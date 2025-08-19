@@ -1,23 +1,25 @@
 
-# Scavenger Hunt - Game
+# A Scavenger Hunt - Game
 
 ## Tasks Log
 
-### 2025-08-16: Replace store of challenge with a json record (GitHub Issue #6)
+### 2025-08-19: Server scaffolds (GitHub Issue #1)
 **Status:** Completed  
-**Description:** Refactor challenge storage from relational tables to JSON records with temporal versioning
+**Description:** Create TypeScript project to implement backend server scaffolds for the Scavenger Hunt Game
 **Requirements:**
-- ✅ Replace challenges and waypoints tables with new temporal challenge structure
-- ✅ New schema: challenge_id (sequence), challenge_version_id (sequence), challenge_name (text), planned_start_time (datetime), challenge (json), start_at (datetime), end_at (datetime)
-- ✅ Implement temporal versioning for challenge records
-- ✅ Update all related code to work with new JSON structure
-- ✅ Add comprehensive tests for new functionality
-- ✅ Maintain backward compatibility with existing APIs
+- ✅ HTTP server to accept REST calls
+- ✅ /health endpoint responding with 200 OK
+- ✅ /ready endpoint responding with 400 Bad Request
+- ✅ Environment variables support from .env file with CLI/Docker override capability
+- ✅ Tests for endpoints
+- ✅ GitHub workflow for CI on PR creation/changes
+- ✅ Documentation: operational-guide.md and README.md
 
 **Implementation Details:**
-- Created new temporal_challenges table with JSONB storage
-- Implemented TemporalChallenge model with full JSON serialization
-- Updated challenge handlers to use new temporal storage
-- Added comprehensive unit tests for JSON serialization/deserialization
-- Maintained existing API compatibility through legacy conversion methods
-- Migration includes data preservation from old relational structure
+- Created TypeScript Express server with strict type checking
+- Implemented /health endpoint returning 200 OK with timestamp
+- Implemented /ready endpoint returning 400 Bad Request as specified
+- Added environment variables support with .env file and yargs CLI override
+- Comprehensive test suite with 100% coverage for core functionality
+- GitHub Actions CI workflow for automated testing and validation
+- Complete documentation including operational guide and README
