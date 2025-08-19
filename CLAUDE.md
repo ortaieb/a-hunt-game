@@ -356,10 +356,8 @@ Code changes are ONLY considered complete when:
 ## Integrity of code
 Any change to the codebase will be followed by a complete execution of the Validation Gates. Use the relevant agent for execution.
 
-## 🤝 Contributing
+## 🤝 Work with GitHub
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- **Create brach for every task**, do not work directly on `main` branch. Each feature or bugfix must be handled on a separate branch.
+- **Create a PR**, Do not continue directly to resolve the issue and merge the changes.
+- Check the **CI build** completed successfully before reporting task as completed.
