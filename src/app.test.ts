@@ -33,7 +33,7 @@ describe('Server Endpoints', () => {
       
       expect(response.body).toEqual({
         status: 'Bad Request',
-        message: 'Service not ready'
+        message: 'Service not ready',
       });
     });
   });
