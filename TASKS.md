@@ -82,3 +82,20 @@
 - Comprehensive test suite with 14 new test cases covering all scenarios and edge cases
 - All validation gates pass: 57/57 tests, ESLint clean, TypeScript builds successfully
 - Created Pull Request #10: https://github.com/ortaieb/a-hunt-game/pull/10
+
+### 2025-08-20: Planned Waypoints Management (GitHub Issue #12)
+**Status:** In Progress  
+**Description:** Implement waypoints management system following specification in docs/plans/02-waypoints.md
+**Requirements:**
+- ⏳ Design temporal database model for waypoints sequences (waypoints_id, waypoint_name, waypoint_description, data)
+- ⏳ Implement CRUD API endpoints with /hunt/manager/waypoints prefix
+- ⏳ Add game.admin role requirement for all waypoints management operations
+- ⏳ Support GeoLocation structure (lat/long) and waypoint properties (seq_id, location, radius, clue, hints, image_subject)
+- ⏳ Comprehensive test suite covering all CRUD operations and error scenarios
+
+**Implementation Details:**
+- Temporal table design with unique(waypoint_name + valid_until) constraint
+- JSON storage for waypoint sequences to maintain order and structure
+- REST endpoints: GET, POST, PUT, DELETE /hunt/manager/waypoints
+- GeoLocation support with floating-point latitude/longitude values
+- Waypoint structure includes sequence ID, location, radius, clue, hints, and image subject requirements
