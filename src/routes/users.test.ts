@@ -17,7 +17,7 @@ describe('User Routes', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    adminToken = generateToken('admin@local.domain', ['game.admin']);
+    adminToken = generateToken('admin@local.domain', ['game.admin'], 'TestUser');
   });
 
   describe('POST /hunt/users', () => {
