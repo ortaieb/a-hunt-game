@@ -12,9 +12,13 @@ module.exports = {
     '!src/**/*.test.ts',
     '!src/**/*.spec.ts',
     '!src/index.ts',
+    '!src/__mocks__/**/*.ts',
   ],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov', 'html'],
-  setupFilesAfterEnv: [],
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   testTimeout: 30000,
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
 };
