@@ -15,13 +15,26 @@ export interface TokenPayload {
   roles: string[];
   iat?: number;
   exp?: number;
+  // New JWT claims as per issue requirements
+  iss?: string;
+  upn?: string;
+  groups?: string[];
 }
 
 export const generateToken = (username: string, roles: string[]): string => {
+  const payload = {
+    username,
+    roles,
+    // Required claims per issue specification
+    iss: 'scavenger-hunt-game',
+    upn: username,
+    groups: roles,
+  };
+  
   return jwt.sign(
-    { username, roles },
+    payload,
     config.jwt.secret,
-    { expiresIn: config.jwt.expiresIn } as jwt.SignOptions,
+    { expiresIn: '2h' } as jwt.SignOptions,  // 2 hour window as specified
   );
 };
 

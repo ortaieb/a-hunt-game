@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import userRoutes from './routes/users';
+import authRoutes from './routes/auth';
 
 const app = express();
 
@@ -13,7 +14,13 @@ app.get('/ready', (_req: Request, res: Response): void => {
   res.status(400).json({ status: 'Bad Request', message: 'Service not ready' });
 });
 
-// User management routes
+// Authentication routes
+app.use('/auth', authRoutes);
+
+// User management routes  
 app.use('/hunt/users', userRoutes);
+
+// Registration route (alternative path as specified in issue)
+app.use('/hunt/auth', authRoutes);
 
 export default app;

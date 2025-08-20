@@ -63,3 +63,19 @@
 - Database connection pooling and graceful shutdown handling
 - Proper error handling with appropriate HTTP status codes
 - Input validation for email format, password strength, and required fields
+
+### 2025-08-20: Authentication Service (GitHub Issue #9)
+**Status:** In Progress  
+**Description:** Extend user management functionality with login and registration endpoints
+**Requirements:**
+- ⏳ Implement GET /auth/login endpoint for user authentication
+- ⏳ Return JWT tokens with specific claims (issuer, upn, groups, exp)
+- ⏳ Implement POST /hunt/auth/register endpoint (no authentication required)
+- ⏳ Handle authentication errors (404, 403, 500)
+- ⏳ JWT tokens with 2-hour expiration window
+
+**Implementation Details:**
+- JWT tokens include: issuer=scavenger-hunt-game, upn=username, groups=user_roles, exp=2h
+- Login endpoint validates credentials and returns Bearer token
+- Registration endpoint functions like POST /hunt/users without auth requirement
+- Proper error handling for user not found, wrong password, and token creation errors
