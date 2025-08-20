@@ -26,7 +26,7 @@ describe('Authentication Middleware', () => {
 
       // Verify token contains expected payload
       const decoded = jwt.verify(token, config.jwt.secret) as jwt.JwtPayload;
-      expect(decoded.username).toBe(username);
+      expect(decoded.upn).toBe(username);
       expect(decoded.roles).toEqual(roles);
       expect(decoded.nickname).toEqual(nickname);
     });
@@ -99,7 +99,7 @@ describe('Authentication Middleware', () => {
 
       await authenticateToken(req as AuthenticatedRequest, res as Response, next);
 
-      expect(req.user).toEqual({ username, roles });
+      expect(req.user).toEqual({ username, roles, nickname });
       expect(next).toHaveBeenCalled();
       expect(res.status).not.toHaveBeenCalled();
     });
@@ -158,7 +158,7 @@ describe('Authentication Middleware', () => {
 
       await authenticateToken(req as AuthenticatedRequest, res as Response, next);
 
-      expect(req.user).toEqual({ username, roles });
+      expect(req.user).toEqual({ username, roles, nickname });
       expect(next).toHaveBeenCalled();
     });
   });
@@ -181,6 +181,7 @@ describe('Authentication Middleware', () => {
       req.user = {
         username: 'test@example.com',
         roles: ['user', 'game.admin'],
+        nickname: 'Test User',
       };
 
       const middleware = requireRole('game.admin');
@@ -194,6 +195,7 @@ describe('Authentication Middleware', () => {
       req.user = {
         username: 'test@example.com',
         roles: ['user'],
+        nickname: 'Test User',
       };
 
       const middleware = requireRole('game.admin');

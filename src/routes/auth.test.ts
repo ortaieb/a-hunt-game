@@ -45,8 +45,7 @@ describe('Authentication Routes', () => {
       const decoded = jwt.verify(token, config.jwt.secret) as jwt.JwtPayload;
       expect(decoded.iss).toBe('scavenger-hunt-game');
       expect(decoded.upn).toBe('test@example.com');
-      expect(decoded.groups).toEqual(['user']);
-      expect(decoded.username).toBe('test@example.com');
+      expect(decoded.nickname).toBe('Test User');
       expect(decoded.roles).toEqual(['user']);
     });
 
