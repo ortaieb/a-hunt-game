@@ -1,6 +1,7 @@
 import express from 'express';
 import { UserModel, CreateUserData } from '../models/User';
 import { generateToken } from '../middleware/auth';
+import { config } from '../config';
 
 const router = express.Router();
 
@@ -50,7 +51,7 @@ router.get('/login', async (req, res) => {
       
       res.status(201).json({
         'user-auth-token': token,
-        'expires_in': '2 hours',
+        'expires_in': config.jwt.expiresIn,
         'token_type': 'Bearer',
       });
     } catch (error) {

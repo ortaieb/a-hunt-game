@@ -34,7 +34,7 @@ export const generateToken = (username: string, roles: string[]): string => {
   return jwt.sign(
     payload,
     config.jwt.secret,
-    { expiresIn: '2h' } as jwt.SignOptions,  // 2 hour window as specified
+    { expiresIn: config.jwt.expiresIn } as jwt.SignOptions,
   );
 };
 

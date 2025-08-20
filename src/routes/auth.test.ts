@@ -37,7 +37,7 @@ describe('Authentication Routes', () => {
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('user-auth-token');
-      expect(response.body).toHaveProperty('expires_in', '2 hours');
+      expect(response.body).toHaveProperty('expires_in', config.jwt.expiresIn);
       expect(response.body).toHaveProperty('token_type', 'Bearer');
 
       // Verify token contains correct claims
