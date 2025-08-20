@@ -12,7 +12,12 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:check": "drizzle-kit check"
   },
   "keywords": [
     "scavenger-hunt",
@@ -25,6 +30,8 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "dotenv": "^16.3.1",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.4",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3",

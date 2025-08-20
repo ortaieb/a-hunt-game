@@ -1,6 +1,6 @@
 import app from './app';
 import { config } from './config';
-import { initializeDatabase, closePool } from './database';
+import { initializeDatabase, closePool } from './db';
 import { initializeDefaultAdmin } from './services/adminInit';
 
 const startServer = async (): Promise<void> => {

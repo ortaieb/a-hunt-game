@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { config } from '../config';
-import { UserModel } from '../models/User';
+import { UserModel } from '../models/UserDrizzle';
 
 export interface AuthenticatedRequest extends Request {
   user?: {

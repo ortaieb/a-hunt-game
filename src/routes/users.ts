@@ -1,5 +1,5 @@
 import express from 'express';
-import { UserModel, CreateUserData, UpdateUserData } from '../models/User';
+import { UserModel, CreateUserData, UpdateUserData } from '../models/UserDrizzle';
 import { authenticateToken, requireRole, AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();

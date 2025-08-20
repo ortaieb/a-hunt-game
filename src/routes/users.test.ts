@@ -1,11 +1,11 @@
 import request from 'supertest';
 import express from 'express';
 import userRoutes from './users';
-import { UserModel } from '../models/User';
+import { UserModel } from '../models/UserDrizzle';
 import { generateToken } from '../middleware/auth';
 
 // Mock dependencies
-jest.mock('../models/User');
+jest.mock('../models/UserDrizzle');
 const mockedUserModel = UserModel as jest.Mocked<typeof UserModel>;
 
 const app = express();
@@ -37,6 +37,7 @@ describe('User Routes', () => {
           nickname: 'admin',
           roles: ['game.admin'],
           valid_from: new Date(),
+          valid_until: null,
         })
         .mockResolvedValueOnce(null); // User doesn't exist yet
 
@@ -47,6 +48,7 @@ describe('User Routes', () => {
         nickname: validUserData.nickname,
         roles: validUserData.roles,
         valid_from: new Date(),
+        valid_until: null,
       });
 
       const response = await request(app)
@@ -79,6 +81,7 @@ describe('User Routes', () => {
         nickname: 'admin',
         roles: ['game.admin'],
         valid_from: new Date(),
+        valid_until: null,
       });
 
       const invalidData = { ...validUserData, username: 'invalid-email' };
@@ -100,6 +103,7 @@ describe('User Routes', () => {
         nickname: 'admin',
         roles: ['game.admin'],
         valid_from: new Date(),
+        valid_until: null,
       });
 
       const weakPasswordData = { ...validUserData, password: '123' };
@@ -122,6 +126,7 @@ describe('User Routes', () => {
           nickname: 'admin',
           roles: ['game.admin'],
           valid_from: new Date(),
+          valid_until: null,
         })
         .mockResolvedValueOnce({
           user_id: 2,
@@ -130,6 +135,7 @@ describe('User Routes', () => {
           nickname: validUserData.nickname,
           roles: validUserData.roles,
           valid_from: new Date(),
+          valid_until: null,
         });
 
       const response = await request(app)
@@ -149,6 +155,7 @@ describe('User Routes', () => {
         nickname: 'admin',
         roles: ['game.admin'],
         valid_from: new Date(),
+        valid_until: null,
       });
 
       const incompleteData = { username: 'test@example.com' };
@@ -172,6 +179,7 @@ describe('User Routes', () => {
         nickname: 'admin',
         roles: ['game.admin'],
         valid_from: new Date(),
+        valid_until: null,
       });
 
       mockedUserModel.delete.mockResolvedValue(undefined);
@@ -200,6 +208,7 @@ describe('User Routes', () => {
         nickname: 'admin',
         roles: ['game.admin'],
         valid_from: new Date(),
+        valid_until: null,
       });
 
       mockedUserModel.delete.mockRejectedValue(new Error('User not found'));
@@ -229,6 +238,7 @@ describe('User Routes', () => {
         nickname: 'admin',
         roles: ['game.admin'],
         valid_from: new Date(),
+        valid_until: null,
       });
 
       mockedUserModel.update.mockResolvedValue({
@@ -238,6 +248,7 @@ describe('User Routes', () => {
         nickname: updateData.nickname,
         roles: updateData.roles,
         valid_from: new Date(),
+        valid_until: null,
       });
 
       const response = await request(app)
@@ -270,6 +281,7 @@ describe('User Routes', () => {
         nickname: 'admin',
         roles: ['game.admin'],
         valid_from: new Date(),
+        valid_until: null,
       });
 
       const response = await request(app)
@@ -289,6 +301,7 @@ describe('User Routes', () => {
         nickname: 'admin',
         roles: ['game.admin'],
         valid_from: new Date(),
+        valid_until: null,
       });
 
       mockedUserModel.update.mockRejectedValue(new Error('No change required'));
@@ -310,6 +323,7 @@ describe('User Routes', () => {
         nickname: 'admin',
         roles: ['game.admin'],
         valid_from: new Date(),
+        valid_until: null,
       });
 
       mockedUserModel.update.mockRejectedValue(new Error('User not found'));
@@ -331,6 +345,7 @@ describe('User Routes', () => {
         nickname: 'admin',
         roles: ['game.admin'],
         valid_from: new Date(),
+        valid_until: null,
       });
 
       const invalidData = { ...updateData, username: 'invalid-email' };

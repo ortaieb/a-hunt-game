@@ -198,7 +198,7 @@ src/
 
 ## Appendix: User Management Setup
 
-This appendix provides setup instructions for the user management system introduced in PR #7.
+This appendix provides setup instructions for the user management system with automated database management using Drizzle ORM.
 
 ### A1. Database Setup with Docker PostgreSQL
 
@@ -259,17 +259,28 @@ psql -h localhost -p 5432 -U postgres -d scavenger_hunt
 docker exec -it scavenger-hunt-postgres psql -U postgres -d scavenger_hunt
 ```
 
-### A2. Database Model Initialization
+### A2. Automated Database Management with Drizzle ORM
 
-The application automatically creates the required database schema on startup. The temporal user table will be created with the following structure:
+The application now uses **Drizzle ORM** for automated database schema management, eliminating all manual setup steps:
 
-#### A2.1 Automatic Schema Creation
+#### A2.1 Automatic Schema Management
+
+**Development Mode (Recommended for Development):**
+- Uses `drizzle-kit push` for instant schema updates
+- No migration files needed for rapid development
+- Schema changes are automatically applied on startup
+
+**Production Mode:**
+- Uses traditional migrations for safety and audit trail
+- Generates migration files with `npm run db:generate`
+- Applies migrations automatically on startup
 
 When you start the application, it will:
-1. Connect to the PostgreSQL database
-2. Create the `users` table with temporal columns
-3. Create required indexes and constraints
-4. Initialize the default admin user
+1. Connect to the PostgreSQL database using Drizzle ORM
+2. Automatically detect your environment (development/production)
+3. Apply schema changes using the appropriate method
+4. Create the temporal `users` table with all constraints
+5. Initialize the default admin user
 
 #### A2.2 Manual Schema Verification
 
@@ -478,7 +489,55 @@ docker logs scavenger-hunt-postgres
 - Rotate secrets regularly
 - Implement proper access controls
 
-### A8. Quick Setup Checklist
+### A8. Drizzle ORM Database Commands
+
+The application now includes automated database management commands:
+
+#### A8.1 Development Commands
+```bash
+# Push schema changes instantly (development mode)
+npm run db:push
+
+# Open Drizzle Studio - Visual database explorer
+npm run db:studio
+
+# Check for schema drift and issues
+npm run db:check
+```
+
+#### A8.2 Production Commands
+```bash
+# Generate migration files for production
+npm run db:generate
+
+# Apply pending migrations
+npm run db:migrate
+```
+
+#### A8.3 Schema Management Workflow
+
+**Development Workflow:**
+1. Modify schema in `src/schema/users.ts`
+2. Run `npm run db:push` or restart the app
+3. Schema is automatically updated in database
+
+**Production Workflow:**
+1. Modify schema in `src/schema/users.ts`
+2. Run `npm run db:generate` to create migration
+3. Commit migration files to version control
+4. Deploy application (migrations run automatically)
+
+### A9. Benefits of Drizzle Integration
+
+✅ **Zero Manual Steps**: Database schema is managed automatically  
+✅ **Type Safety**: Full TypeScript integration with compile-time query validation  
+✅ **Development Speed**: Instant schema updates with `db:push`  
+✅ **Production Safety**: Traditional migrations for production deployments  
+✅ **SQL-like Syntax**: Similar to sqlx with TypeScript benefits  
+✅ **Performance**: Lightweight ORM with minimal overhead  
+✅ **Temporal Tables**: Full support for temporal database patterns  
+
+### A10. Quick Setup Checklist
 
 - [ ] PostgreSQL container running on port 5432
 - [ ] Database `scavenger_hunt` created
@@ -486,6 +545,7 @@ docker logs scavenger-hunt-postgres
 - [ ] `.env` file configured with all required variables
 - [ ] Dependencies installed (`npm install`)
 - [ ] Application starts without errors (`npm run dev`)
+- [ ] Drizzle automatically creates/updates schema
 - [ ] Default admin user created successfully
-- [ ] Database schema initialized with users table
 - [ ] API endpoints accessible at http://localhost:3000/hunt/users
+- [ ] Optional: Access Drizzle Studio at `npm run db:studio`

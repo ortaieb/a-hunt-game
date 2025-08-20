@@ -1,11 +1,11 @@
 import jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { generateToken, verifyToken, authenticateToken, requireRole, AuthenticatedRequest } from './auth';
-import { UserModel } from '../models/User';
+import { UserModel } from '../models/UserDrizzle';
 import { config } from '../config';
 
 // Mock UserModel
-jest.mock('../models/User');
+jest.mock('../models/UserDrizzle');
 const mockedUserModel = UserModel as jest.Mocked<typeof UserModel>;
 
 describe('Authentication Middleware', () => {
@@ -89,6 +89,7 @@ describe('Authentication Middleware', () => {
         nickname: 'Test',
         roles,
         valid_from: new Date(),
+        valid_until: null,
       });
 
       await authenticateToken(req as AuthenticatedRequest, res as Response, next);
@@ -145,6 +146,7 @@ describe('Authentication Middleware', () => {
         nickname: 'Test',
         roles,
         valid_from: new Date(),
+        valid_until: null,
       });
 
       await authenticateToken(req as AuthenticatedRequest, res as Response, next);

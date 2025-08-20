@@ -1,4 +1,4 @@
-import { UserModel } from '../models/User';
+import { UserModel } from '../models/UserDrizzle';
 import { config } from '../config';
 
 export const initializeDefaultAdmin = async (): Promise<void> => {
