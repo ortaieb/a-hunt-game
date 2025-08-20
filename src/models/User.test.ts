@@ -8,7 +8,9 @@ jest.mock('../db', () => ({
 // Mock bcrypt for consistent testing
 jest.mock('bcrypt', () => ({
   hash: jest.fn((password: string) => Promise.resolve(`hashed_${password}`)),
-  compare: jest.fn((password: string, hash: string) => Promise.resolve(hash === `hashed_${password}`)),
+  compare: jest.fn((password: string, hash: string) =>
+    Promise.resolve(hash === `hashed_${password}`),
+  ),
 }));
 
 describe('UserModel (Drizzle)', () => {
@@ -23,42 +25,52 @@ describe('UserModel (Drizzle)', () => {
     mockUserIdCounter = 1;
     hashCounter = 0;
     jest.clearAllMocks();
-    
+
     // Mock UserModel.hashPassword with salting simulation
-    jest.spyOn(UserModel, 'hashPassword').mockImplementation(async (password: string) => {
-      return `hashed_${password}_${++hashCounter}`;
-    });
+    jest
+      .spyOn(UserModel, 'hashPassword')
+      .mockImplementation(async (password: string) => {
+        return `hashed_${password}_${++hashCounter}`;
+      });
 
     // Mock UserModel.verifyPassword
-    jest.spyOn(UserModel, 'verifyPassword').mockImplementation(async (password: string, hash: string) => {
-      return hash.startsWith(`hashed_${password}_`);
-    });
-    
+    jest
+      .spyOn(UserModel, 'verifyPassword')
+      .mockImplementation(async (password: string, hash: string) => {
+        return hash.startsWith(`hashed_${password}_`);
+      });
+
     // Mock UserModel.create
-    jest.spyOn(UserModel, 'create').mockImplementation(async (userData: CreateUserData) => {
-      const hashedPassword = await UserModel.hashPassword(userData.password);
-      const newUser = {
-        user_id: mockUserIdCounter++,
-        username: userData.username,
-        password_hash: hashedPassword,
-        nickname: userData.nickname,
-        roles: userData.roles,
-        valid_from: new Date(),
-        valid_until: null,
-      };
-      mockUsers.push(newUser);
-      return newUser;
-    });
+    jest
+      .spyOn(UserModel, 'create')
+      .mockImplementation(async (userData: CreateUserData) => {
+        const hashedPassword = await UserModel.hashPassword(userData.password);
+        const newUser = {
+          user_id: mockUserIdCounter++,
+          username: userData.username,
+          password_hash: hashedPassword,
+          nickname: userData.nickname,
+          roles: userData.roles,
+          valid_from: new Date(),
+          valid_until: null,
+        };
+        mockUsers.push(newUser);
+        return newUser;
+      });
 
     // Mock UserModel.findActiveByUsername
-    jest.spyOn(UserModel, 'findActiveByUsername').mockImplementation(async (username: string) => {
-      const user = mockUsers.find(u => u.username === username && !u.valid_until);
-      return user || null;
-    });
+    jest
+      .spyOn(UserModel, 'findActiveByUsername')
+      .mockImplementation(async (username: string) => {
+        const user = mockUsers.find(
+          (u) => u.username === username && !u.valid_until,
+        );
+        return user || null;
+      });
 
     // Mock UserModel.getAllActive
     jest.spyOn(UserModel, 'getAllActive').mockImplementation(async () => {
-      return mockUsers.filter(u => !u.valid_until);
+      return mockUsers.filter((u) => !u.valid_until);
     });
   });
 
@@ -101,7 +113,9 @@ describe('UserModel (Drizzle)', () => {
     });
 
     it('should return null for non-existent user', async () => {
-      const foundUser = await UserModel.findActiveByUsername('nonexistent@example.com');
+      const foundUser = await UserModel.findActiveByUsername(
+        'nonexistent@example.com',
+      );
       expect(foundUser).toBeNull();
     });
   });
@@ -132,8 +146,18 @@ describe('UserModel (Drizzle)', () => {
   describe('getAllActive', () => {
     it('should return all active users', async () => {
       const users = [
-        { username: 'user1@example.com', password: 'Password123!', nickname: 'User1', roles: ['user'] },
-        { username: 'user2@example.com', password: 'Password123!', nickname: 'User2', roles: ['admin'] },
+        {
+          username: 'user1@example.com',
+          password: 'Password123!',
+          nickname: 'User1',
+          roles: ['user'],
+        },
+        {
+          username: 'user2@example.com',
+          password: 'Password123!',
+          nickname: 'User2',
+          roles: ['admin'],
+        },
       ];
 
       for (const userData of users) {
@@ -142,7 +166,10 @@ describe('UserModel (Drizzle)', () => {
 
       const activeUsers = await UserModel.getAllActive();
       expect(activeUsers).toHaveLength(2);
-      expect(activeUsers.map(u => u.username).sort()).toEqual(['user1@example.com', 'user2@example.com']);
+      expect(activeUsers.map((u) => u.username).sort()).toEqual([
+        'user1@example.com',
+        'user2@example.com',
+      ]);
     });
   });
 });
