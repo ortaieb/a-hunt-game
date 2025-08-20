@@ -11,26 +11,24 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export interface TokenPayload {
-  username: string;
+  nickname: string;
   roles: string[];
   iat?: number;
   exp?: number;
   // New JWT claims as per issue requirements
   iss?: string;
   upn?: string;
-  groups?: string[];
 }
 
-export const generateToken = (username: string, roles: string[]): string => {
+export const generateToken = (username: string, roles: string[], nickname: string): string => {
   const payload = {
-    username,
+    nickname,
     roles,
     // Required claims per issue specification
     iss: 'scavenger-hunt-game',
     upn: username,
-    groups: roles,
   };
-  
+
   return jwt.sign(
     payload,
     config.jwt.secret,
@@ -63,14 +61,14 @@ export const authenticateToken = async (
     const decoded = verifyToken(token);
     
     // Verify user still exists and is active
-    const user = await UserModel.findActiveByUsername(decoded.username);
+    const user = await UserModel.findActiveByUsername(decoded.nickname);
     if (!user) {
       res.status(401).json({ error: 'request carries the wrong token' });
       return;
     }
 
     req.user = {
-      username: decoded.username,
+      username: decoded.nickname,
       roles: decoded.roles,
     };
     

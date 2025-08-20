@@ -47,8 +47,8 @@ router.get('/login', async (req, res) => {
 
     // Generate JWT token
     try {
-      const token = generateToken(user.username, user.roles);
-      
+      const token = generateToken(user.username, user.roles, user.nickname);
+
       res.status(201).json({
         'user-auth-token': token,
         'expires_in': config.jwt.expiresIn,

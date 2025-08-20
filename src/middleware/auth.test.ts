@@ -17,16 +17,18 @@ describe('Authentication Middleware', () => {
     it('should generate a valid JWT token', () => {
       const username = 'test@example.com';
       const roles = ['user'];
-      
-      const token = generateToken(username, roles);
-      
+      const nickname = 'test';
+
+      const token = generateToken(username, roles, nickname);
+
       expect(token).toBeDefined();
       expect(typeof token).toBe('string');
-      
+
       // Verify token contains expected payload
       const decoded = jwt.verify(token, config.jwt.secret) as jwt.JwtPayload;
       expect(decoded.username).toBe(username);
       expect(decoded.roles).toEqual(roles);
+      expect(decoded.nickname).toEqual(nickname);
     });
   });
 
@@ -34,27 +36,29 @@ describe('Authentication Middleware', () => {
     it('should verify valid token', () => {
       const username = 'test@example.com';
       const roles = ['user'];
-      const token = generateToken(username, roles);
-      
+      const nickname = 'test';
+      const token = generateToken(username, roles, nickname);
+
       const payload = verifyToken(token);
-      
-      expect(payload.username).toBe(username);
+
+      expect(payload.upn).toBe(username);
       expect(payload.roles).toEqual(roles);
+      expect(payload.nickname).toEqual(nickname);
     });
 
     it('should throw error for invalid token', () => {
       const invalidToken = 'invalid.token.here';
-      
+
       expect(() => verifyToken(invalidToken)).toThrow('Invalid token');
     });
 
     it('should throw error for expired token', () => {
       const expiredToken = jwt.sign(
-        { username: 'test@example.com', roles: ['user'] },
+        { username: 'test@example.com', roles: ['user'], nickname: 'test' },
         config.jwt.secret,
         { expiresIn: '-1h' },
       );
-      
+
       expect(() => verifyToken(expiredToken)).toThrow('Invalid token');
     });
   });
@@ -78,10 +82,11 @@ describe('Authentication Middleware', () => {
     it('should authenticate valid token', async () => {
       const username = 'test@example.com';
       const roles = ['user'];
-      const token = generateToken(username, roles);
-      
+      const nickname = 'test';
+      const token = generateToken(username, roles, nickname);
+
       req.headers = { 'user-auth-token': token };
-      
+
       mockedUserModel.findActiveByUsername.mockResolvedValue({
         user_id: 1,
         username,
@@ -120,8 +125,9 @@ describe('Authentication Middleware', () => {
     it('should reject token for non-existent user', async () => {
       const username = 'test@example.com';
       const roles = ['user'];
-      const token = generateToken(username, roles);
-      
+      const nickname = 'test';
+      const token = generateToken(username, roles, nickname);
+
       req.headers = { 'user-auth-token': token };
       mockedUserModel.findActiveByUsername.mockResolvedValue(null);
 
@@ -135,10 +141,11 @@ describe('Authentication Middleware', () => {
     it('should handle array token header', async () => {
       const username = 'test@example.com';
       const roles = ['user'];
-      const token = generateToken(username, roles);
-      
+      const nickname = 'Test';
+      const token = generateToken(username, roles, nickname);
+
       req.headers = { 'user-auth-token': [token, 'other-token'] };
-      
+
       mockedUserModel.findActiveByUsername.mockResolvedValue({
         user_id: 1,
         username,
