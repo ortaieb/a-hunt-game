@@ -1,15 +1,7 @@
 import bcrypt from 'bcrypt';
-import { getClient } from '../database';
-
-export interface User {
-  user_id: number;
-  username: string;
-  password_hash: string;
-  nickname: string;
-  roles: string[];
-  valid_from: Date;
-  valid_until?: Date;
-}
+import { eq, isNull, and } from 'drizzle-orm';
+import { getDb } from '../db';
+import { users, type User } from '../schema/users';
 
 export interface CreateUserData {
   username: string;
@@ -37,50 +29,56 @@ export class UserModel {
   }
 
   static async create(userData: CreateUserData): Promise<User> {
-    const client = await getClient();
-    try {
-      await client.query('BEGIN');
+    const db = getDb();
+    
+    const passwordHash = await this.hashPassword(userData.password);
+    
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        username: userData.username,
+        password_hash: passwordHash,
+        nickname: userData.nickname,
+        roles: userData.roles,
+      })
+      .returning();
 
-      const passwordHash = await this.hashPassword(userData.password);
-      
-      const result = await client.query(`
-        INSERT INTO users (username, password_hash, nickname, roles)
-        VALUES ($1, $2, $3, $4)
-        RETURNING user_id, username, password_hash, nickname, roles, valid_from, valid_until
-      `, [userData.username, passwordHash, userData.nickname, userData.roles]);
-
-      await client.query('COMMIT');
-      return result.rows[0];
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    return newUser;
   }
 
   static async findActiveByUsername(username: string): Promise<User | null> {
-    const client = await getClient();
-    try {
-      const result = await client.query(`
-        SELECT user_id, username, password_hash, nickname, roles, valid_from, valid_until
-        FROM users
-        WHERE username = $1 AND valid_until IS NULL
-      `, [username]);
+    const db = getDb();
+    
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.username, username),
+          isNull(users.valid_until),
+        ),
+      )
+      .limit(1);
 
-      return result.rows[0] || null;
-    } finally {
-      client.release();
-    }
+    return user || null;
   }
 
   static async update(username: string, userData: UpdateUserData): Promise<User> {
-    const client = await getClient();
-    try {
-      await client.query('BEGIN');
-
+    const db = getDb();
+    
+    return await db.transaction(async (tx) => {
       // Find current active record
-      const currentUser = await this.findActiveByUsername(username);
+      const [currentUser] = await tx
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.username, username),
+            isNull(users.valid_until),
+          ),
+        )
+        .limit(1);
+
       if (!currentUser) {
         throw new Error('User not found');
       }
@@ -95,71 +93,61 @@ export class UserModel {
                         (userData.password && !(await this.verifyPassword(userData.password, currentUser.password_hash)));
 
       if (!hasChanges) {
-        await client.query('ROLLBACK');
         throw new Error('No change required');
       }
 
       // Mark current record as invalid (temporal delete)
-      await client.query(`
-        UPDATE users 
-        SET valid_until = CURRENT_TIMESTAMP
-        WHERE username = $1 AND valid_until IS NULL
-      `, [username]);
+      await tx
+        .update(users)
+        .set({ valid_until: new Date() })
+        .where(
+          and(
+            eq(users.username, username),
+            isNull(users.valid_until),
+          ),
+        );
 
       // Insert new record (temporal insert)
-      const result = await client.query(`
-        INSERT INTO users (username, password_hash, nickname, roles)
-        VALUES ($1, $2, $3, $4)
-        RETURNING user_id, username, password_hash, nickname, roles, valid_from, valid_until
-      `, [userData.username, passwordHash, userData.nickname, userData.roles]);
+      const [updatedUser] = await tx
+        .insert(users)
+        .values({
+          username: userData.username,
+          password_hash: passwordHash,
+          nickname: userData.nickname,
+          roles: userData.roles,
+        })
+        .returning();
 
-      await client.query('COMMIT');
-      return result.rows[0];
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+      return updatedUser;
+    });
   }
 
   static async delete(username: string): Promise<void> {
-    const client = await getClient();
-    try {
-      await client.query('BEGIN');
+    const db = getDb();
+    
+    const [result] = await db
+      .update(users)
+      .set({ valid_until: new Date() })
+      .where(
+        and(
+          eq(users.username, username),
+          isNull(users.valid_until),
+        ),
+      )
+      .returning({ user_id: users.user_id });
 
-      const result = await client.query(`
-        UPDATE users 
-        SET valid_until = CURRENT_TIMESTAMP
-        WHERE username = $1 AND valid_until IS NULL
-      `, [username]);
-
-      if (result.rowCount === 0) {
-        throw new Error('User not found');
-      }
-
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
+    if (!result) {
+      throw new Error('User not found');
     }
   }
 
   static async getAllActive(): Promise<User[]> {
-    const client = await getClient();
-    try {
-      const result = await client.query(`
-        SELECT user_id, username, password_hash, nickname, roles, valid_from, valid_until
-        FROM users
-        WHERE valid_until IS NULL
-        ORDER BY username
-      `);
-
-      return result.rows;
-    } finally {
-      client.release();
-    }
+    const db = getDb();
+    
+    return await db
+      .select()
+      .from(users)
+      .where(isNull(users.valid_until))
+      .orderBy(users.username);
   }
 }

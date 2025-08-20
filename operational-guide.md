@@ -381,7 +381,7 @@ DB_PASSWORD=postgres
 JWT_SECRET=your-generated-64-character-hex-string-here
 JWT_EXPIRES_IN=24h
 
-# Default Admin User
+# Default Admin User (Environment Variables Only - Not in Config Struct)
 DEFAULT_ADMIN_USERNAME=admin@local.domain
 DEFAULT_ADMIN_PASSWORD=Password1!
 DEFAULT_ADMIN_NICKNAME=admin

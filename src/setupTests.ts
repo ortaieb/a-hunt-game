@@ -11,7 +11,7 @@ process.env.DB_NAME = 'test_scavenger_hunt';
 process.env.JWT_SECRET = 'test-jwt-secret-for-testing-only';
 
 // Mock the database module to avoid requiring real PostgreSQL connection
-jest.mock('./database');
+jest.mock('./db');
 
 // Mock console methods to reduce noise in tests
 const originalConsoleLog = console.log;

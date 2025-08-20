@@ -1,11 +1,11 @@
 import request from 'supertest';
 import express from 'express';
 import userRoutes from './users';
-import { UserModel } from '../models/UserDrizzle';
+import { UserModel } from '../models/User';
 import { generateToken } from '../middleware/auth';
 
 // Mock dependencies
-jest.mock('../models/UserDrizzle');
+jest.mock('../models/User');
 const mockedUserModel = UserModel as jest.Mocked<typeof UserModel>;
 
 const app = express();

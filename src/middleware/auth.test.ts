@@ -1,11 +1,11 @@
 import jwt from 'jsonwebtoken';
 import { Response } from 'express';
 import { generateToken, verifyToken, authenticateToken, requireRole, AuthenticatedRequest } from './auth';
-import { UserModel } from '../models/UserDrizzle';
+import { UserModel } from '../models/User';
 import { config } from '../config';
 
 // Mock UserModel
-jest.mock('../models/UserDrizzle');
+jest.mock('../models/User');
 const mockedUserModel = UserModel as jest.Mocked<typeof UserModel>;
 
 describe('Authentication Middleware', () => {

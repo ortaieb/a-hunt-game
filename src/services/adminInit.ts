@@ -1,21 +1,24 @@
-import { UserModel } from '../models/UserDrizzle';
-import { config } from '../config';
+import { UserModel } from '../models/User';
 
 export const initializeDefaultAdmin = async (): Promise<void> => {
   try {
-    const existingAdmin = await UserModel.findActiveByUsername(config.defaultAdmin.username);
+    const defaultUsername = process.env.DEFAULT_ADMIN_USERNAME || 'admin@local.domain';
+    const defaultPassword = process.env.DEFAULT_ADMIN_PASSWORD || 'Password1!';
+    const defaultNickname = process.env.DEFAULT_ADMIN_NICKNAME || 'admin';
+    
+    const existingAdmin = await UserModel.findActiveByUsername(defaultUsername);
     
     if (!existingAdmin) {
       console.log('Creating default admin user...');
       
       await UserModel.create({
-        username: config.defaultAdmin.username,
-        password: config.defaultAdmin.password,
-        nickname: config.defaultAdmin.nickname,
+        username: defaultUsername,
+        password: defaultPassword,
+        nickname: defaultNickname,
         roles: ['game.admin'],
       });
       
-      console.log(`Default admin user created: ${config.defaultAdmin.username}`);
+      console.log(`Default admin user created: ${defaultUsername}`);
     } else {
       console.log('Default admin user already exists');
     }

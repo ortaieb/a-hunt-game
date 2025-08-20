@@ -1,4 +1,4 @@
-import { UserModel, CreateUserData } from './UserDrizzle';
+import { UserModel, CreateUserData } from './User';
 
 // Mock the db module with specific implementations
 jest.mock('../db', () => ({

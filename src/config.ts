@@ -18,11 +18,6 @@ interface Config {
     secret: string;
     expiresIn: string;
   };
-  defaultAdmin: {
-    username: string;
-    password: string;
-    nickname: string;
-  };
 }
 
 const argv = yargs(hideBin(process.argv))
@@ -52,10 +47,5 @@ export const config: Config = {
   jwt: {
     secret: process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production',
     expiresIn: process.env.JWT_EXPIRES_IN || '24h',
-  },
-  defaultAdmin: {
-    username: process.env.DEFAULT_ADMIN_USERNAME || 'admin@local.domain',
-    password: process.env.DEFAULT_ADMIN_PASSWORD || 'Password1!',
-    nickname: process.env.DEFAULT_ADMIN_NICKNAME || 'admin',
   },
 };
