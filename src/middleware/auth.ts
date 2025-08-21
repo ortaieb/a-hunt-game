@@ -21,7 +21,11 @@ export interface TokenPayload {
   upn: string;
 }
 
-export const generateToken = (username: string, roles: string[], nickname: string): string => {
+export const generateToken = (
+  username: string,
+  roles: string[],
+  nickname: string,
+): string => {
   const payload = {
     nickname,
     roles,
@@ -30,11 +34,9 @@ export const generateToken = (username: string, roles: string[], nickname: strin
     upn: username,
   };
 
-  return jwt.sign(
-    payload,
-    config.jwt.secret,
-    { expiresIn: config.jwt.expiresIn } as jwt.SignOptions,
-  );
+  return jwt.sign(payload, config.jwt.secret, {
+    expiresIn: config.jwt.expiresIn,
+  } as jwt.SignOptions);
 };
 
 export const verifyToken = (token: string): TokenPayload => {
@@ -60,7 +62,7 @@ export const authenticateToken = async (
 
   try {
     const decoded = verifyToken(token);
-    
+
     // Verify user still exists and is active
     const user = await UserModel.findActiveByUsername(decoded.upn);
     if (!user) {
@@ -73,7 +75,7 @@ export const authenticateToken = async (
       roles: decoded.roles,
       nickname: decoded.nickname,
     };
-    
+
     next();
   } catch {
     res.status(401).json({ error: 'request carries the wrong token' });
@@ -81,7 +83,11 @@ export const authenticateToken = async (
 };
 
 export const requireRole = (requiredRole: string) => {
-  return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+  return (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ): void => {
     if (!req.user) {
       res.status(401).json({ error: 'request did not include token' });
       return;

@@ -21,22 +21,26 @@ const mockDb: any = {
     from: () => ({
       where: () => ({
         limit: (count: number): MockUser[] => {
-          let filteredUsers = mockUsers.filter(u => !u.valid_until);
-          
+          let filteredUsers = mockUsers.filter((u) => !u.valid_until);
+
           // If we have a username query, filter by it
           if (lastUsernameQuery !== null) {
-            filteredUsers = filteredUsers.filter(u => u.username === lastUsernameQuery);
+            filteredUsers = filteredUsers.filter(
+              (u) => u.username === lastUsernameQuery,
+            );
             lastUsernameQuery = null; // Reset after use
           }
-          
-          return count === 1 ? [filteredUsers[0]].filter(Boolean) : filteredUsers;
+
+          return count === 1
+            ? [filteredUsers[0]].filter(Boolean)
+            : filteredUsers;
         },
-        orderBy: (): MockUser[] => mockUsers.filter(u => !u.valid_until),
+        orderBy: (): MockUser[] => mockUsers.filter((u) => !u.valid_until),
       }),
-      orderBy: (): MockUser[] => mockUsers.filter(u => !u.valid_until),
+      orderBy: (): MockUser[] => mockUsers.filter((u) => !u.valid_until),
     }),
   }),
-  
+
   insert: () => ({
     values: (data: Partial<MockUser>) => ({
       returning: (): MockUser[] => {
@@ -59,15 +63,17 @@ const mockDb: any = {
     set: (data: Partial<MockUser>) => ({
       where: () => ({
         returning: (): MockUser[] => {
-          const userIndex = mockUsers.findIndex(u => 
-            lastUsernameQuery ? u.username === lastUsernameQuery : !u.valid_until,
+          const userIndex = mockUsers.findIndex((u) =>
+            lastUsernameQuery
+              ? u.username === lastUsernameQuery
+              : !u.valid_until,
           );
-          
+
           if (userIndex >= 0) {
             mockUsers[userIndex] = { ...mockUsers[userIndex], ...data };
             return [mockUsers[userIndex]];
           }
-          
+
           lastUsernameQuery = null;
           return [];
         },
@@ -75,7 +81,9 @@ const mockDb: any = {
     }),
   }),
 
-  transaction: async <T>(callback: (tx: typeof mockDb) => Promise<T>): Promise<T> => {
+  transaction: async <T>(
+    callback: (tx: typeof mockDb) => Promise<T>,
+  ): Promise<T> => {
     return await callback(mockDb);
   },
 };

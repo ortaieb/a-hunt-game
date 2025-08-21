@@ -24,15 +24,18 @@ export class UserModel {
     return await bcrypt.hash(password, this.SALT_ROUNDS);
   }
 
-  static async verifyPassword(password: string, hash: string): Promise<boolean> {
+  static async verifyPassword(
+    password: string,
+    hash: string,
+  ): Promise<boolean> {
     return await bcrypt.compare(password, hash);
   }
 
   static async create(userData: CreateUserData): Promise<User> {
     const db = getDb();
-    
+
     const passwordHash = await this.hashPassword(userData.password);
-    
+
     const [newUser] = await db
       .insert(users)
       .values({
@@ -48,35 +51,28 @@ export class UserModel {
 
   static async findActiveByUsername(username: string): Promise<User | null> {
     const db = getDb();
-    
+
     const [user] = await db
       .select()
       .from(users)
-      .where(
-        and(
-          eq(users.username, username),
-          isNull(users.valid_until),
-        ),
-      )
+      .where(and(eq(users.username, username), isNull(users.valid_until)))
       .limit(1);
 
     return user || null;
   }
 
-  static async update(username: string, userData: UpdateUserData): Promise<User> {
+  static async update(
+    username: string,
+    userData: UpdateUserData,
+  ): Promise<User> {
     const db = getDb();
-    
+
     return await db.transaction(async (tx) => {
       // Find current active record
       const [currentUser] = await tx
         .select()
         .from(users)
-        .where(
-          and(
-            eq(users.username, username),
-            isNull(users.valid_until),
-          ),
-        )
+        .where(and(eq(users.username, username), isNull(users.valid_until)))
         .limit(1);
 
       if (!currentUser) {
@@ -84,13 +80,19 @@ export class UserModel {
       }
 
       // Check if any changes are needed
-      const passwordHash = userData.password 
+      const passwordHash = userData.password
         ? await this.hashPassword(userData.password)
         : currentUser.password_hash;
 
-      const hasChanges = currentUser.nickname !== userData.nickname ||
-                        JSON.stringify(currentUser.roles.sort()) !== JSON.stringify(userData.roles.sort()) ||
-                        (userData.password && !(await this.verifyPassword(userData.password, currentUser.password_hash)));
+      const hasChanges =
+        currentUser.nickname !== userData.nickname ||
+        JSON.stringify(currentUser.roles.sort()) !==
+          JSON.stringify(userData.roles.sort()) ||
+        (userData.password &&
+          !(await this.verifyPassword(
+            userData.password,
+            currentUser.password_hash,
+          )));
 
       if (!hasChanges) {
         throw new Error('No change required');
@@ -100,12 +102,7 @@ export class UserModel {
       await tx
         .update(users)
         .set({ valid_until: new Date() })
-        .where(
-          and(
-            eq(users.username, username),
-            isNull(users.valid_until),
-          ),
-        );
+        .where(and(eq(users.username, username), isNull(users.valid_until)));
 
       // Insert new record (temporal insert)
       const [updatedUser] = await tx
@@ -124,16 +121,11 @@ export class UserModel {
 
   static async delete(username: string): Promise<void> {
     const db = getDb();
-    
+
     const [result] = await db
       .update(users)
       .set({ valid_until: new Date() })
-      .where(
-        and(
-          eq(users.username, username),
-          isNull(users.valid_until),
-        ),
-      )
+      .where(and(eq(users.username, username), isNull(users.valid_until)))
       .returning({ user_id: users.user_id });
 
     if (!result) {
@@ -143,7 +135,7 @@ export class UserModel {
 
   static async getAllActive(): Promise<User[]> {
     const db = getDb();
-    
+
     return await db
       .select()
       .from(users)
