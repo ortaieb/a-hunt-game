@@ -1,14 +1,14 @@
-import express from "express";
+import express from 'express';
 import {
   WaypointModel,
   CreateWaypointSequenceData,
   UpdateWaypointSequenceData,
-} from "../models/Waypoint";
+} from '../models/Waypoint';
 import {
   authenticateToken,
   requireRole,
   AuthenticatedRequest,
-} from "../middleware/auth";
+} from '../middleware/auth';
 
 const router = express.Router();
 
@@ -19,9 +19,9 @@ const isValidWaypointName = (name: string): boolean => {
 
 // Get all active waypoint sequences
 router.get(
-  "/",
+  '/',
   authenticateToken,
-  requireRole("game.admin"),
+  requireRole('game.admin'),
   async (req: AuthenticatedRequest, res) => {
     try {
       const waypointSequences = await WaypointModel.getAllActive();
@@ -36,9 +36,9 @@ router.get(
         })),
       });
     } catch (error) {
-      console.error("Error fetching waypoint sequences:", error);
+      console.error('Error fetching waypoint sequences:', error);
       res.status(500).json({
-        error: "Failed to fetch waypoint sequences",
+        error: 'Failed to fetch waypoint sequences',
       });
     }
   },
@@ -46,15 +46,15 @@ router.get(
 
 // Get specific waypoint sequence by name
 router.get(
-  "/:waypoint_name",
+  '/:waypoint_name',
   authenticateToken,
-  requireRole("game.admin"),
+  requireRole('game.admin'),
   async (req: AuthenticatedRequest, res) => {
     try {
       const { waypoint_name } = req.params;
 
       if (!isValidWaypointName(waypoint_name)) {
-        res.status(400).json({ error: "Invalid waypoint name" });
+        res.status(400).json({ error: 'Invalid waypoint name' });
         return;
       }
 
@@ -62,7 +62,7 @@ router.get(
         await WaypointModel.findActiveByName(waypoint_name);
 
       if (!waypointSequence) {
-        res.status(404).json({ error: "Waypoint sequence not found" });
+        res.status(404).json({ error: 'Waypoint sequence not found' });
         return;
       }
 
@@ -74,9 +74,9 @@ router.get(
         valid_from: waypointSequence.valid_from,
       });
     } catch (error) {
-      console.error("Error fetching waypoint sequence:", error);
+      console.error('Error fetching waypoint sequence:', error);
       res.status(500).json({
-        error: "Failed to fetch waypoint sequence",
+        error: 'Failed to fetch waypoint sequence',
       });
     }
   },
@@ -84,9 +84,9 @@ router.get(
 
 // Create new waypoint sequence
 router.post(
-  "/",
+  '/',
   authenticateToken,
-  requireRole("game.admin"),
+  requireRole('game.admin'),
   async (req: AuthenticatedRequest, res) => {
     try {
       const { waypoint_name, waypoint_description, data } = req.body;
@@ -97,7 +97,7 @@ router.post(
           .status(400)
           .json({
             error:
-              "Missing required fields: waypoint_name, waypoint_description, data",
+              'Missing required fields: waypoint_name, waypoint_description, data',
           });
         return;
       }
@@ -105,17 +105,17 @@ router.post(
       if (!isValidWaypointName(waypoint_name)) {
         res
           .status(400)
-          .json({ error: "waypoint_name must be 1-255 characters long" });
+          .json({ error: 'waypoint_name must be 1-255 characters long' });
         return;
       }
 
       if (
-        typeof waypoint_description !== "string" ||
+        typeof waypoint_description !== 'string' ||
         waypoint_description.length === 0
       ) {
         res
           .status(400)
-          .json({ error: "waypoint_description must be a non-empty string" });
+          .json({ error: 'waypoint_description must be a non-empty string' });
         return;
       }
 
@@ -125,7 +125,7 @@ router.post(
       if (existingWaypoint) {
         res
           .status(409)
-          .json({ error: "Waypoint sequence with this name already exists" });
+          .json({ error: 'Waypoint sequence with this name already exists' });
         return;
       }
 
@@ -144,12 +144,12 @@ router.post(
         data: newWaypointSequence.data,
       });
     } catch (error) {
-      console.error("Error creating waypoint sequence:", error);
+      console.error('Error creating waypoint sequence:', error);
       if (error instanceof Error) {
         // Validation errors from WaypointModel
         res.status(400).json({ error: error.message });
       } else {
-        res.status(500).json({ error: "Failed to create waypoint sequence" });
+        res.status(500).json({ error: 'Failed to create waypoint sequence' });
       }
     }
   },
@@ -157,9 +157,9 @@ router.post(
 
 // Update waypoint sequence
 router.put(
-  "/:waypoint_name",
+  '/:waypoint_name',
   authenticateToken,
-  requireRole("game.admin"),
+  requireRole('game.admin'),
   async (req: AuthenticatedRequest, res) => {
     try {
       const { waypoint_name: urlWaypointName } = req.params;
@@ -171,7 +171,7 @@ router.put(
           .status(400)
           .json({
             error:
-              "Missing required fields: waypoint_name, waypoint_description, data",
+              'Missing required fields: waypoint_name, waypoint_description, data',
           });
         return;
       }
@@ -179,17 +179,17 @@ router.put(
       if (!isValidWaypointName(waypoint_name)) {
         res
           .status(400)
-          .json({ error: "waypoint_name must be 1-255 characters long" });
+          .json({ error: 'waypoint_name must be 1-255 characters long' });
         return;
       }
 
       if (
-        typeof waypoint_description !== "string" ||
+        typeof waypoint_description !== 'string' ||
         waypoint_description.length === 0
       ) {
         res
           .status(400)
-          .json({ error: "waypoint_description must be a non-empty string" });
+          .json({ error: 'waypoint_description must be a non-empty string' });
         return;
       }
 
@@ -197,7 +197,7 @@ router.put(
       if (urlWaypointName !== waypoint_name) {
         res
           .status(400)
-          .json({ error: "URL waypoint_name must match body waypoint_name" });
+          .json({ error: 'URL waypoint_name must match body waypoint_name' });
         return;
       }
 
@@ -219,20 +219,20 @@ router.put(
         data: updatedWaypointSequence.data,
       });
     } catch (error) {
-      console.error("Error updating waypoint sequence:", error);
+      console.error('Error updating waypoint sequence:', error);
       if (error instanceof Error) {
-        if (error.message === "Waypoint sequence not found") {
-          res.status(404).json({ error: "Waypoint sequence not found" });
+        if (error.message === 'Waypoint sequence not found') {
+          res.status(404).json({ error: 'Waypoint sequence not found' });
           return;
         }
-        if (error.message === "No change required") {
-          res.status(400).json({ error: "No change required" });
+        if (error.message === 'No change required') {
+          res.status(400).json({ error: 'No change required' });
           return;
         }
         // Validation errors
         res.status(400).json({ error: error.message });
       } else {
-        res.status(500).json({ error: "Failed to update waypoint sequence" });
+        res.status(500).json({ error: 'Failed to update waypoint sequence' });
       }
     }
   },
@@ -240,31 +240,31 @@ router.put(
 
 // Delete waypoint sequence
 router.delete(
-  "/:waypoint_name",
+  '/:waypoint_name',
   authenticateToken,
-  requireRole("game.admin"),
+  requireRole('game.admin'),
   async (req: AuthenticatedRequest, res) => {
     try {
       const { waypoint_name } = req.params;
 
       if (!isValidWaypointName(waypoint_name)) {
-        res.status(400).json({ error: "Invalid waypoint name" });
+        res.status(400).json({ error: 'Invalid waypoint name' });
         return;
       }
 
       await WaypointModel.delete(waypoint_name);
       res.status(204).send();
     } catch (error) {
-      console.error("Error deleting waypoint sequence:", error);
+      console.error('Error deleting waypoint sequence:', error);
       if (
         error instanceof Error &&
-        error.message === "Waypoint sequence not found"
+        error.message === 'Waypoint sequence not found'
       ) {
-        res.status(404).json({ error: "Waypoint sequence not found" });
+        res.status(404).json({ error: 'Waypoint sequence not found' });
         return;
       }
       res.status(500).json({
-        error: "Failed to delete waypoint sequence",
+        error: 'Failed to delete waypoint sequence',
       });
     }
   },

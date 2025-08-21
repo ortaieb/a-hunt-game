@@ -1,6 +1,12 @@
 import jwt from 'jsonwebtoken';
 import { Response } from 'express';
-import { generateToken, verifyToken, authenticateToken, requireRole, AuthenticatedRequest } from './auth';
+import {
+  generateToken,
+  verifyToken,
+  authenticateToken,
+  requireRole,
+  AuthenticatedRequest,
+} from './auth';
 import { UserModel } from '../models/User';
 import { config } from '../config';
 
@@ -97,7 +103,11 @@ describe('Authentication Middleware', () => {
         valid_until: null,
       });
 
-      await authenticateToken(req as AuthenticatedRequest, res as Response, next);
+      await authenticateToken(
+        req as AuthenticatedRequest,
+        res as Response,
+        next,
+      );
 
       expect(req.user).toEqual({ username, roles, nickname });
       expect(next).toHaveBeenCalled();
@@ -105,20 +115,32 @@ describe('Authentication Middleware', () => {
     });
 
     it('should reject request without token', async () => {
-      await authenticateToken(req as AuthenticatedRequest, res as Response, next);
+      await authenticateToken(
+        req as AuthenticatedRequest,
+        res as Response,
+        next,
+      );
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'request did not include token' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'request did not include token',
+      });
       expect(next).not.toHaveBeenCalled();
     });
 
     it('should reject request with invalid token', async () => {
       req.headers = { 'user-auth-token': 'invalid.token' };
 
-      await authenticateToken(req as AuthenticatedRequest, res as Response, next);
+      await authenticateToken(
+        req as AuthenticatedRequest,
+        res as Response,
+        next,
+      );
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'request carries the wrong token' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'request carries the wrong token',
+      });
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -131,10 +153,16 @@ describe('Authentication Middleware', () => {
       req.headers = { 'user-auth-token': token };
       mockedUserModel.findActiveByUsername.mockResolvedValue(null);
 
-      await authenticateToken(req as AuthenticatedRequest, res as Response, next);
+      await authenticateToken(
+        req as AuthenticatedRequest,
+        res as Response,
+        next,
+      );
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'request carries the wrong token' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'request carries the wrong token',
+      });
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -156,7 +184,11 @@ describe('Authentication Middleware', () => {
         valid_until: null,
       });
 
-      await authenticateToken(req as AuthenticatedRequest, res as Response, next);
+      await authenticateToken(
+        req as AuthenticatedRequest,
+        res as Response,
+        next,
+      );
 
       expect(req.user).toEqual({ username, roles, nickname });
       expect(next).toHaveBeenCalled();
@@ -202,7 +234,9 @@ describe('Authentication Middleware', () => {
       middleware(req as AuthenticatedRequest, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'insufficient permissions' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'insufficient permissions',
+      });
       expect(next).not.toHaveBeenCalled();
     });
 
@@ -211,7 +245,9 @@ describe('Authentication Middleware', () => {
       middleware(req as AuthenticatedRequest, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'request did not include token' });
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'request did not include token',
+      });
       expect(next).not.toHaveBeenCalled();
     });
   });

@@ -28,12 +28,10 @@ describe('Authentication Routes', () => {
       mockedUserModel.findActiveByUsername.mockResolvedValue(mockUser);
       mockedUserModel.verifyPassword.mockResolvedValue(true);
 
-      const response = await request(app)
-        .get('/auth/login')
-        .send({
-          username: 'test@example.com',
-          password: 'validpassword',
-        });
+      const response = await request(app).get('/auth/login').send({
+        username: 'test@example.com',
+        password: 'validpassword',
+      });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('user-auth-token');
@@ -52,12 +50,10 @@ describe('Authentication Routes', () => {
     it('should return 404 for non-existent user', async () => {
       mockedUserModel.findActiveByUsername.mockResolvedValue(null);
 
-      const response = await request(app)
-        .get('/auth/login')
-        .send({
-          username: 'nonexistent@example.com',
-          password: 'password',
-        });
+      const response = await request(app).get('/auth/login').send({
+        username: 'nonexistent@example.com',
+        password: 'password',
+      });
 
       expect(response.status).toBe(404);
       expect(response.body).toEqual({ error: 'User not found' });
@@ -77,37 +73,35 @@ describe('Authentication Routes', () => {
       mockedUserModel.findActiveByUsername.mockResolvedValue(mockUser);
       mockedUserModel.verifyPassword.mockResolvedValue(false);
 
-      const response = await request(app)
-        .get('/auth/login')
-        .send({
-          username: 'test@example.com',
-          password: 'wrongpassword',
-        });
+      const response = await request(app).get('/auth/login').send({
+        username: 'test@example.com',
+        password: 'wrongpassword',
+      });
 
       expect(response.status).toBe(403);
       expect(response.body).toEqual({ error: 'Wrong password' });
     });
 
     it('should return 400 for missing username', async () => {
-      const response = await request(app)
-        .get('/auth/login')
-        .send({
-          password: 'password',
-        });
+      const response = await request(app).get('/auth/login').send({
+        password: 'password',
+      });
 
       expect(response.status).toBe(400);
-      expect(response.body).toEqual({ error: 'Missing required fields: username, password' });
+      expect(response.body).toEqual({
+        error: 'Missing required fields: username, password',
+      });
     });
 
     it('should return 400 for missing password', async () => {
-      const response = await request(app)
-        .get('/auth/login')
-        .send({
-          username: 'test@example.com',
-        });
+      const response = await request(app).get('/auth/login').send({
+        username: 'test@example.com',
+      });
 
       expect(response.status).toBe(400);
-      expect(response.body).toEqual({ error: 'Missing required fields: username, password' });
+      expect(response.body).toEqual({
+        error: 'Missing required fields: username, password',
+      });
     });
 
     it('should return 500 for token creation error', async () => {
@@ -130,12 +124,10 @@ describe('Authentication Routes', () => {
         throw new Error('Token creation failed');
       });
 
-      const response = await request(app)
-        .get('/auth/login')
-        .send({
-          username: 'test@example.com',
-          password: 'validpassword',
-        });
+      const response = await request(app).get('/auth/login').send({
+        username: 'test@example.com',
+        password: 'validpassword',
+      });
 
       expect(response.status).toBe(500);
       expect(response.body).toEqual({ error: 'Error in creating token' });
@@ -184,16 +176,16 @@ describe('Authentication Routes', () => {
     });
 
     it('should return 403 for missing required fields', async () => {
-      const response = await request(app)
-        .post('/hunt/auth/register')
-        .send({
-          username: 'test@example.com',
-          password: 'Password123!',
-          // Missing nickname and roles
-        });
+      const response = await request(app).post('/hunt/auth/register').send({
+        username: 'test@example.com',
+        password: 'Password123!',
+        // Missing nickname and roles
+      });
 
       expect(response.status).toBe(403);
-      expect(response.body).toEqual({ error: 'Missing required fields: username, password, nickname, roles' });
+      expect(response.body).toEqual({
+        error: 'Missing required fields: username, password, nickname, roles',
+      });
     });
 
     it('should return 403 for invalid email format', async () => {
@@ -207,7 +199,9 @@ describe('Authentication Routes', () => {
         });
 
       expect(response.status).toBe(403);
-      expect(response.body).toEqual({ error: 'Username must be a valid email address' });
+      expect(response.body).toEqual({
+        error: 'Username must be a valid email address',
+      });
     });
 
     it('should return 403 for weak password', async () => {
@@ -221,18 +215,19 @@ describe('Authentication Routes', () => {
         });
 
       expect(response.status).toBe(403);
-      expect(response.body).toEqual({ error: 'Password must be at least 8 characters with letters and numbers' });
+      expect(response.body).toEqual({
+        error:
+          'Password must be at least 8 characters with letters and numbers',
+      });
     });
 
     it('should return 403 for invalid roles format', async () => {
-      const response = await request(app)
-        .post('/hunt/auth/register')
-        .send({
-          username: 'test@example.com',
-          password: 'Password123!',
-          nickname: 'Test User',
-          roles: 'not-an-array',
-        });
+      const response = await request(app).post('/hunt/auth/register').send({
+        username: 'test@example.com',
+        password: 'Password123!',
+        nickname: 'Test User',
+        roles: 'not-an-array',
+      });
 
       expect(response.status).toBe(403);
       expect(response.body).toEqual({ error: 'Roles must be an array' });
@@ -280,12 +275,10 @@ describe('Authentication Routes', () => {
       mockedUserModel.findActiveByUsername.mockResolvedValue(mockUser);
       mockedUserModel.verifyPassword.mockResolvedValue(true);
 
-      const response = await request(app)
-        .get('/auth/login')
-        .send({
-          username: 'test@example.com',
-          password: 'validpassword',
-        });
+      const response = await request(app).get('/auth/login').send({
+        username: 'test@example.com',
+        password: 'validpassword',
+      });
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('user-auth-token');

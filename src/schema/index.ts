@@ -1,2 +1,2 @@
-export * from "./users";
-export * from "./waypoints";
+export * from './users';
+export * from './waypoints';

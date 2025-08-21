@@ -1,8 +1,8 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { migrate } from 'drizzle-orm/node-postgres/migrator';
-import { Pool } from 'pg';
-import { config } from './config';
-import * as schema from './schema';
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { Pool } from "pg";
+import { config } from "./config";
+import * as schema from "./schema";
 
 let pool: Pool | null = null;
 let db: ReturnType<typeof drizzle> | null = null;
@@ -40,22 +40,22 @@ export const closePool = async (): Promise<void> => {
 
 export const initializeDatabase = async (): Promise<void> => {
   const database = getDb();
-  
+
   try {
     // In development, use push for instant schema updates
-    if (config.nodeEnv === 'development') {
-      console.log('Development mode: Using schema push for instant updates...');
-      const { execSync } = require('child_process');
-      execSync('npx drizzle-kit push', { stdio: 'inherit' });
+    if (config.nodeEnv === "development") {
+      console.log("Development mode: Using schema push for instant updates...");
+      const { execSync } = require("child_process");
+      execSync("npx drizzle-kit push", { stdio: "inherit" });
     } else {
       // In production, use migrations for safety
-      console.log('Production mode: Running migrations...');
-      await migrate(database, { migrationsFolder: './drizzle' });
+      console.log("Production mode: Running migrations...");
+      await migrate(database, { migrationsFolder: "./drizzle" });
     }
-    
-    console.log('Database schema initialized successfully');
+
+    console.log("Database schema initialized successfully");
   } catch (error) {
-    console.error('Failed to initialize database:', error);
+    console.error("Failed to initialize database:", error);
     throw error;
   }
 };
