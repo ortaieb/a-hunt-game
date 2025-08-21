@@ -143,6 +143,102 @@ describe('Waypoints Routes', () => {
     });
   });
 
+  describe('GET /hunt/manager/waypoints/summary', () => {
+    it('should get waypoint summaries for admin user', async () => {
+      const mockWaypoints = [
+        {
+          waypoints_id: 1,
+          waypoint_name: 'Central Park Tour',
+          waypoint_description: 'A scenic tour of Central Park',
+          data: validWaypointDataInternal,
+          valid_from: new Date(),
+          valid_until: null,
+        },
+        {
+          waypoints_id: 2,
+          waypoint_name: 'City Center Tour',
+          waypoint_description: 'Explore the city center',
+          data: validWaypointDataInternal,
+          valid_from: new Date(),
+          valid_until: null,
+        },
+      ];
+
+      mockedWaypointModel.getAllActive.mockResolvedValue(mockWaypoints);
+
+      const response = await request(app)
+        .get('/hunt/manager/waypoints/summary')
+        .set('user-auth-token', adminToken);
+
+      expect(response.status).toBe(200);
+      expect(response.body.waypoint_summaries).toHaveLength(2);
+      expect(response.body.waypoint_summaries[0]).toEqual({
+        'waypoint-name': 'Central Park Tour',
+        'waypoint-description': 'A scenic tour of Central Park',
+      });
+      expect(response.body.waypoint_summaries[1]).toEqual({
+        'waypoint-name': 'City Center Tour',
+        'waypoint-description': 'Explore the city center',
+      });
+    });
+
+    it('should require authentication', async () => {
+      const response = await request(app).get('/hunt/manager/waypoints/summary');
+
+      expect(response.status).toBe(401);
+      expect(response.body.error).toBe('request did not include token');
+    });
+
+    it('should require game.admin role', async () => {
+      const userToken = generateToken(
+        'user@test.com',
+        ['user'],
+        'Regular User',
+      );
+
+      mockedUserModel.findActiveByUsername.mockResolvedValue({
+        user_id: 2,
+        username: 'user@test.com',
+        password_hash: 'hash',
+        nickname: 'Regular User',
+        roles: ['user'],
+        valid_from: new Date(),
+        valid_until: null,
+      });
+
+      const response = await request(app)
+        .get('/hunt/manager/waypoints/summary')
+        .set('user-auth-token', userToken);
+
+      expect(response.status).toBe(403);
+      expect(response.body.error).toBe('insufficient permissions');
+    });
+
+    it('should return empty array when no waypoints exist', async () => {
+      mockedWaypointModel.getAllActive.mockResolvedValue([]);
+
+      const response = await request(app)
+        .get('/hunt/manager/waypoints/summary')
+        .set('user-auth-token', adminToken);
+
+      expect(response.status).toBe(200);
+      expect(response.body.waypoint_summaries).toEqual([]);
+    });
+
+    it('should handle internal server errors', async () => {
+      mockedWaypointModel.getAllActive.mockRejectedValue(
+        new Error('Database connection failed'),
+      );
+
+      const response = await request(app)
+        .get('/hunt/manager/waypoints/summary')
+        .set('user-auth-token', adminToken);
+
+      expect(response.status).toBe(500);
+      expect(response.body.error).toBe('Failed to fetch waypoint summaries');
+    });
+  });
+
   describe('GET /hunt/manager/waypoints/:waypoint_name', () => {
     it('should get specific waypoint sequence', async () => {
       const mockWaypoint = {

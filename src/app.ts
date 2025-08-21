@@ -1,7 +1,7 @@
-import express, { Request, Response } from "express";
-import userRoutes from "./routes/users";
-import authRoutes from "./routes/auth";
-import waypointRoutes from "./routes/waypoints";
+import express, { Request, Response } from 'express';
+import userRoutes from './routes/users';
+import authRoutes from './routes/auth';
+import waypointRoutes from './routes/waypoints';
 
 const app = express();
 
@@ -20,6 +20,9 @@ app.use("/auth", authRoutes);
 
 // User management routes
 app.use("/hunt/users", userRoutes);
+
+// Waypoints management routes
+app.use('/hunt/manager/waypoints', waypointRoutes);
 
 // Registration route (alternative path as specified in issue)
 app.use("/hunt/auth", authRoutes);

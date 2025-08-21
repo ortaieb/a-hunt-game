@@ -103,3 +103,22 @@
 - Full authentication and authorization integration with existing user management
 - All validation gates pass: 98/98 tests, ESLint clean, TypeScript builds successfully
 - Created Pull Request #13: https://github.com/ortaieb/a-hunt-game/pull/13
+
+### 2025-08-21: Waypoints Summary Endpoint (GitHub Issue #14)
+**Status:** Completed  
+**Description:** Add GET /hunt/manager/waypoints/summary endpoint to return available waypoint sequences
+**Requirements:**
+- ✅ Return list of active waypoint entries (valid_until is null)
+- ✅ Include only waypoint-name and waypoint-description fields
+- ✅ Use kebab-case JSON format via class-transformer decorators
+- ✅ Maintain game.admin authentication requirement
+- ✅ Add comprehensive test coverage
+
+**Implementation Details:**
+- Created WaypointSummary class with @Expose decorators for kebab-case JSON mapping
+- Added GET /hunt/manager/waypoints/summary endpoint with proper authentication
+- Returns simplified response with waypoint_summaries array containing waypoint-name and waypoint-description
+- Comprehensive test suite with 5 new test cases covering all scenarios and error handling
+- Uses class-transformer instanceToPlain() for proper JSON serialization with kebab-case format
+- All validation gates pass: 101/101 tests, ESLint clean, TypeScript builds successfully
+- Created Pull Request #15: https://github.com/ortaieb/a-hunt-game/pull/15

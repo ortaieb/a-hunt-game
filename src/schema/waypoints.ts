@@ -71,3 +71,17 @@ export const waypoints = pgTable(
 
 export type WaypointSequence = typeof waypoints.$inferSelect;
 export type NewWaypointSequence = typeof waypoints.$inferInsert;
+
+// WaypointSummary class for summary endpoint response with class-transformer decorators
+export class WaypointSummary {
+  @Expose({ name: 'waypoint-name' })
+  waypoint_name: string;
+
+  @Expose({ name: 'waypoint-description' })
+  waypoint_description: string;
+
+  constructor() {
+    this.waypoint_name = '';
+    this.waypoint_description = '';
+  }
+}

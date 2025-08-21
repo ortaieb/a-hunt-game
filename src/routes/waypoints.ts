@@ -9,7 +9,7 @@ import {
   requireRole,
   AuthenticatedRequest,
 } from '../middleware/auth';
-import { Waypoint } from '../schema/waypoints';
+import { Waypoint, WaypointSummary } from '../schema/waypoints';
 import { instanceToPlain, plainToClass } from 'class-transformer';
 
 const router = express.Router();
@@ -41,6 +41,34 @@ router.get(
       console.error('Error fetching waypoint sequences:', error);
       res.status(500).json({
         error: 'Failed to fetch waypoint sequences',
+      });
+    }
+  },
+);
+
+// Get summary of available waypoint sequences (names and descriptions only)
+router.get(
+  '/summary',
+  authenticateToken,
+  requireRole('game.admin'),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const waypointSequences = await WaypointModel.getAllActive();
+
+      const summaries = waypointSequences.map((sequence) => {
+        const summary = new WaypointSummary();
+        summary.waypoint_name = sequence.waypoint_name;
+        summary.waypoint_description = sequence.waypoint_description;
+        return instanceToPlain(summary);
+      });
+
+      res.status(200).json({
+        waypoint_summaries: summaries,
+      });
+    } catch (error) {
+      console.error('Error fetching waypoint summaries:', error);
+      res.status(500).json({
+        error: 'Failed to fetch waypoint summaries',
       });
     }
   },
