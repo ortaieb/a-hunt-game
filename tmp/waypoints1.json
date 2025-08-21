@@ -1,0 +1,46 @@
+[
+  {
+    "waypoint_seq_id": 1,
+    "location": {
+      "lat": 38.69372812244212,
+      "long": -9.215001919357597
+    },
+    "radius": 50,
+    "clue": "Belem Tower",
+    "hints": [],
+    "image_subject": "Ponte 25 de Abril"
+  },
+  {
+    "waypoint_seq_id": 2,
+    "location": {
+      "lat": 40.41388862722524,
+      "long": -3.692148978912699
+    },
+    "radius": 50,
+    "clue": "Museo Nacional del Prado",
+    "hints": [],
+    "image_subject": "A Statue of a sitting man"
+  },
+  {
+    "waypoint_seq_id": 3,
+    "location": {
+      "lat": 42.508829583348216,
+      "long": 1.5294605837894832
+    },
+    "radius": 50,
+    "clue": "La Noblesse du Temps",
+    "hints": [],
+    "image_subject": "A distorted clock"
+  },
+  {
+    "waypoint_seq_id": 4,
+    "location": {
+      "lat": 48.85373242012414,
+      "long": 2.3500044785507783
+    },
+    "radius": 100,
+    "clue": "Notre-Dame Cathedral of Paris",
+    "hints": [],
+    "image_subject": "Facade of the Cathedral"
+  }
+]

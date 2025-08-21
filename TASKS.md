@@ -82,3 +82,42 @@
 - Comprehensive test suite with 14 new test cases covering all scenarios and edge cases
 - All validation gates pass: 57/57 tests, ESLint clean, TypeScript builds successfully
 - Created Pull Request #10: https://github.com/ortaieb/a-hunt-game/pull/10
+
+### 2025-08-20: Planned Waypoints Management (GitHub Issue #12)
+**Status:** Completed  
+**Description:** Implement waypoints management system following specification in docs/plans/02-waypoints.md
+**Requirements:**
+- ✅ Design temporal database model for waypoints sequences (waypoints_id, waypoint_name, waypoint_description, data)
+- ✅ Implement CRUD API endpoints with /hunt/manager/waypoints prefix
+- ✅ Add game.admin role requirement for all waypoints management operations
+- ✅ Support GeoLocation structure (lat/long) and waypoint properties (seq_id, location, radius, clue, hints, image_subject)
+- ✅ Comprehensive test suite covering all CRUD operations and error scenarios
+
+**Implementation Details:**
+- Temporal table design with unique(waypoint_name + valid_until) constraint
+- JSON storage for waypoint sequences to maintain order and structure
+- REST endpoints: GET, POST, PUT, DELETE /hunt/manager/waypoints
+- GeoLocation support with floating-point latitude/longitude values
+- Waypoint structure includes sequence ID, location, radius, clue, hints, and image subject requirements
+- Comprehensive validation with 41 new test cases covering all scenarios and edge cases
+- Full authentication and authorization integration with existing user management
+- All validation gates pass: 98/98 tests, ESLint clean, TypeScript builds successfully
+- Created Pull Request #13: https://github.com/ortaieb/a-hunt-game/pull/13
+
+### 2025-08-21: Waypoints Summary Endpoint (GitHub Issue #14)
+**Status:** Completed  
+**Description:** Add GET /hunt/manager/waypoints/summary endpoint to return available waypoint sequences
+**Requirements:**
+- ✅ Return list of active waypoint entries (valid_until is null)
+- ✅ Include only waypoint-name and waypoint-description fields
+- ✅ Use kebab-case JSON format via class-transformer decorators
+- ✅ Maintain game.admin authentication requirement
+- ✅ Add comprehensive test coverage
+
+**Implementation Details:**
+- Created WaypointSummary class with @Expose decorators for kebab-case JSON mapping
+- Added GET /hunt/manager/waypoints/summary endpoint with proper authentication
+- Returns simplified response with waypoint_summaries array containing waypoint-name and waypoint-description
+- Comprehensive test suite with 5 new test cases covering all scenarios and error handling
+- Uses class-transformer instanceToPlain() for proper JSON serialization with kebab-case format
+- All validation gates pass: 101/101 tests, ESLint clean, TypeScript builds successfully
