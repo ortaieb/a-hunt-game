@@ -9,6 +9,8 @@ import {
   json,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
+import { Expose } from 'class-transformer';
+import 'reflect-metadata';
 
 // GeoLocation interface for type safety
 export interface GeoLocation {
@@ -16,14 +18,27 @@ export interface GeoLocation {
   long: number;
 }
 
-// Waypoint interface representing individual waypoint in a sequence
-export interface Waypoint {
+// Waypoint class with class-transformer decorators for JSON serialization
+export class Waypoint {
+  @Expose({ name: 'waypoint-seq-id' })
   waypoint_seq_id: number;
+
   location: GeoLocation;
   radius: number;
   clue: string;
   hints: string[];
+
+  @Expose({ name: 'image-subject' })
   image_subject: string;
+
+  constructor() {
+    this.waypoint_seq_id = 0;
+    this.location = { lat: 0, long: 0 };
+    this.radius = 0;
+    this.clue = '';
+    this.hints = [];
+    this.image_subject = '';
+  }
 }
 
 // Waypoints table schema - stores sequences of waypoints as JSON

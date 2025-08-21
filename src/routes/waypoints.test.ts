@@ -34,7 +34,7 @@ describe('Waypoints Routes', () => {
     });
   });
 
-  const validWaypointData = [
+  const validWaypointDataInternal = [
     {
       waypoint_seq_id: 1,
       location: { lat: 40.7128, long: -74.006 },
@@ -53,6 +53,25 @@ describe('Waypoints Routes', () => {
     },
   ];
 
+  const validWaypointDataJSON = [
+    {
+      'waypoint-seq-id': 1,
+      location: { lat: 40.7128, long: -74.006 },
+      radius: 50,
+      clue: 'Find the tall building with the green roof',
+      hints: ['Look for the spire', 'Near the park'],
+      'image-subject': 'Green roof building',
+    },
+    {
+      'waypoint-seq-id': 2,
+      location: { lat: 40.7589, long: -73.9851 },
+      radius: 30,
+      clue: 'Locate the fountain in the square',
+      hints: ['Center of the plaza'],
+      'image-subject': 'Water fountain',
+    },
+  ];
+
   describe('GET /hunt/manager/waypoints', () => {
     it('should get all waypoint sequences for admin user', async () => {
       const mockWaypoints = [
@@ -60,7 +79,7 @@ describe('Waypoints Routes', () => {
           waypoints_id: 1,
           waypoint_name: 'Central Park Tour',
           waypoint_description: 'A scenic tour of Central Park',
-          data: validWaypointData,
+          data: validWaypointDataInternal,
           valid_from: new Date(),
           valid_until: null,
         },
@@ -68,7 +87,7 @@ describe('Waypoints Routes', () => {
           waypoints_id: 2,
           waypoint_name: 'City Center Tour',
           waypoint_description: 'Explore the city center',
-          data: validWaypointData,
+          data: validWaypointDataInternal,
           valid_from: new Date(),
           valid_until: null,
         },
@@ -86,7 +105,7 @@ describe('Waypoints Routes', () => {
         waypoints_id: 1,
         waypoint_name: 'Central Park Tour',
         waypoint_description: 'A scenic tour of Central Park',
-        data: validWaypointData,
+        data: validWaypointDataJSON,
         valid_from: mockWaypoints[0].valid_from.toISOString(),
       });
     });
@@ -130,7 +149,7 @@ describe('Waypoints Routes', () => {
         waypoints_id: 1,
         waypoint_name: 'Central Park Tour',
         waypoint_description: 'A scenic tour of Central Park',
-        data: validWaypointData,
+        data: validWaypointDataInternal,
         valid_from: new Date(),
         valid_until: null,
       };
@@ -146,7 +165,7 @@ describe('Waypoints Routes', () => {
         waypoints_id: 1,
         waypoint_name: 'Central Park Tour',
         waypoint_description: 'A scenic tour of Central Park',
-        data: validWaypointData,
+        data: validWaypointDataJSON,
         valid_from: mockWaypoint.valid_from.toISOString(),
       });
     });
@@ -180,7 +199,7 @@ describe('Waypoints Routes', () => {
         waypoints_id: 1,
         waypoint_name: 'New Tour',
         waypoint_description: 'A new exciting tour',
-        data: validWaypointData,
+        data: validWaypointDataInternal,
         valid_from: new Date(),
         valid_until: null,
       };
@@ -194,7 +213,7 @@ describe('Waypoints Routes', () => {
         .send({
           waypoint_name: 'New Tour',
           waypoint_description: 'A new exciting tour',
-          data: validWaypointData,
+          data: validWaypointDataJSON,
         });
 
       expect(response.status).toBe(201);
@@ -202,7 +221,7 @@ describe('Waypoints Routes', () => {
         waypoints_id: 1,
         waypoint_name: 'New Tour',
         waypoint_description: 'A new exciting tour',
-        data: validWaypointData,
+        data: validWaypointDataJSON,
       });
     });
 
@@ -228,7 +247,7 @@ describe('Waypoints Routes', () => {
         .send({
           waypoint_name: '', // Empty name
           waypoint_description: 'Test description',
-          data: validWaypointData,
+          data: validWaypointDataJSON,
         });
 
       expect(response.status).toBe(400);
@@ -244,7 +263,7 @@ describe('Waypoints Routes', () => {
         .send({
           waypoint_name: 'Test Tour',
           waypoint_description: '', // Empty description
-          data: validWaypointData,
+          data: validWaypointDataJSON,
         });
 
       expect(response.status).toBe(400);
@@ -261,7 +280,7 @@ describe('Waypoints Routes', () => {
         .send({
           waypoint_name: longName,
           waypoint_description: 'Valid description',
-          data: validWaypointData,
+          data: validWaypointDataJSON,
         });
 
       expect(response.status).toBe(400);
@@ -286,7 +305,7 @@ describe('Waypoints Routes', () => {
         .send({
           waypoint_name: 'Existing Tour',
           waypoint_description: 'Test description',
-          data: validWaypointData,
+          data: validWaypointDataJSON,
         });
 
       expect(response.status).toBe(409);
@@ -303,12 +322,12 @@ describe('Waypoints Routes', () => {
 
       const invalidData = [
         {
-          waypoint_seq_id: 1,
+          'waypoint-seq-id': 1,
           location: { lat: 40.7128, long: -74.006 },
           radius: -5, // Invalid radius
           clue: 'Test clue',
           hints: ['Test hint'],
-          image_subject: 'Test subject',
+          'image-subject': 'Test subject',
         },
       ];
 
@@ -332,7 +351,7 @@ describe('Waypoints Routes', () => {
         waypoints_id: 1,
         waypoint_name: 'Updated Tour',
         waypoint_description: 'Updated description',
-        data: validWaypointData,
+        data: validWaypointDataInternal,
         valid_from: new Date(),
         valid_until: null,
       };
@@ -345,7 +364,7 @@ describe('Waypoints Routes', () => {
         .send({
           waypoint_name: 'Updated Tour',
           waypoint_description: 'Updated description',
-          data: validWaypointData,
+          data: validWaypointDataJSON,
         });
 
       expect(response.status).toBe(200);
@@ -353,7 +372,7 @@ describe('Waypoints Routes', () => {
         waypoints_id: 1,
         waypoint_name: 'Updated Tour',
         waypoint_description: 'Updated description',
-        data: validWaypointData,
+        data: validWaypointDataJSON,
       });
     });
 
@@ -364,7 +383,7 @@ describe('Waypoints Routes', () => {
         .send({
           waypoint_name: 'Body Name', // Different from URL
           waypoint_description: 'Test description',
-          data: validWaypointData,
+          data: validWaypointDataJSON,
         });
 
       expect(response.status).toBe(400);
@@ -384,7 +403,7 @@ describe('Waypoints Routes', () => {
         .send({
           waypoint_name: 'Non-existent',
           waypoint_description: 'Test description',
-          data: validWaypointData,
+          data: validWaypointDataJSON,
         });
 
       expect(response.status).toBe(404);
@@ -402,7 +421,7 @@ describe('Waypoints Routes', () => {
         .send({
           waypoint_name: 'Unchanged Tour',
           waypoint_description: 'Same description',
-          data: validWaypointData,
+          data: validWaypointDataJSON,
         });
 
       expect(response.status).toBe(400);

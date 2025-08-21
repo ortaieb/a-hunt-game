@@ -34,12 +34,9 @@ router.post(
 
       // Validate input
       if (!username || !password || !nickname || !roles) {
-        res
-          .status(403)
-          .json({
-            error:
-              'Missing required fields: username, password, nickname, roles',
-          });
+        res.status(403).json({
+          error: 'Missing required fields: username, password, nickname, roles',
+        });
         return;
       }
 
@@ -51,12 +48,10 @@ router.post(
       }
 
       if (!isValidPassword(password)) {
-        res
-          .status(403)
-          .json({
-            error:
-              'Password must be at least 8 characters with letters and numbers',
-          });
+        res.status(403).json({
+          error:
+            'Password must be at least 8 characters with letters and numbers',
+        });
         return;
       }
 
@@ -135,11 +130,9 @@ router.put(
 
       // Validate input
       if (!username || !nickname || !roles) {
-        res
-          .status(403)
-          .json({
-            error: 'Missing required fields: username, nickname, roles',
-          });
+        res.status(403).json({
+          error: 'Missing required fields: username, nickname, roles',
+        });
         return;
       }
 
@@ -151,12 +144,10 @@ router.put(
       }
 
       if (password && !isValidPassword(password)) {
-        res
-          .status(403)
-          .json({
-            error:
-              'Password must be at least 8 characters with letters and numbers',
-          });
+        res.status(403).json({
+          error:
+            'Password must be at least 8 characters with letters and numbers',
+        });
         return;
       }
 

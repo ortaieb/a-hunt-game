@@ -9,6 +9,8 @@ import {
   requireRole,
   AuthenticatedRequest,
 } from '../middleware/auth';
+import { Waypoint } from '../schema/waypoints';
+import { instanceToPlain, plainToClass } from 'class-transformer';
 
 const router = express.Router();
 
@@ -31,7 +33,7 @@ router.get(
           waypoints_id: sequence.waypoints_id,
           waypoint_name: sequence.waypoint_name,
           waypoint_description: sequence.waypoint_description,
-          data: sequence.data,
+          data: sequence.data.map(waypoint => instanceToPlain(Object.assign(new Waypoint(), waypoint))),
           valid_from: sequence.valid_from,
         })),
       });
@@ -70,7 +72,7 @@ router.get(
         waypoints_id: waypointSequence.waypoints_id,
         waypoint_name: waypointSequence.waypoint_name,
         waypoint_description: waypointSequence.waypoint_description,
-        data: waypointSequence.data,
+        data: waypointSequence.data.map(waypoint => instanceToPlain(Object.assign(new Waypoint(), waypoint))),
         valid_from: waypointSequence.valid_from,
       });
     } catch (error) {
@@ -93,12 +95,10 @@ router.post(
 
       // Validate input
       if (!waypoint_name || !waypoint_description || !data) {
-        res
-          .status(400)
-          .json({
-            error:
-              'Missing required fields: waypoint_name, waypoint_description, data',
-          });
+        res.status(400).json({
+          error:
+            'Missing required fields: waypoint_name, waypoint_description, data',
+        });
         return;
       }
 
@@ -129,10 +129,15 @@ router.post(
         return;
       }
 
+      // Convert kebab-case JSON data to internal format using class-transformer
+      const internalData = (data as Record<string, unknown>[]).map(jsonWaypoint => 
+        plainToClass(Waypoint, jsonWaypoint),
+      );
+
       const waypointData: CreateWaypointSequenceData = {
         waypoint_name,
         waypoint_description,
-        data,
+        data: internalData,
       };
 
       const newWaypointSequence = await WaypointModel.create(waypointData);
@@ -141,7 +146,7 @@ router.post(
         waypoints_id: newWaypointSequence.waypoints_id,
         waypoint_name: newWaypointSequence.waypoint_name,
         waypoint_description: newWaypointSequence.waypoint_description,
-        data: newWaypointSequence.data,
+        data: newWaypointSequence.data.map(waypoint => instanceToPlain(Object.assign(new Waypoint(), waypoint))),
       });
     } catch (error) {
       console.error('Error creating waypoint sequence:', error);
@@ -167,12 +172,10 @@ router.put(
 
       // Validate input
       if (!waypoint_name || !waypoint_description || !data) {
-        res
-          .status(400)
-          .json({
-            error:
-              'Missing required fields: waypoint_name, waypoint_description, data',
-          });
+        res.status(400).json({
+          error:
+            'Missing required fields: waypoint_name, waypoint_description, data',
+        });
         return;
       }
 
@@ -201,10 +204,15 @@ router.put(
         return;
       }
 
+      // Convert kebab-case JSON data to internal format using class-transformer
+      const internalData = (data as Record<string, unknown>[]).map(jsonWaypoint => 
+        plainToClass(Waypoint, jsonWaypoint),
+      );
+
       const waypointData: UpdateWaypointSequenceData = {
         waypoint_name,
         waypoint_description,
-        data,
+        data: internalData,
       };
 
       const updatedWaypointSequence = await WaypointModel.update(
@@ -216,7 +224,7 @@ router.put(
         waypoints_id: updatedWaypointSequence.waypoints_id,
         waypoint_name: updatedWaypointSequence.waypoint_name,
         waypoint_description: updatedWaypointSequence.waypoint_description,
-        data: updatedWaypointSequence.data,
+        data: updatedWaypointSequence.data.map(waypoint => instanceToPlain(Object.assign(new Waypoint(), waypoint))),
       });
     } catch (error) {
       console.error('Error updating waypoint sequence:', error);

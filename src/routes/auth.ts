@@ -76,11 +76,9 @@ router.post('/register', async (req, res) => {
 
     // Validate input
     if (!username || !password || !nickname || !roles) {
-      res
-        .status(403)
-        .json({
-          error: 'Missing required fields: username, password, nickname, roles',
-        });
+      res.status(403).json({
+        error: 'Missing required fields: username, password, nickname, roles',
+      });
       return;
     }
 
@@ -90,12 +88,10 @@ router.post('/register', async (req, res) => {
     }
 
     if (!isValidPassword(password)) {
-      res
-        .status(403)
-        .json({
-          error:
-            'Password must be at least 8 characters with letters and numbers',
-        });
+      res.status(403).json({
+        error:
+          'Password must be at least 8 characters with letters and numbers',
+      });
       return;
     }
 
