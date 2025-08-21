@@ -27,7 +27,9 @@ router.get('/login', async (req, res) => {
 
     // Validate input
     if (!username || !password) {
-      res.status(400).json({ error: 'Missing required fields: username, password' });
+      res
+        .status(400)
+        .json({ error: 'Missing required fields: username, password' });
       return;
     }
 
@@ -39,7 +41,10 @@ router.get('/login', async (req, res) => {
     }
 
     // Verify password
-    const isPasswordValid = await UserModel.verifyPassword(password, user.password_hash);
+    const isPasswordValid = await UserModel.verifyPassword(
+      password,
+      user.password_hash,
+    );
     if (!isPasswordValid) {
       res.status(403).json({ error: 'Wrong password' });
       return;
@@ -51,8 +56,8 @@ router.get('/login', async (req, res) => {
 
       res.status(201).json({
         'user-auth-token': token,
-        'expires_in': config.jwt.expiresIn,
-        'token_type': 'Bearer',
+        expires_in: config.jwt.expiresIn,
+        token_type: 'Bearer',
       });
     } catch (error) {
       console.error('Error creating token:', error);
@@ -71,7 +76,9 @@ router.post('/register', async (req, res) => {
 
     // Validate input
     if (!username || !password || !nickname || !roles) {
-      res.status(403).json({ error: 'Missing required fields: username, password, nickname, roles' });
+      res.status(403).json({
+        error: 'Missing required fields: username, password, nickname, roles',
+      });
       return;
     }
 
@@ -81,7 +88,10 @@ router.post('/register', async (req, res) => {
     }
 
     if (!isValidPassword(password)) {
-      res.status(403).json({ error: 'Password must be at least 8 characters with letters and numbers' });
+      res.status(403).json({
+        error:
+          'Password must be at least 8 characters with letters and numbers',
+      });
       return;
     }
 
@@ -112,8 +122,8 @@ router.post('/register', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating user:', error);
-    res.status(403).json({ 
-      error: error instanceof Error ? error.message : 'Failed to create user', 
+    res.status(403).json({
+      error: error instanceof Error ? error.message : 'Failed to create user',
     });
   }
 });

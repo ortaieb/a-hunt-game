@@ -17,7 +17,11 @@ describe('User Routes', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    adminToken = generateToken('admin@local.domain', ['game.admin'], 'TestUser');
+    adminToken = generateToken(
+      'admin@local.domain',
+      ['game.admin'],
+      'TestUser',
+    );
   });
 
   describe('POST /hunt/users', () => {
@@ -92,7 +96,9 @@ describe('User Routes', () => {
         .send(invalidData);
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toBe('Username must be a valid email address');
+      expect(response.body.error).toBe(
+        'Username must be a valid email address',
+      );
     });
 
     it('should return 403 with weak password', async () => {
@@ -114,7 +120,9 @@ describe('User Routes', () => {
         .send(weakPasswordData);
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toBe('Password must be at least 8 characters with letters and numbers');
+      expect(response.body.error).toBe(
+        'Password must be at least 8 characters with letters and numbers',
+      );
     });
 
     it('should return 403 when user already exists', async () => {
@@ -166,7 +174,9 @@ describe('User Routes', () => {
         .send(incompleteData);
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toBe('Missing required fields: username, password, nickname, roles');
+      expect(response.body.error).toBe(
+        'Missing required fields: username, password, nickname, roles',
+      );
     });
   });
 
@@ -193,8 +203,9 @@ describe('User Routes', () => {
     });
 
     it('should return 401 without auth token', async () => {
-      const response = await request(app)
-        .delete('/hunt/users/test@example.com');
+      const response = await request(app).delete(
+        '/hunt/users/test@example.com',
+      );
 
       expect(response.status).toBe(401);
       expect(response.body.error).toBe('request did not include token');
@@ -261,7 +272,10 @@ describe('User Routes', () => {
         'user-id': 2,
         username: updateData.username,
       });
-      expect(mockedUserModel.update).toHaveBeenCalledWith('test@example.com', updateData);
+      expect(mockedUserModel.update).toHaveBeenCalledWith(
+        'test@example.com',
+        updateData,
+      );
     });
 
     it('should return 401 without auth token', async () => {
@@ -356,7 +370,9 @@ describe('User Routes', () => {
         .send(invalidData);
 
       expect(response.status).toBe(403);
-      expect(response.body.error).toBe('Username must be a valid email address');
+      expect(response.body.error).toBe(
+        'Username must be a valid email address',
+      );
     });
   });
 });
