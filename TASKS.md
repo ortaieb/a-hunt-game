@@ -121,3 +121,4 @@
 - Comprehensive test suite with 5 new test cases covering all scenarios and error handling
 - Uses class-transformer instanceToPlain() for proper JSON serialization with kebab-case format
 - All validation gates pass: 101/101 tests, ESLint clean, TypeScript builds successfully
+- Created Pull Request #15: https://github.com/ortaieb/a-hunt-game/pull/15
