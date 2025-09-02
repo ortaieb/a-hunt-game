@@ -3,6 +3,7 @@ import app from '../app';
 import { WaypointModel } from '../models/Waypoint';
 import { generateToken } from '../middleware/auth';
 import { UserModel } from '../models/User';
+import { uuidV7ForTest } from '../test-support/funcs/uuid';
 
 // Mock dependencies
 jest.mock('../models/Waypoint');
@@ -24,7 +25,7 @@ describe('Waypoints Routes', () => {
 
     // Mock admin user lookup for authentication
     mockedUserModel.findActiveByUsername.mockResolvedValue({
-      user_id: 1,
+      user_id: uuidV7ForTest(0, 1),
       username: 'admin@test.com',
       password_hash: 'hash',
       nickname: 'Admin User',
@@ -118,14 +119,10 @@ describe('Waypoints Routes', () => {
     });
 
     it('should require game.admin role', async () => {
-      const userToken = generateToken(
-        'user@test.com',
-        ['user'],
-        'Regular User',
-      );
+      const userToken = generateToken('user@test.com', ['user'], 'Regular User');
 
       mockedUserModel.findActiveByUsername.mockResolvedValue({
-        user_id: 2,
+        user_id: uuidV7ForTest(0, 2),
         username: 'user@test.com',
         password_hash: 'hash',
         nickname: 'Regular User',
@@ -190,14 +187,10 @@ describe('Waypoints Routes', () => {
     });
 
     it('should require game.admin role', async () => {
-      const userToken = generateToken(
-        'user@test.com',
-        ['user'],
-        'Regular User',
-      );
+      const userToken = generateToken('user@test.com', ['user'], 'Regular User');
 
       mockedUserModel.findActiveByUsername.mockResolvedValue({
-        user_id: 2,
+        user_id: uuidV7ForTest(0, 2),
         username: 'user@test.com',
         password_hash: 'hash',
         nickname: 'Regular User',
@@ -226,9 +219,7 @@ describe('Waypoints Routes', () => {
     });
 
     it('should handle internal server errors', async () => {
-      mockedWaypointModel.getAllActive.mockRejectedValue(
-        new Error('Database connection failed'),
-      );
+      mockedWaypointModel.getAllActive.mockRejectedValue(new Error('Database connection failed'));
 
       const response = await request(app)
         .get('/hunt/manager/waypoints/summary')
@@ -380,9 +371,7 @@ describe('Waypoints Routes', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe(
-        'waypoint_name must be 1-255 characters long',
-      );
+      expect(response.body.error).toBe('waypoint_name must be 1-255 characters long');
     });
 
     it('should reject duplicate waypoint name', async () => {
@@ -405,16 +394,12 @@ describe('Waypoints Routes', () => {
         });
 
       expect(response.status).toBe(409);
-      expect(response.body.error).toBe(
-        'Waypoint sequence with this name already exists',
-      );
+      expect(response.body.error).toBe('Waypoint sequence with this name already exists');
     });
 
     it('should handle validation errors from WaypointModel', async () => {
       mockedWaypointModel.findActiveByName.mockResolvedValue(null);
-      mockedWaypointModel.create.mockRejectedValue(
-        new Error('radius must be a positive number'),
-      );
+      mockedWaypointModel.create.mockRejectedValue(new Error('radius must be a positive number'));
 
       const invalidData = [
         {
@@ -483,15 +468,11 @@ describe('Waypoints Routes', () => {
         });
 
       expect(response.status).toBe(400);
-      expect(response.body.error).toBe(
-        'URL waypoint_name must match body waypoint_name',
-      );
+      expect(response.body.error).toBe('URL waypoint_name must match body waypoint_name');
     });
 
     it('should handle waypoint not found', async () => {
-      mockedWaypointModel.update.mockRejectedValue(
-        new Error('Waypoint sequence not found'),
-      );
+      mockedWaypointModel.update.mockRejectedValue(new Error('Waypoint sequence not found'));
 
       const response = await request(app)
         .put('/hunt/manager/waypoints/Non-existent')
@@ -507,9 +488,7 @@ describe('Waypoints Routes', () => {
     });
 
     it('should handle no change required', async () => {
-      mockedWaypointModel.update.mockRejectedValue(
-        new Error('No change required'),
-      );
+      mockedWaypointModel.update.mockRejectedValue(new Error('No change required'));
 
       const response = await request(app)
         .put('/hunt/manager/waypoints/Unchanged Tour')
@@ -538,9 +517,7 @@ describe('Waypoints Routes', () => {
     });
 
     it('should handle waypoint not found', async () => {
-      mockedWaypointModel.delete.mockRejectedValue(
-        new Error('Waypoint sequence not found'),
-      );
+      mockedWaypointModel.delete.mockRejectedValue(new Error('Waypoint sequence not found'));
 
       const response = await request(app)
         .delete('/hunt/manager/waypoints/Non-existent')
@@ -551,9 +528,7 @@ describe('Waypoints Routes', () => {
     });
 
     it('should handle spaces in waypoint names', async () => {
-      mockedWaypointModel.delete.mockRejectedValue(
-        new Error('Waypoint sequence not found'),
-      );
+      mockedWaypointModel.delete.mockRejectedValue(new Error('Waypoint sequence not found'));
 
       const response = await request(app)
         .delete('/hunt/manager/waypoints/Valid Name') // Space in name is actually valid
@@ -566,9 +541,7 @@ describe('Waypoints Routes', () => {
 
   describe('Error handling', () => {
     it('should handle internal server errors', async () => {
-      mockedWaypointModel.getAllActive.mockRejectedValue(
-        new Error('Database connection failed'),
-      );
+      mockedWaypointModel.getAllActive.mockRejectedValue(new Error('Database connection failed'));
 
       const response = await request(app)
         .get('/hunt/manager/waypoints')

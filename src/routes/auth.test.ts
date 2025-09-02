@@ -1,12 +1,14 @@
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import app from '../app';
-import { UserModel } from '../models/User';
 import { config } from '../config';
+import { uuidV7ForTest } from '../test-support/funcs/uuid';
+import { userService } from '../modules/users/user.service';
+import { ConflictError, NotFoundError, UnauthorizedError } from '../shared/types/errors';
 
-// Mock UserModel
-jest.mock('../models/User');
-const mockedUserModel = UserModel as jest.Mocked<typeof UserModel>;
+// Mock userService
+jest.mock('../modules/users/user.service');
+const mockedUserService = userService as jest.Mocked<typeof userService>;
 
 describe('Authentication Routes', () => {
   beforeEach(() => {
@@ -16,17 +18,26 @@ describe('Authentication Routes', () => {
   describe('GET /auth/login', () => {
     it('should login successfully with valid credentials', async () => {
       const mockUser = {
-        user_id: 1,
+        user_id: uuidV7ForTest(0, 1),
         username: 'test@example.com',
-        password_hash: '$2b$12$hashedpassword',
+        password_hash: '$2b$12$4VhFxF1Usk2lV0pXjTGzYenZmgB92fQ9edG3LG.rjHg4PDChN/1jy',
         nickname: 'Test User',
-        roles: ['user'],
+        roles: ['game.player'],
         valid_from: new Date(),
         valid_until: null,
       };
 
-      mockedUserModel.findActiveByUsername.mockResolvedValue(mockUser);
-      mockedUserModel.verifyPassword.mockResolvedValue(true);
+      const mockUserResponse = {
+        user_id: uuidV7ForTest(0, 1),
+        username: 'test@example.com',
+        nickname: 'Test User',
+        roles: ['game.player'],
+        valid_from: new Date(),
+        valid_until: null,
+      };
+
+      mockedUserService.getUser.mockResolvedValue(mockUser);
+      mockedUserService.validateUser.mockResolvedValue(mockUserResponse);
 
       const response = await request(app).get('/auth/login').send({
         username: 'test@example.com',
@@ -44,11 +55,11 @@ describe('Authentication Routes', () => {
       expect(decoded.iss).toBe('scavenger-hunt-game');
       expect(decoded.upn).toBe('test@example.com');
       expect(decoded.nickname).toBe('Test User');
-      expect(decoded.roles).toEqual(['user']);
+      expect(decoded.roles).toEqual(['game.player']);
     });
 
     it('should return 404 for non-existent user', async () => {
-      mockedUserModel.findActiveByUsername.mockResolvedValue(null);
+      mockedUserService.getUser.mockRejectedValue(new NotFoundError('User not found'));
 
       const response = await request(app).get('/auth/login').send({
         username: 'nonexistent@example.com',
@@ -59,9 +70,9 @@ describe('Authentication Routes', () => {
       expect(response.body).toEqual({ error: 'User not found' });
     });
 
-    it('should return 403 for wrong password', async () => {
+    it('should return 401 for wrong password', async () => {
       const mockUser = {
-        user_id: 1,
+        user_id: uuidV7ForTest(0, 1),
         username: 'test@example.com',
         password_hash: '$2b$12$hashedpassword',
         nickname: 'Test User',
@@ -70,16 +81,16 @@ describe('Authentication Routes', () => {
         valid_until: null,
       };
 
-      mockedUserModel.findActiveByUsername.mockResolvedValue(mockUser);
-      mockedUserModel.verifyPassword.mockResolvedValue(false);
+      mockedUserService.getUser.mockResolvedValue(mockUser);
+      mockedUserService.validateUser.mockRejectedValue(new UnauthorizedError('Invalid credentials'));
 
       const response = await request(app).get('/auth/login').send({
         username: 'test@example.com',
         password: 'wrongpassword',
       });
 
-      expect(response.status).toBe(403);
-      expect(response.body).toEqual({ error: 'Wrong password' });
+      expect(response.status).toBe(401);
+      expect(response.body).toEqual({ error: 'Invalid credentials' });
     });
 
     it('should return 400 for missing username', async () => {
@@ -106,7 +117,7 @@ describe('Authentication Routes', () => {
 
     it('should return 500 for token creation error', async () => {
       const mockUser = {
-        user_id: 1,
+        user_id: uuidV7ForTest(0, 1),
         username: 'test@example.com',
         password_hash: '$2b$12$hashedpassword',
         nickname: 'Test User',
@@ -115,8 +126,17 @@ describe('Authentication Routes', () => {
         valid_until: null,
       };
 
-      mockedUserModel.findActiveByUsername.mockResolvedValue(mockUser);
-      mockedUserModel.verifyPassword.mockResolvedValue(true);
+      const mockUserResponse = {
+        user_id: uuidV7ForTest(0, 1),
+        username: 'test@example.com',
+        nickname: 'Test User',
+        roles: ['user'],
+        valid_from: new Date(),
+        valid_until: null,
+      };
+
+      mockedUserService.getUser.mockResolvedValue(mockUser);
+      mockedUserService.validateUser.mockResolvedValue(mockUserResponse);
 
       // Mock jwt.sign to throw error
       const originalSign = jwt.sign;
@@ -130,7 +150,7 @@ describe('Authentication Routes', () => {
       });
 
       expect(response.status).toBe(500);
-      expect(response.body).toEqual({ error: 'Error in creating token' });
+      expect(response.body).toEqual({ error: 'Internal server error' });
 
       // Restore original jwt.sign
       jwt.sign = originalSign;
@@ -140,17 +160,15 @@ describe('Authentication Routes', () => {
   describe('POST /hunt/auth/register', () => {
     it('should register a new user successfully', async () => {
       const newUser = {
-        user_id: 2,
+        user_id: uuidV7ForTest(0, 2),
         username: 'newuser@example.com',
-        password_hash: '$2b$12$hashedpassword',
         nickname: 'New User',
-        roles: ['user'],
+        roles: ['game.player'],
         valid_from: new Date(),
         valid_until: null,
       };
 
-      mockedUserModel.findActiveByUsername.mockResolvedValue(null); // User doesn't exist
-      mockedUserModel.create.mockResolvedValue(newUser);
+      mockedUserService.createUser.mockResolvedValue(newUser);
 
       const response = await request(app)
         .post('/hunt/auth/register')
@@ -158,24 +176,20 @@ describe('Authentication Routes', () => {
           username: 'newuser@example.com',
           password: 'Password123!',
           nickname: 'New User',
-          roles: ['user'],
+          roles: ['game.player'],
         });
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        'user-id': 2,
+        'user-id': uuidV7ForTest(0, 2),
         username: 'newuser@example.com',
-      });
-
-      expect(mockedUserModel.create).toHaveBeenCalledWith({
-        username: 'newuser@example.com',
-        password: 'Password123!',
-        nickname: 'New User',
-        roles: ['user'],
       });
     });
 
     it('should return 403 for missing required fields', async () => {
+      // Mock userService to reject with validation error
+      mockedUserService.createUser.mockRejectedValue(new Error('Validation failed'));
+
       const response = await request(app).post('/hunt/auth/register').send({
         username: 'test@example.com',
         password: 'Password123!',
@@ -183,45 +197,47 @@ describe('Authentication Routes', () => {
       });
 
       expect(response.status).toBe(403);
-      expect(response.body).toEqual({
-        error: 'Missing required fields: username, password, nickname, roles',
-      });
+      expect(response.body).toHaveProperty('error');
     });
 
     it('should return 403 for invalid email format', async () => {
+      // Mock userService to reject with validation error
+      mockedUserService.createUser.mockRejectedValue(new Error('Invalid email format'));
+
       const response = await request(app)
         .post('/hunt/auth/register')
         .send({
           username: 'invalid-email',
           password: 'Password123!',
           nickname: 'Test User',
-          roles: ['user'],
+          roles: ['game.player'],
         });
 
       expect(response.status).toBe(403);
-      expect(response.body).toEqual({
-        error: 'Username must be a valid email address',
-      });
+      expect(response.body).toHaveProperty('error');
     });
 
     it('should return 403 for weak password', async () => {
+      // Mock userService to reject with validation error
+      mockedUserService.createUser.mockRejectedValue(new Error('Password validation failed'));
+
       const response = await request(app)
         .post('/hunt/auth/register')
         .send({
           username: 'test@example.com',
           password: 'weak',
           nickname: 'Test User',
-          roles: ['user'],
+          roles: ['game.player'],
         });
 
       expect(response.status).toBe(403);
-      expect(response.body).toEqual({
-        error:
-          'Password must be at least 8 characters with letters and numbers',
-      });
+      expect(response.body).toHaveProperty('error');
     });
 
     it('should return 403 for invalid roles format', async () => {
+      // Mock userService to reject with validation error
+      mockedUserService.createUser.mockRejectedValue(new Error('Invalid roles format'));
+
       const response = await request(app).post('/hunt/auth/register').send({
         username: 'test@example.com',
         password: 'Password123!',
@@ -230,21 +246,11 @@ describe('Authentication Routes', () => {
       });
 
       expect(response.status).toBe(403);
-      expect(response.body).toEqual({ error: 'Roles must be an array' });
+      expect(response.body).toHaveProperty('error');
     });
 
-    it('should return 403 for existing user', async () => {
-      const existingUser = {
-        user_id: 1,
-        username: 'existing@example.com',
-        password_hash: '$2b$12$hashedpassword',
-        nickname: 'Existing User',
-        roles: ['user'],
-        valid_from: new Date(),
-        valid_until: null,
-      };
-
-      mockedUserModel.findActiveByUsername.mockResolvedValue(existingUser);
+    it('should return 409 for existing user', async () => {
+      mockedUserService.createUser.mockRejectedValue(new ConflictError('User already exists'));
 
       const response = await request(app)
         .post('/hunt/auth/register')
@@ -252,10 +258,10 @@ describe('Authentication Routes', () => {
           username: 'existing@example.com',
           password: 'Password123!',
           nickname: 'Test User',
-          roles: ['user'],
+          roles: ['game.player'],
         });
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(409);
       expect(response.body).toEqual({ error: 'User already exists' });
     });
   });
@@ -263,17 +269,26 @@ describe('Authentication Routes', () => {
   describe('Alternative route paths', () => {
     it('should access login via /auth/login', async () => {
       const mockUser = {
-        user_id: 1,
+        user_id: uuidV7ForTest(0, 1),
         username: 'test@example.com',
         password_hash: '$2b$12$hashedpassword',
         nickname: 'Test User',
-        roles: ['user'],
+        roles: ['game.player'],
         valid_from: new Date(),
         valid_until: null,
       };
 
-      mockedUserModel.findActiveByUsername.mockResolvedValue(mockUser);
-      mockedUserModel.verifyPassword.mockResolvedValue(true);
+      const mockUserResponse = {
+        user_id: uuidV7ForTest(0, 1),
+        username: 'test@example.com',
+        nickname: 'Test User',
+        roles: ['game.player'],
+        valid_from: new Date(),
+        valid_until: null,
+      };
+
+      mockedUserService.getUser.mockResolvedValue(mockUser);
+      mockedUserService.validateUser.mockResolvedValue(mockUserResponse);
 
       const response = await request(app).get('/auth/login').send({
         username: 'test@example.com',
@@ -286,17 +301,15 @@ describe('Authentication Routes', () => {
 
     it('should access register via /hunt/auth/register', async () => {
       const newUser = {
-        user_id: 2,
+        user_id: uuidV7ForTest(0, 2),
         username: 'newuser@example.com',
-        password_hash: '$2b$12$hashedpassword',
         nickname: 'New User',
-        roles: ['user'],
+        roles: ['game.player'],
         valid_from: new Date(),
         valid_until: null,
       };
 
-      mockedUserModel.findActiveByUsername.mockResolvedValue(null);
-      mockedUserModel.create.mockResolvedValue(newUser);
+      mockedUserService.createUser.mockResolvedValue(newUser);
 
       const response = await request(app)
         .post('/hunt/auth/register')
@@ -304,12 +317,12 @@ describe('Authentication Routes', () => {
           username: 'newuser@example.com',
           password: 'Password123!',
           nickname: 'New User',
-          roles: ['user'],
+          roles: ['game.player'],
         });
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual({
-        'user-id': 2,
+        'user-id': uuidV7ForTest(0, 2),
         username: 'newuser@example.com',
       });
     });

@@ -9,7 +9,7 @@ import {
 } from './auth';
 import { UserModel } from '../models/User';
 import { config } from '../config';
-
+import { uuidV7ForTest } from '../test-support/funcs/uuid';
 // Mock UserModel
 jest.mock('../models/User');
 const mockedUserModel = UserModel as jest.Mocked<typeof UserModel>;
@@ -94,7 +94,7 @@ describe('Authentication Middleware', () => {
       req.headers = { 'user-auth-token': token };
 
       mockedUserModel.findActiveByUsername.mockResolvedValue({
-        user_id: 1,
+        user_id: uuidV7ForTest(0, 1),
         username,
         password_hash: 'hash',
         nickname: 'Test',
@@ -103,11 +103,7 @@ describe('Authentication Middleware', () => {
         valid_until: null,
       });
 
-      await authenticateToken(
-        req as AuthenticatedRequest,
-        res as Response,
-        next,
-      );
+      await authenticateToken(req as AuthenticatedRequest, res as Response, next);
 
       expect(req.user).toEqual({ username, roles, nickname });
       expect(next).toHaveBeenCalled();
@@ -115,11 +111,7 @@ describe('Authentication Middleware', () => {
     });
 
     it('should reject request without token', async () => {
-      await authenticateToken(
-        req as AuthenticatedRequest,
-        res as Response,
-        next,
-      );
+      await authenticateToken(req as AuthenticatedRequest, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({
@@ -131,11 +123,7 @@ describe('Authentication Middleware', () => {
     it('should reject request with invalid token', async () => {
       req.headers = { 'user-auth-token': 'invalid.token' };
 
-      await authenticateToken(
-        req as AuthenticatedRequest,
-        res as Response,
-        next,
-      );
+      await authenticateToken(req as AuthenticatedRequest, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({
@@ -153,11 +141,7 @@ describe('Authentication Middleware', () => {
       req.headers = { 'user-auth-token': token };
       mockedUserModel.findActiveByUsername.mockResolvedValue(null);
 
-      await authenticateToken(
-        req as AuthenticatedRequest,
-        res as Response,
-        next,
-      );
+      await authenticateToken(req as AuthenticatedRequest, res as Response, next);
 
       expect(res.status).toHaveBeenCalledWith(401);
       expect(res.json).toHaveBeenCalledWith({
@@ -175,7 +159,7 @@ describe('Authentication Middleware', () => {
       req.headers = { 'user-auth-token': [token, 'other-token'] };
 
       mockedUserModel.findActiveByUsername.mockResolvedValue({
-        user_id: 1,
+        user_id: uuidV7ForTest(0, 1),
         username,
         password_hash: 'hash',
         nickname: 'Test',
@@ -184,11 +168,7 @@ describe('Authentication Middleware', () => {
         valid_until: null,
       });
 
-      await authenticateToken(
-        req as AuthenticatedRequest,
-        res as Response,
-        next,
-      );
+      await authenticateToken(req as AuthenticatedRequest, res as Response, next);
 
       expect(req.user).toEqual({ username, roles, nickname });
       expect(next).toHaveBeenCalled();

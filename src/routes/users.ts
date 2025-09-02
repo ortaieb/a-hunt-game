@@ -1,10 +1,6 @@
 import express from 'express';
 import { UserModel, CreateUserData, UpdateUserData } from '../models/User';
-import {
-  authenticateToken,
-  requireRole,
-  AuthenticatedRequest,
-} from '../middleware/auth';
+import { authenticateToken, requireRole, AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -41,16 +37,13 @@ router.post(
       }
 
       if (!isValidEmail(username)) {
-        res
-          .status(403)
-          .json({ error: 'Username must be a valid email address' });
+        res.status(403).json({ error: 'Username must be a valid email address' });
         return;
       }
 
       if (!isValidPassword(password)) {
         res.status(403).json({
-          error:
-            'Password must be at least 8 characters with letters and numbers',
+          error: 'Password must be at least 8 characters with letters and numbers',
         });
         return;
       }
@@ -75,7 +68,9 @@ router.post(
       };
 
       const newUser = await UserModel.create(userData);
-
+      if (newUser == null) {
+        throw new Error('user is null');
+      }
       res.status(200).json({
         'user-id': newUser.user_id,
         username: newUser.username,
@@ -137,16 +132,13 @@ router.put(
       }
 
       if (!isValidEmail(username)) {
-        res
-          .status(403)
-          .json({ error: 'Username must be a valid email address' });
+        res.status(403).json({ error: 'Username must be a valid email address' });
         return;
       }
 
       if (password && !isValidPassword(password)) {
         res.status(403).json({
-          error:
-            'Password must be at least 8 characters with letters and numbers',
+          error: 'Password must be at least 8 characters with letters and numbers',
         });
         return;
       }
@@ -158,9 +150,7 @@ router.put(
 
       // URL username should match body username for consistency
       if (urlUsername !== username) {
-        res
-          .status(403)
-          .json({ error: 'URL username must match body username' });
+        res.status(403).json({ error: 'URL username must match body username' });
         return;
       }
 
@@ -172,6 +162,10 @@ router.put(
       };
 
       const updatedUser = await UserModel.update(urlUsername, userData);
+
+      if (updatedUser == null) {
+        throw new Error('User is null');
+      }
 
       res.status(200).json({
         'user-id': updatedUser.user_id,
