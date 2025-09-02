@@ -1,13 +1,13 @@
 import request from 'supertest';
 import app from '../app';
 import { WaypointModel } from '../models/Waypoint';
-import { generateToken } from '../middleware/auth';
-import { UserModel } from '../models/User';
+import { generateToken } from '../shared/middleware/auth';
+import { UserModel } from '../modules/users/user.model';
 import { uuidV7ForTest } from '../test-support/funcs/uuid';
 
 // Mock dependencies
 jest.mock('../models/Waypoint');
-jest.mock('../models/User');
+jest.mock('../modules/users/user.model');
 
 const mockedWaypointModel = WaypointModel as jest.Mocked<typeof WaypointModel>;
 const mockedUserModel = UserModel as jest.Mocked<typeof UserModel>;
@@ -24,7 +24,7 @@ describe('Waypoints Routes', () => {
     jest.clearAllMocks();
 
     // Mock admin user lookup for authentication
-    mockedUserModel.findActiveByUsername.mockResolvedValue({
+    mockedUserModel.findByUsername.mockResolvedValue({
       user_id: uuidV7ForTest(0, 1),
       username: 'admin@test.com',
       password_hash: 'hash',
@@ -121,7 +121,7 @@ describe('Waypoints Routes', () => {
     it('should require game.admin role', async () => {
       const userToken = generateToken('user@test.com', ['user'], 'Regular User');
 
-      mockedUserModel.findActiveByUsername.mockResolvedValue({
+      mockedUserModel.findByUsername.mockResolvedValue({
         user_id: uuidV7ForTest(0, 2),
         username: 'user@test.com',
         password_hash: 'hash',
@@ -189,7 +189,7 @@ describe('Waypoints Routes', () => {
     it('should require game.admin role', async () => {
       const userToken = generateToken('user@test.com', ['user'], 'Regular User');
 
-      mockedUserModel.findActiveByUsername.mockResolvedValue({
+      mockedUserModel.findByUsername.mockResolvedValue({
         user_id: uuidV7ForTest(0, 2),
         username: 'user@test.com',
         password_hash: 'hash',
