@@ -1,4 +1,5 @@
 import { UserModel, CreateUserData } from './User';
+import { uuidV7ForTest } from '../test-support/funcs/uuid';
 
 // Mock the db module with specific implementations
 jest.mock('../db', () => ({
@@ -27,11 +28,9 @@ describe('UserModel (Drizzle)', () => {
     jest.clearAllMocks();
 
     // Mock UserModel.hashPassword with salting simulation
-    jest
-      .spyOn(UserModel, 'hashPassword')
-      .mockImplementation(async (password: string) => {
-        return `hashed_${password}_${++hashCounter}`;
-      });
+    jest.spyOn(UserModel, 'hashPassword').mockImplementation(async (password: string) => {
+      return `hashed_${password}_${++hashCounter}`;
+    });
 
     // Mock UserModel.verifyPassword
     jest
@@ -41,32 +40,26 @@ describe('UserModel (Drizzle)', () => {
       });
 
     // Mock UserModel.create
-    jest
-      .spyOn(UserModel, 'create')
-      .mockImplementation(async (userData: CreateUserData) => {
-        const hashedPassword = await UserModel.hashPassword(userData.password);
-        const newUser = {
-          user_id: mockUserIdCounter++,
-          username: userData.username,
-          password_hash: hashedPassword,
-          nickname: userData.nickname,
-          roles: userData.roles,
-          valid_from: new Date(),
-          valid_until: null,
-        };
-        mockUsers.push(newUser);
-        return newUser;
-      });
+    jest.spyOn(UserModel, 'create').mockImplementation(async (userData: CreateUserData) => {
+      const hashedPassword = await UserModel.hashPassword(userData.password);
+      const newUser = {
+        user_id: uuidV7ForTest(0, mockUserIdCounter++),
+        username: userData.username,
+        password_hash: hashedPassword,
+        nickname: userData.nickname,
+        roles: userData.roles,
+        valid_from: new Date(),
+        valid_until: null,
+      };
+      mockUsers.push(newUser);
+      return newUser;
+    });
 
     // Mock UserModel.findActiveByUsername
-    jest
-      .spyOn(UserModel, 'findActiveByUsername')
-      .mockImplementation(async (username: string) => {
-        const user = mockUsers.find(
-          (u) => u.username === username && !u.valid_until,
-        );
-        return user || null;
-      });
+    jest.spyOn(UserModel, 'findActiveByUsername').mockImplementation(async (username: string) => {
+      const user = mockUsers.find((u) => u.username === username && !u.valid_until);
+      return user || null;
+    });
 
     // Mock UserModel.getAllActive
     jest.spyOn(UserModel, 'getAllActive').mockImplementation(async () => {
@@ -85,13 +78,13 @@ describe('UserModel (Drizzle)', () => {
 
       const user = await UserModel.create(userData);
 
-      expect(user.username).toBe(userData.username);
-      expect(user.nickname).toBe(userData.nickname);
-      expect(user.roles).toEqual(userData.roles);
-      expect(user.password_hash).not.toBe(userData.password);
-      expect(user.user_id).toBeDefined();
-      expect(user.valid_from).toBeDefined();
-      expect(user.valid_until).toBeNull();
+      expect(user?.username).toBe(userData.username);
+      expect(user?.nickname).toBe(userData.nickname);
+      expect(user?.roles).toEqual(userData.roles);
+      expect(user?.password_hash).not.toBe(userData.password);
+      expect(user?.user_id).toBeDefined();
+      expect(user?.valid_from).toBeDefined();
+      expect(user?.valid_until).toBeNull();
     });
   });
 
@@ -108,14 +101,12 @@ describe('UserModel (Drizzle)', () => {
       const foundUser = await UserModel.findActiveByUsername(userData.username);
 
       expect(foundUser).toBeDefined();
-      expect(foundUser?.user_id).toBe(createdUser.user_id);
+      expect(foundUser?.user_id).toBe(createdUser?.user_id);
       expect(foundUser?.username).toBe(userData.username);
     });
 
     it('should return null for non-existent user', async () => {
-      const foundUser = await UserModel.findActiveByUsername(
-        'nonexistent@example.com',
-      );
+      const foundUser = await UserModel.findActiveByUsername('nonexistent@example.com');
       expect(foundUser).toBeNull();
     });
   });

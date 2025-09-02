@@ -1,18 +1,10 @@
-import {
-  pgTable,
-  serial,
-  varchar,
-  text,
-  timestamp,
-  uniqueIndex,
-  index,
-} from 'drizzle-orm/pg-core';
+import { pgTable, varchar, text, timestamp, uniqueIndex, index, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 export const users = pgTable(
   'users',
   {
-    user_id: serial('user_id').primaryKey(),
+    user_id: uuid('user_id').primaryKey(),
     username: varchar('username', { length: 255 }).notNull(),
     password_hash: varchar('password_hash', { length: 255 }).notNull(),
     nickname: varchar('nickname', { length: 255 }).notNull(),
@@ -20,9 +12,7 @@ export const users = pgTable(
       .array()
       .notNull()
       .default(sql`ARRAY[]::text[]`),
-    valid_from: timestamp('valid_from', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    valid_from: timestamp('valid_from', { withTimezone: true }).notNull().defaultNow(),
     valid_until: timestamp('valid_until', { withTimezone: true }),
   },
   (table) => ({
