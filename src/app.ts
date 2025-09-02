@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import userRoutes from './routes/users';
+import userRoutes from './modules/users/user.routes';
 import authRoutes from './routes/auth';
 import waypointRoutes from './routes/waypoints';
 
@@ -14,9 +14,6 @@ app.get('/health', (_req: Request, res: Response): void => {
 app.get('/ready', (_req: Request, res: Response): void => {
   res.status(400).json({ status: 'Bad Request', message: 'Service not ready' });
 });
-
-// Authentication routes
-app.use('/auth', authRoutes);
 
 // User management routes
 app.use('/hunt/users', userRoutes);

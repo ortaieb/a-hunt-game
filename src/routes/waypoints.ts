@@ -4,11 +4,7 @@ import {
   CreateWaypointSequenceData,
   UpdateWaypointSequenceData,
 } from '../models/Waypoint';
-import {
-  authenticateToken,
-  requireRole,
-  AuthenticatedRequest,
-} from '../middleware/auth';
+import { authenticateToken, requireRole, AuthenticatedRequest } from '../shared/middleware/auth';
 import { Waypoint, WaypointSummary } from '../schema/waypoints';
 import { instanceToPlain, plainToClass } from 'class-transformer';
 
@@ -33,7 +29,9 @@ router.get(
           waypoints_id: sequence.waypoints_id,
           waypoint_name: sequence.waypoint_name,
           waypoint_description: sequence.waypoint_description,
-          data: sequence.data.map(waypoint => instanceToPlain(Object.assign(new Waypoint(), waypoint))),
+          data: sequence.data.map((waypoint) =>
+            instanceToPlain(Object.assign(new Waypoint(), waypoint)),
+          ),
           valid_from: sequence.valid_from,
         })),
       });
@@ -88,8 +86,7 @@ router.get(
         return;
       }
 
-      const waypointSequence =
-        await WaypointModel.findActiveByName(waypoint_name);
+      const waypointSequence = await WaypointModel.findActiveByName(waypoint_name);
 
       if (!waypointSequence) {
         res.status(404).json({ error: 'Waypoint sequence not found' });
@@ -100,7 +97,9 @@ router.get(
         waypoints_id: waypointSequence.waypoints_id,
         waypoint_name: waypointSequence.waypoint_name,
         waypoint_description: waypointSequence.waypoint_description,
-        data: waypointSequence.data.map(waypoint => instanceToPlain(Object.assign(new Waypoint(), waypoint))),
+        data: waypointSequence.data.map((waypoint) =>
+          instanceToPlain(Object.assign(new Waypoint(), waypoint)),
+        ),
         valid_from: waypointSequence.valid_from,
       });
     } catch (error) {
@@ -124,41 +123,30 @@ router.post(
       // Validate input
       if (!waypoint_name || !waypoint_description || !data) {
         res.status(400).json({
-          error:
-            'Missing required fields: waypoint_name, waypoint_description, data',
+          error: 'Missing required fields: waypoint_name, waypoint_description, data',
         });
         return;
       }
 
       if (!isValidWaypointName(waypoint_name)) {
-        res
-          .status(400)
-          .json({ error: 'waypoint_name must be 1-255 characters long' });
+        res.status(400).json({ error: 'waypoint_name must be 1-255 characters long' });
         return;
       }
 
-      if (
-        typeof waypoint_description !== 'string' ||
-        waypoint_description.length === 0
-      ) {
-        res
-          .status(400)
-          .json({ error: 'waypoint_description must be a non-empty string' });
+      if (typeof waypoint_description !== 'string' || waypoint_description.length === 0) {
+        res.status(400).json({ error: 'waypoint_description must be a non-empty string' });
         return;
       }
 
       // Check if waypoint sequence already exists
-      const existingWaypoint =
-        await WaypointModel.findActiveByName(waypoint_name);
+      const existingWaypoint = await WaypointModel.findActiveByName(waypoint_name);
       if (existingWaypoint) {
-        res
-          .status(409)
-          .json({ error: 'Waypoint sequence with this name already exists' });
+        res.status(409).json({ error: 'Waypoint sequence with this name already exists' });
         return;
       }
 
       // Convert kebab-case JSON data to internal format using class-transformer
-      const internalData = (data as Record<string, unknown>[]).map(jsonWaypoint => 
+      const internalData = (data as Record<string, unknown>[]).map((jsonWaypoint) =>
         plainToClass(Waypoint, jsonWaypoint),
       );
 
@@ -174,7 +162,9 @@ router.post(
         waypoints_id: newWaypointSequence.waypoints_id,
         waypoint_name: newWaypointSequence.waypoint_name,
         waypoint_description: newWaypointSequence.waypoint_description,
-        data: newWaypointSequence.data.map(waypoint => instanceToPlain(Object.assign(new Waypoint(), waypoint))),
+        data: newWaypointSequence.data.map((waypoint) =>
+          instanceToPlain(Object.assign(new Waypoint(), waypoint)),
+        ),
       });
     } catch (error) {
       console.error('Error creating waypoint sequence:', error);
@@ -201,39 +191,29 @@ router.put(
       // Validate input
       if (!waypoint_name || !waypoint_description || !data) {
         res.status(400).json({
-          error:
-            'Missing required fields: waypoint_name, waypoint_description, data',
+          error: 'Missing required fields: waypoint_name, waypoint_description, data',
         });
         return;
       }
 
       if (!isValidWaypointName(waypoint_name)) {
-        res
-          .status(400)
-          .json({ error: 'waypoint_name must be 1-255 characters long' });
+        res.status(400).json({ error: 'waypoint_name must be 1-255 characters long' });
         return;
       }
 
-      if (
-        typeof waypoint_description !== 'string' ||
-        waypoint_description.length === 0
-      ) {
-        res
-          .status(400)
-          .json({ error: 'waypoint_description must be a non-empty string' });
+      if (typeof waypoint_description !== 'string' || waypoint_description.length === 0) {
+        res.status(400).json({ error: 'waypoint_description must be a non-empty string' });
         return;
       }
 
       // URL waypoint name should match body waypoint name for consistency
       if (urlWaypointName !== waypoint_name) {
-        res
-          .status(400)
-          .json({ error: 'URL waypoint_name must match body waypoint_name' });
+        res.status(400).json({ error: 'URL waypoint_name must match body waypoint_name' });
         return;
       }
 
       // Convert kebab-case JSON data to internal format using class-transformer
-      const internalData = (data as Record<string, unknown>[]).map(jsonWaypoint => 
+      const internalData = (data as Record<string, unknown>[]).map((jsonWaypoint) =>
         plainToClass(Waypoint, jsonWaypoint),
       );
 
@@ -243,16 +223,15 @@ router.put(
         data: internalData,
       };
 
-      const updatedWaypointSequence = await WaypointModel.update(
-        urlWaypointName,
-        waypointData,
-      );
+      const updatedWaypointSequence = await WaypointModel.update(urlWaypointName, waypointData);
 
       res.status(200).json({
         waypoints_id: updatedWaypointSequence.waypoints_id,
         waypoint_name: updatedWaypointSequence.waypoint_name,
         waypoint_description: updatedWaypointSequence.waypoint_description,
-        data: updatedWaypointSequence.data.map(waypoint => instanceToPlain(Object.assign(new Waypoint(), waypoint))),
+        data: updatedWaypointSequence.data.map((waypoint) =>
+          instanceToPlain(Object.assign(new Waypoint(), waypoint)),
+        ),
       });
     } catch (error) {
       console.error('Error updating waypoint sequence:', error);
@@ -292,10 +271,7 @@ router.delete(
       res.status(204).send();
     } catch (error) {
       console.error('Error deleting waypoint sequence:', error);
-      if (
-        error instanceof Error &&
-        error.message === 'Waypoint sequence not found'
-      ) {
+      if (error instanceof Error && error.message === 'Waypoint sequence not found') {
         res.status(404).json({ error: 'Waypoint sequence not found' });
         return;
       }

@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 import { config } from '../../config';
-import { UserModel } from '../../models/User';
+import { UserModel } from '../../modules/users/user.model';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -60,7 +60,7 @@ export const authenticateToken = async (
     const decoded = verifyToken(token);
 
     // Verify user still exists and is active
-    const user = await UserModel.findActiveByUsername(decoded.upn);
+    const user = await UserModel.findByUsername(decoded.upn);
     if (!user) {
       res.status(401).json({ error: 'request carries the wrong token' });
       return;

@@ -147,7 +147,7 @@ export class UserModel {
     const result = await db
       .select({ count: sql<number>`count(*)` })
       .from(users)
-      .where(eq(users.username, username.toLowerCase()));
+      .where(and(eq(users.username, username.toLowerCase()), isNull(users.valid_until)));
 
     return result[0].count > 0;
   }
