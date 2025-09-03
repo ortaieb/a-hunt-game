@@ -1,13 +1,13 @@
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
-import app from '../app';
-import { config } from '../config';
-import { uuidV7ForTest } from '../test-support/funcs/uuid';
-import { userService } from '../modules/users/user.service';
-import { ConflictError, NotFoundError, UnauthorizedError } from '../shared/types/errors';
+import app from '../../app';
+import { config } from '../../config';
+import { uuidV7ForTest } from '../../test-support/funcs/uuid';
+import { userService } from '../users/user.service';
+import { ConflictError, NotFoundError, UnauthorizedError } from '../../shared/types/errors';
 
 // Mock userService
-jest.mock('../modules/users/user.service');
+jest.mock('../users/user.service');
 const mockedUserService = userService as jest.Mocked<typeof userService>;
 
 describe('Authentication Routes', () => {
@@ -82,7 +82,9 @@ describe('Authentication Routes', () => {
       };
 
       mockedUserService.getUser.mockResolvedValue(mockUser);
-      mockedUserService.validateUser.mockRejectedValue(new UnauthorizedError('Invalid credentials'));
+      mockedUserService.validateUser.mockRejectedValue(
+        new UnauthorizedError('Invalid credentials'),
+      );
 
       const response = await request(app).get('/hunt/auth/login').send({
         username: 'test@example.com',

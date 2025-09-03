@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import userRoutes from './modules/users/user.routes';
-import authRoutes from './routes/auth';
+import authRoutes from './modules/auths/auth.routes';
 import waypointRoutes from './routes/waypoints';
 
 const app = express();

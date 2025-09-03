@@ -1,9 +1,8 @@
 import express from 'express';
-// import { UserModel, CreateUserData } from '../models/User';
-import { userService } from '../modules/users/user.service';
-import { generateToken } from '../shared/middleware/auth';
-import { config } from '../config';
-import { AppError } from '../shared/types/errors';
+import { userService } from '../users/user.service';
+import { generateToken } from '../../shared/middleware/auth';
+import { config } from '../../config';
+import { AppError } from '../../shared/types/errors';
 
 const router = express.Router();
 
