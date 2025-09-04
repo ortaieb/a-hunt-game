@@ -1,6 +1,5 @@
 import {
   pgTable,
-  serial,
   varchar,
   text,
   timestamp,
@@ -81,3 +80,5 @@ export class WaypointSummary {
     this.waypoint_description = '';
   }
 }
+
+export type WaypointsRecord = typeof waypoints.$inferSelect;
