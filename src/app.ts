@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
 import userRoutes from './modules/users/user.routes';
 import authRoutes from './modules/auths/auth.routes';
-import waypointRoutes from './routes/waypoints';
+import waypointRoutes from './modules/waypoints/waypoint.routes';
+import { errorHandler } from './shared/middleware/asyncHandler';
 
 const app = express();
 
@@ -18,13 +19,12 @@ app.get('/ready', (_req: Request, res: Response): void => {
 // User management routes
 app.use('/hunt/users', userRoutes);
 
-// Waypoints management routes
-app.use('/hunt/manager/waypoints', waypointRoutes);
-
 // Registration route (alternative path as specified in issue)
 app.use('/hunt/auth', authRoutes);
 
 // Waypoints management routes
 app.use('/hunt/manager/waypoints', waypointRoutes);
+
+app.use(errorHandler);
 
 export default app;
