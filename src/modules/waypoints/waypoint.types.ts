@@ -15,15 +15,3 @@ export interface UpdateWaypointSequenceData {
   waypoint_description: string;
   data: Waypoint[];
 }
-
-// export interface WaypointSequenceFilters {
-//   includeDeleted?: boolean;
-//   waypoint_name?: string;
-// }
-
-// export interface WaypointSequenceSummary {
-//   waypoints_id: string;
-//   waypoint_name: string;
-//   waypoint_description: string;
-//   valid_from: Date;
-// }
