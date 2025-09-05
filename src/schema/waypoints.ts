@@ -1,12 +1,12 @@
 import {
   pgTable,
-  serial,
   varchar,
   text,
   timestamp,
   uniqueIndex,
   index,
   json,
+  uuid,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { Expose } from 'class-transformer';
@@ -45,13 +45,11 @@ export class Waypoint {
 export const waypoints = pgTable(
   'waypoints',
   {
-    waypoints_id: serial('waypoints_id').primaryKey(),
+    waypoints_id: uuid('waypoints_id').primaryKey(),
     waypoint_name: varchar('waypoint_name', { length: 255 }).notNull(),
     waypoint_description: text('waypoint_description').notNull(),
     data: json('data').$type<Waypoint[]>().notNull(), // JSON array of waypoints
-    valid_from: timestamp('valid_from', { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    valid_from: timestamp('valid_from', { withTimezone: true }).notNull().defaultNow(),
     valid_until: timestamp('valid_until', { withTimezone: true }),
   },
   (table) => ({
@@ -69,9 +67,6 @@ export const waypoints = pgTable(
   }),
 );
 
-export type WaypointSequence = typeof waypoints.$inferSelect;
-export type NewWaypointSequence = typeof waypoints.$inferInsert;
-
 // WaypointSummary class for summary endpoint response with class-transformer decorators
 export class WaypointSummary {
   @Expose({ name: 'waypoint-name' })
@@ -85,3 +80,5 @@ export class WaypointSummary {
     this.waypoint_description = '';
   }
 }
+
+export type WaypointsRecord = typeof waypoints.$inferSelect;

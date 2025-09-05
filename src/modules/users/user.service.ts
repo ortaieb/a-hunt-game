@@ -90,16 +90,6 @@ export class UserService {
     }
     return history.map((user) => this.toResponse(user));
   }
-
-  // async verifyCredentials(username: string, password: string): Promise<UserResponse | null> {
-  //   const isValid = await UserModel.verifyPassword(username, password);
-  //   if (!isValid) {
-  //     return null;
-  //   }
-
-  //   const user = await UserModel.findByUsername(username);
-  //   return user ? this.toResponse(user) : null;
-  // }
 }
 
 export const userService = new UserService();
