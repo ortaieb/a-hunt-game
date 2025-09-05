@@ -52,7 +52,7 @@ router.delete(
   requireRole('game.admin'),
   validate(deleteWaypointSequenceSchema),
   asyncHandler(async (req: Request, res: Response) => {
-    await waypointService.createWaypointSequence(req.body);
+    await waypointService.deleteWaypointSequence(req.params.waypoint_name);
     res.status(204).send();
   }),
 );
