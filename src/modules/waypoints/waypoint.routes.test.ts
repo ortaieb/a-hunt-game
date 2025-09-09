@@ -728,7 +728,7 @@ describe('Waypoint Routes', () => {
 
         // The service layer validation should catch this mismatch and throw an error
         mockedWaypointService.updateWaypointSequence.mockRejectedValue(
-          new ValidationError('URL waypoint_name must match body waypoint_name')
+          new ValidationError('URL waypoint_name must match body waypoint_name'),
         );
 
         const response = await request(app)

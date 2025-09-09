@@ -155,7 +155,7 @@ describe('Waypoint Validator Schemas', () => {
           ...validCreateData,
           data: [{ 
             ...validWaypoint, 
-            location: { lat: 91, long: -74.0060 }
+            location: { lat: 91, long: -74.0060 },
           }],
         };
         const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
@@ -171,7 +171,7 @@ describe('Waypoint Validator Schemas', () => {
           ...validCreateData,
           data: [{ 
             ...validWaypoint, 
-            location: { lat: 40.7128, long: 181 }
+            location: { lat: 40.7128, long: 181 },
           }],
         };
         const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
@@ -336,7 +336,7 @@ describe('Waypoint Validator Schemas', () => {
           body: { 
             waypoint_name: '',  // invalid body
             waypoint_description: '',
-            data: []
+            data: [],
           },
         };
         const result = updateWaypointSequenceSchema.safeParse(input);
@@ -479,8 +479,8 @@ describe('Waypoint Validator Schemas', () => {
         const input = { 
           query: { 
             includeDeleted: false, 
-            waypoint_name: 'test-waypoint' 
-          } 
+            waypoint_name: 'test-waypoint', 
+          }, 
         };
         const result = listWaypointSequencesSchema.safeParse(input);
         
