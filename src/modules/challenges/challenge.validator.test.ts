@@ -88,7 +88,7 @@ describe('Challenge Validators', () => {
         } catch (error) {
           expect(error).toBeInstanceOf(z.ZodError);
           expect((error as z.ZodError).issues[0].message).toBe(
-            'Challenge-Name should not be less than 3 characters'
+            'Challenge-Name should not be less than 3 characters',
           );
         }
       });
@@ -110,7 +110,7 @@ describe('Challenge Validators', () => {
         } catch (error) {
           expect(error).toBeInstanceOf(z.ZodError);
           expect((error as z.ZodError).issues[0].message).toBe(
-            'Challenge-Name should not be more than 32 characters'
+            'Challenge-Name should not be more than 32 characters',
           );
         }
       });
@@ -161,7 +161,7 @@ describe('Challenge Validators', () => {
         } catch (error) {
           expect(error).toBeInstanceOf(z.ZodError);
           expect((error as z.ZodError).issues[0].message).toBe(
-            'Challenge description should not be more than 255 characters'
+            'Challenge description should not be more than 255 characters',
           );
         }
       });
@@ -304,7 +304,7 @@ describe('Challenge Validators', () => {
         } catch (error) {
           expect(error).toBeInstanceOf(z.ZodError);
           expect((error as z.ZodError).issues[0].message).toBe(
-            'Duration cannot be negative value'
+            'Duration cannot be negative value',
           );
         }
       });

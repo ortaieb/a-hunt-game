@@ -40,7 +40,7 @@ export const createChallengeSchema = z.object({
         startTime: z.string().datetime({ offset: true }),
         duration: z.number().min(0, 'Duration cannot be negative value'),
         invitedUsers: z.array(emailSchema).optional(),
-      })
+      }),
     ),
 });
 
@@ -59,7 +59,7 @@ export const challengeWaypointSchema = z.object({
           return val.charAt(14) === '7';
         }, 'Must be a UUIDv7 format'),
         waypointsRef: z.string(),
-      })
+      }),
     ),
 });
 
@@ -78,7 +78,7 @@ export const challengeParticipantsSchema = z.object({
           return val.charAt(14) === '7';
         }, 'Must be a UUIDv7 format'),
         invitedUsers: z.array(emailSchema).optional(),
-      })
+      }),
     ),
 });
 
