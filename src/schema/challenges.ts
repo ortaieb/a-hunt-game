@@ -7,8 +7,8 @@ import {
   index,
   foreignKey,
   uuid,
-  numeric,
   pgEnum,
+  integer,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { users } from './users';
@@ -27,7 +27,7 @@ export const challenges = pgTable(
         onUpdate: 'no action',
       }),
     start_time: timestamp('challenge_start_time', { withTimezone: true }).notNull(),
-    duration: numeric('challenge_duration').notNull().default('90'),
+    duration: integer('challenge_duration').notNull().default(90),
     valid_from: timestamp('valid_from', { withTimezone: true }).notNull().defaultNow(),
     valid_until: timestamp('valid_until', { withTimezone: true }),
   },
@@ -46,12 +46,10 @@ export const challenges = pgTable(
   }),
 );
 
-export const challengeParticipantState = pgEnum('participant_state', [
-  'PENDING',
-  'INVITED',
-  'ACCEPTED',
-  'REJECTED',
-]);
+export const PARTICIPANT_STATES = ['PENDING', 'INVITED', 'ACCEPTED', 'REJECTED'] as const;
+
+export const challengeParticipantState = pgEnum('participant_state', PARTICIPANT_STATES);
+export type ChallengeParticipantState = (typeof PARTICIPANT_STATES)[number];
 
 export const challengeParticipants = pgTable(
   'challenge_participants',
