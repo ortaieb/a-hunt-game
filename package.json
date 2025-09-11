@@ -13,7 +13,7 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "typecheck": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate:pg",
+    "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push:pg",
     "db:migrate": "tsx src/scripts/migrate.ts",
     "db:studio": "drizzle-kit studio",
