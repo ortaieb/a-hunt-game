@@ -1,6 +1,11 @@
 import { AppError, NotFoundError } from '../../shared/types/errors';
 import { ChallengeModel } from './challenge.model';
-import { Challenge, ChallengeParticipantResponse, ChallengeResponse } from './challenge.type';
+import {
+  Challenge,
+  ChallengeParticipantResponse,
+  ChallengeParticipantsData,
+  ChallengeResponse,
+} from './challenge.type';
 import { CreateChallengeInput } from './challenge.validator';
 
 export class ChallengeService {
@@ -9,12 +14,27 @@ export class ChallengeService {
     return challengeResponse;
   }
 
+  async activeChallenges(): Promise<ChallengeResponse[]> {
+    return await ChallengeModel.allChallenges();
+  }
+
   async getChallenge(challengeId: string): Promise<ChallengeResponse> {
     const result = await ChallengeModel.challengeById(challengeId);
     if (!result) {
       throw new NotFoundError(`Challenge [${challengeId}] was not found`);
     }
     return result;
+  }
+
+  async getParticipant(participantId: string): Promise<ChallengeParticipantResponse> {
+    return await ChallengeModel.findByParticipantId(participantId);
+  }
+
+  async getParticipantByChallengeAndUsername(
+    challengeId: string,
+    username: string,
+  ): Promise<ChallengeParticipantResponse> {
+    return await ChallengeModel.findParticipantByChallengeAndUser(challengeId, username);
   }
 
   async getParticipantsByChallengeId(challengeId: string): Promise<ChallengeParticipantResponse[]> {
@@ -75,4 +95,16 @@ export class ChallengeService {
       return newParticipant[0];
     }
   }
+
+  async inviteParticipants(
+    participantsData: ChallengeParticipantsData,
+  ): Promise<ChallengeParticipantResponse[]> {
+    const invitedParticipants = participantsData.participants.map((part) =>
+      this.inviteParticipant(participantsData.challengeId, part),
+    );
+
+    return Promise.all(invitedParticipants);
+  }
 }
+
+export const challengeService = new ChallengeService();

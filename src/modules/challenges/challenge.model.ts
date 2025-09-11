@@ -17,6 +17,10 @@ import { DatabaseError } from 'pg';
 import { ConflictError, NotFoundError } from '../../shared/types/errors';
 
 export class ChallengeModel {
+  static async allChallenges(): Promise<ChallengeResponse[]> {
+    return await db.select().from(challenges).where(isNull(challenges.valid_until));
+  }
+
   static async challengeById(challengeId: string): Promise<ChallengeResponse | undefined> {
     const result = await db
       .select()
