@@ -122,7 +122,7 @@ export class ChallengeModel {
       .where(
         and(
           eq(challengeParticipants.challenge_id, challengeId),
-          eq(challengeParticipants.user_name, username),
+          eq(challengeParticipants.username, username),
           isNull(challengeParticipants.valid_until),
         ),
       )
@@ -172,7 +172,7 @@ export class ChallengeModel {
       challenge_participant_id: uuidv7(),
       challenge_participant_inst_id: uuidv7(),
       challenge_id: participantsData.challengeId,
-      user_name: userName,
+      username: userName,
       participant_name: '',
       state: 'PENDING' as const,
       valid_from: new Date(),
@@ -222,7 +222,7 @@ export class ChallengeModel {
         challenge_participant_id: currentInstance[0].challenge_participant_id,
         challenge_participant_inst_id: uuidv7(),
         challenge_id: currentInstance[0].challenge_id,
-        user_name: currentInstance[0].user_name,
+        username: currentInstance[0].username,
         participant_name: updateStateData.participantName ?? currentInstance[0].participant_name,
         state: updateStateData.state ?? currentInstance[0].state,
         valid_from: now,

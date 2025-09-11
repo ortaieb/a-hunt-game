@@ -83,7 +83,7 @@ export const challengeParticipantsSchema = z.object({
             // Check if it's UUIDv7 format (version 7 in the 13th character)
             return val.charAt(14) === '7';
           }, 'Must be a UUIDv7 format'),
-        invitedUsers: z.array(emailSchema).optional(),
+        participants: z.array(emailSchema).optional(),
       }),
     ),
 });

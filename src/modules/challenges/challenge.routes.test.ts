@@ -49,7 +49,7 @@ describe('Challenge Routes', () => {
   const mockParticipant = {
     challenge_participant_id: 'participant-1',
     challenge_id: 'test-challenge-id',
-    user_name: 'user1@example.com',
+    username: 'user1@example.com',
     participant_name: 'User One',
     state: 'PENDING' as const,
     valid_from: new Date('2024-01-01T00:00:00Z'),
@@ -72,7 +72,7 @@ describe('Challenge Routes', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Mock UserModel for authentication
     mockedUserModel.findByUsername.mockResolvedValue({
       user_id: 'admin-user-id',
@@ -96,10 +96,12 @@ describe('Challenge Routes', () => {
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(200);
-        expect(response.body).toEqual(mockChallenges.map(challenge => ({
-          ...challenge,
-          start_time: challenge.start_time.toISOString()
-        })));
+        expect(response.body).toEqual(
+          mockChallenges.map((challenge) => ({
+            ...challenge,
+            start_time: challenge.start_time.toISOString(),
+          })),
+        );
         expect(mockedChallengeService.activeChallenges).toHaveBeenCalledTimes(1);
       });
 
@@ -120,7 +122,9 @@ describe('Challenge Routes', () => {
         const response = await request(app).get('/hunt/challenges');
 
         expect(response.status).toBe(401);
-        expect(response.body).toEqual({ error: 'request did not include token' });
+        expect(response.body).toEqual({
+          error: 'request did not include token',
+        });
         expect(mockedChallengeService.activeChallenges).not.toHaveBeenCalled();
       });
 
@@ -140,13 +144,17 @@ describe('Challenge Routes', () => {
           .set('user-auth-token', 'invalid-token');
 
         expect(response.status).toBe(401);
-        expect(response.body).toEqual({ error: 'request carries the wrong token' });
+        expect(response.body).toEqual({
+          error: 'request carries the wrong token',
+        });
       });
     });
 
     describe('Service Layer Errors', () => {
       it('should return 500 for service layer database error', async () => {
-        mockedChallengeService.activeChallenges.mockRejectedValue(new Error('Database connection failed'));
+        mockedChallengeService.activeChallenges.mockRejectedValue(
+          new Error('Database connection failed'),
+        );
 
         const response = await request(app)
           .get('/hunt/challenges')
@@ -170,7 +178,7 @@ describe('Challenge Routes', () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
           ...mockChallenge,
-          start_time: mockChallenge.start_time.toISOString()
+          start_time: mockChallenge.start_time.toISOString(),
         });
         expect(mockedChallengeService.getChallenge).toHaveBeenCalledWith('test-challenge-id');
       });
@@ -178,7 +186,9 @@ describe('Challenge Routes', () => {
 
     describe('Error Cases', () => {
       it('should return 404 when challenge not found', async () => {
-        mockedChallengeService.getChallenge.mockRejectedValue(new NotFoundError('Challenge not found'));
+        mockedChallengeService.getChallenge.mockRejectedValue(
+          new NotFoundError('Challenge not found'),
+        );
 
         const response = await request(app)
           .get('/hunt/challenges/nonexistent-challenge')
@@ -233,15 +243,15 @@ describe('Challenge Routes', () => {
         expect(response.status).toBe(201);
         expect(response.body).toEqual({
           ...createdChallenge,
-          start_time: createdChallenge.start_time.toISOString()
+          start_time: createdChallenge.start_time.toISOString(),
         });
         expect(mockedChallengeService.createChallenge).toHaveBeenCalledWith(
           expect.objectContaining({
-            'challenge-name': 'Adventure Hunt',
-            'challenge-desc': 'A thrilling adventure challenge',
-            'waypoints-ref': 'central-park-waypoints',
+            challengeName: 'Adventure Hunt',
+            challengeDesc: 'A thrilling adventure challenge',
+            waypointsRef: 'central-park-waypoints',
             duration: 120,
-            'invited-users': ['user1@example.com', 'user2@example.com'],
+            invitedUsers: ['user1@example.com', 'user2@example.com'],
           }),
         );
       });
@@ -267,7 +277,7 @@ describe('Challenge Routes', () => {
         expect(response.status).toBe(201);
         expect(response.body).toEqual({
           ...createdChallenge,
-          start_time: createdChallenge.start_time.toISOString()
+          start_time: createdChallenge.start_time.toISOString(),
         });
       });
     });
@@ -337,7 +347,9 @@ describe('Challenge Routes', () => {
 
     describe('Service Layer Errors', () => {
       it('should return 409 for duplicate challenge name', async () => {
-        mockedChallengeService.createChallenge.mockRejectedValue(new ConflictError('Challenge already exists'));
+        mockedChallengeService.createChallenge.mockRejectedValue(
+          new ConflictError('Challenge already exists'),
+        );
 
         const response = await request(app)
           .post('/hunt/challenges')
@@ -349,7 +361,9 @@ describe('Challenge Routes', () => {
       });
 
       it('should return 500 for service layer database error', async () => {
-        mockedChallengeService.createChallenge.mockRejectedValue(new Error('Database constraint violation'));
+        mockedChallengeService.createChallenge.mockRejectedValue(
+          new Error('Database constraint violation'),
+        );
 
         const response = await request(app)
           .post('/hunt/challenges')
@@ -363,9 +377,7 @@ describe('Challenge Routes', () => {
 
     describe('Authorization', () => {
       it('should return 401 for missing token', async () => {
-        const response = await request(app)
-          .post('/hunt/challenges')
-          .send(mockCreateChallengeInput);
+        const response = await request(app).post('/hunt/challenges').send(mockCreateChallengeInput);
 
         expect(response.status).toBe(401);
         expect(mockedChallengeService.createChallenge).not.toHaveBeenCalled();
@@ -386,7 +398,10 @@ describe('Challenge Routes', () => {
   describe('POST /:challengeId', () => {
     describe('Happy Path', () => {
       it('should update existing challenge successfully', async () => {
-        const updatedChallenge = { ...mockChallenge, challenge_desc: 'Updated description' };
+        const updatedChallenge = {
+          ...mockChallenge,
+          challenge_desc: 'Updated description',
+        };
         mockedChallengeService.updateChallenge.mockResolvedValue(updatedChallenge);
 
         const response = await request(app)
@@ -397,17 +412,17 @@ describe('Challenge Routes', () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
           ...updatedChallenge,
-          start_time: updatedChallenge.start_time.toISOString()
+          start_time: updatedChallenge.start_time.toISOString(),
         });
         expect(mockedChallengeService.updateChallenge).toHaveBeenCalledWith(
           'test-challenge-id',
           expect.objectContaining({
-            'challenge-name': mockCreateChallengeInput.challengeName,
-            'challenge-desc': mockCreateChallengeInput.challengeDesc,
-            'waypoints-ref': mockCreateChallengeInput.waypointsRef,
-            'start-time': expect.any(Date),
+            challengeName: mockCreateChallengeInput.challengeName,
+            challengeDesc: mockCreateChallengeInput.challengeDesc,
+            waypointsRef: mockCreateChallengeInput.waypointsRef,
+            startTime: expect.any(Date),
             duration: mockCreateChallengeInput.duration,
-            'invited-users': mockCreateChallengeInput.invitedUsers,
+            invitedUsers: mockCreateChallengeInput.invitedUsers,
           }),
         );
       });
@@ -415,7 +430,9 @@ describe('Challenge Routes', () => {
 
     describe('Error Cases', () => {
       it('should return 404 when challenge not found for update', async () => {
-        mockedChallengeService.updateChallenge.mockRejectedValue(new NotFoundError('Challenge not found'));
+        mockedChallengeService.updateChallenge.mockRejectedValue(
+          new NotFoundError('Challenge not found'),
+        );
 
         const response = await request(app)
           .post('/hunt/challenges/nonexistent-challenge')
@@ -452,7 +469,10 @@ describe('Challenge Routes', () => {
   describe('GET /:challengeId/participants', () => {
     describe('Happy Path', () => {
       it('should return all participants for a challenge', async () => {
-        const mockParticipants = [mockParticipant, { ...mockParticipant, challenge_participant_id: 'participant-2' }];
+        const mockParticipants = [
+          mockParticipant,
+          { ...mockParticipant, challenge_participant_id: 'participant-2' },
+        ];
         mockedChallengeService.getParticipantsByChallengeId.mockResolvedValue(mockParticipants);
 
         const response = await request(app)
@@ -460,11 +480,15 @@ describe('Challenge Routes', () => {
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(200);
-        expect(response.body).toEqual(mockParticipants.map(participant => ({
-          ...participant,
-          valid_from: participant.valid_from.toISOString()
-        })));
-        expect(mockedChallengeService.getParticipantsByChallengeId).toHaveBeenCalledWith('test-challenge-id');
+        expect(response.body).toEqual(
+          mockParticipants.map((participant) => ({
+            ...participant,
+            valid_from: participant.valid_from.toISOString(),
+          })),
+        );
+        expect(mockedChallengeService.getParticipantsByChallengeId).toHaveBeenCalledWith(
+          'test-challenge-id',
+        );
       });
 
       it('should return empty array when no participants found', async () => {
@@ -481,7 +505,9 @@ describe('Challenge Routes', () => {
 
     describe('Error Cases', () => {
       it('should return 500 for service layer error', async () => {
-        mockedChallengeService.getParticipantsByChallengeId.mockRejectedValue(new Error('Database error'));
+        mockedChallengeService.getParticipantsByChallengeId.mockRejectedValue(
+          new Error('Database error'),
+        );
 
         const response = await request(app)
           .get('/hunt/challenges/test-challenge-id/participants')
@@ -516,7 +542,7 @@ describe('Challenge Routes', () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
           ...mockParticipant,
-          valid_from: mockParticipant.valid_from.toISOString()
+          valid_from: mockParticipant.valid_from.toISOString(),
         });
         expect(mockedChallengeService.getParticipant).toHaveBeenCalledWith('participant-1');
       });
@@ -524,7 +550,10 @@ describe('Challenge Routes', () => {
 
     describe('Error Cases', () => {
       it('should return 404 when participant is in different challenge', async () => {
-        const wrongChallengeParticipant = { ...mockParticipant, challenge_id: 'different-challenge-id' };
+        const wrongChallengeParticipant = {
+          ...mockParticipant,
+          challenge_id: 'different-challenge-id',
+        };
         mockedChallengeService.getParticipant.mockResolvedValue(wrongChallengeParticipant);
 
         const response = await request(app)
@@ -564,7 +593,9 @@ describe('Challenge Routes', () => {
   describe('GET /:challengeId/participants/byUser/:username', () => {
     describe('Happy Path', () => {
       it('should return participant by username for specific challenge', async () => {
-        mockedChallengeService.getParticipantByChallengeAndUsername.mockResolvedValue(mockParticipant);
+        mockedChallengeService.getParticipantByChallengeAndUsername.mockResolvedValue(
+          mockParticipant,
+        );
 
         const response = await request(app)
           .get('/hunt/challenges/test-challenge-id/participants/byUser/user1@example.com')
@@ -573,7 +604,7 @@ describe('Challenge Routes', () => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual({
           ...mockParticipant,
-          valid_from: mockParticipant.valid_from.toISOString()
+          valid_from: mockParticipant.valid_from.toISOString(),
         });
         expect(mockedChallengeService.getParticipantByChallengeAndUsername).toHaveBeenCalledWith(
           'test-challenge-id',
@@ -595,7 +626,9 @@ describe('Challenge Routes', () => {
 
     describe('Error Cases', () => {
       it('should return 500 for service layer error', async () => {
-        mockedChallengeService.getParticipantByChallengeAndUsername.mockRejectedValue(new Error('Database error'));
+        mockedChallengeService.getParticipantByChallengeAndUsername.mockRejectedValue(
+          new Error('Database error'),
+        );
 
         const response = await request(app)
           .get('/hunt/challenges/test-challenge-id/participants/byUser/user1@example.com')
@@ -623,7 +656,11 @@ describe('Challenge Routes', () => {
       it('should invite participants to challenge successfully', async () => {
         const invitedParticipants = [
           mockParticipant,
-          { ...mockParticipant, challenge_participant_id: 'participant-2', user_name: 'user2@example.com' },
+          {
+            ...mockParticipant,
+            challenge_participant_id: 'participant-2',
+            username: 'user2@example.com',
+          },
         ];
         mockedChallengeService.inviteParticipants.mockResolvedValue(invitedParticipants);
 
@@ -633,13 +670,15 @@ describe('Challenge Routes', () => {
           .send(mockChallengeParticipantsInput);
 
         expect(response.status).toBe(200);
-        expect(response.body).toEqual(invitedParticipants.map(participant => ({
-          ...participant,
-          valid_from: participant.valid_from.toISOString()
-        })));
+        expect(response.body).toEqual(
+          invitedParticipants.map((participant) => ({
+            ...participant,
+            valid_from: participant.valid_from.toISOString(),
+          })),
+        );
         expect(mockedChallengeService.inviteParticipants).toHaveBeenCalledWith({
-          'challenge-id': mockChallengeParticipantsInput.challengeId,
-          'invited-users': mockChallengeParticipantsInput.invitedUsers,
+          challengeId: mockChallengeParticipantsInput.challengeId,
+          invitedUsers: mockChallengeParticipantsInput.invitedUsers,
         });
       });
 
@@ -658,10 +697,12 @@ describe('Challenge Routes', () => {
           .send(kebabCaseInput);
 
         expect(response.status).toBe(200);
-        expect(response.body).toEqual(invitedParticipants.map(participant => ({
-          ...participant,
-          valid_from: participant.valid_from.toISOString()
-        })));
+        expect(response.body).toEqual(
+          invitedParticipants.map((participant) => ({
+            ...participant,
+            valid_from: participant.valid_from.toISOString(),
+          })),
+        );
       });
     });
 
@@ -685,7 +726,7 @@ describe('Challenge Routes', () => {
       it('should return 400 for invalid challenge ID format', async () => {
         const invalidInput = {
           challengeId: '01234567-89ab-4def-8123-456789abcdef', // UUIDv4, not UUIDv7
-          invitedUsers: ['user1@example.com'],
+          participants: ['user1@example.com'],
         };
 
         const response = await request(app)
@@ -700,7 +741,7 @@ describe('Challenge Routes', () => {
       it('should return 400 for invalid email formats in invited users', async () => {
         const invalidInput = {
           challengeId: '01234567-89ab-7def-8123-456789abcdef', // UUIDv7 format
-          invitedUsers: ['invalid-email', 'another-invalid'],
+          participants: ['invalid-email', 'another-invalid'],
         };
 
         const response = await request(app)
@@ -715,7 +756,9 @@ describe('Challenge Routes', () => {
 
     describe('Service Layer Errors', () => {
       it('should return 409 for participant already exists', async () => {
-        mockedChallengeService.inviteParticipants.mockRejectedValue(new ConflictError('Participant already exists'));
+        mockedChallengeService.inviteParticipants.mockRejectedValue(
+          new ConflictError('Participant already exists'),
+        );
 
         const response = await request(app)
           .post('/hunt/challenges/test-challenge-id/inviteParticipants')
@@ -727,7 +770,9 @@ describe('Challenge Routes', () => {
       });
 
       it('should return 500 for service layer database error', async () => {
-        mockedChallengeService.inviteParticipants.mockRejectedValue(new Error('Database constraint violation'));
+        mockedChallengeService.inviteParticipants.mockRejectedValue(
+          new Error('Database constraint violation'),
+        );
 
         const response = await request(app)
           .post('/hunt/challenges/test-challenge-id/inviteParticipants')
@@ -784,13 +829,13 @@ describe('Challenge Routes', () => {
       expect(getResponse.status).toBe(200);
       expect(getResponse.body).toEqual({
         ...mockChallenge,
-        start_time: mockChallenge.start_time.toISOString()
+        start_time: mockChallenge.start_time.toISOString(),
       });
     });
 
     it('should maintain consistent error handling across endpoints', async () => {
       const dbError = new Error('Database unavailable');
-      
+
       mockedChallengeService.activeChallenges.mockRejectedValue(dbError);
       mockedChallengeService.getChallenge.mockRejectedValue(dbError);
       mockedChallengeService.createChallenge.mockRejectedValue(dbError);
@@ -798,15 +843,17 @@ describe('Challenge Routes', () => {
       const endpoints = [
         { method: 'get', path: '/hunt/challenges' },
         { method: 'get', path: '/hunt/challenges/test-id' },
-        { method: 'post', path: '/hunt/challenges', body: mockCreateChallengeInput },
+        {
+          method: 'post',
+          path: '/hunt/challenges',
+          body: mockCreateChallengeInput,
+        },
       ];
 
       for (const endpoint of endpoints) {
         let response;
         if (endpoint.method === 'get') {
-          response = await request(app)
-            .get(endpoint.path)
-            .set('user-auth-token', mockAdminToken);
+          response = await request(app).get(endpoint.path).set('user-auth-token', mockAdminToken);
         } else {
           response = await request(app)
             .post(endpoint.path)

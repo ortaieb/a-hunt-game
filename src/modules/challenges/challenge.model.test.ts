@@ -55,7 +55,7 @@ describe('ChallengeModel', () => {
     challenge_participant_id: 'test-participant-id',
     challenge_participant_inst_id: 'test-participant-inst-id',
     challenge_id: 'test-challenge-id',
-    user_name: 'user@example.com',
+    username: 'user@example.com',
     participant_name: 'John Doe',
     state: 'ACCEPTED',
     valid_from: new Date('2024-08-01T00:00:00Z'),
@@ -316,10 +316,14 @@ describe('ChallengeModel', () => {
 
       it('should throw ConflictError for duplicate challenge name (23505)', async () => {
         // Arrange
-        const duplicateError = new DatabaseError('duplicate key value violates unique constraint', 0, 'error');
+        const duplicateError = new DatabaseError(
+          'duplicate key value violates unique constraint',
+          0,
+          'error',
+        );
         duplicateError.code = '23505';
         duplicateError.constraint = 'idx_challenges_challengename';
-        
+
         const mockQuery = {
           values: jest.fn().mockReturnThis(),
           returning: jest.fn().mockRejectedValue(duplicateError),
@@ -327,7 +331,9 @@ describe('ChallengeModel', () => {
         mockDb.insert.mockReturnValue(mockQuery);
 
         // Act & Assert
-        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(ConflictError);
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
+          ConflictError,
+        );
         await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
           'Challenge already exists (constraint: idx_challenges_challengename)',
         );
@@ -335,10 +341,14 @@ describe('ChallengeModel', () => {
 
       it('should throw ConflictError for invalid waypoint reference (23503)', async () => {
         // Arrange
-        const foreignKeyError = new DatabaseError('insert or update on table violates foreign key constraint', 0, 'error');
+        const foreignKeyError = new DatabaseError(
+          'insert or update on table violates foreign key constraint',
+          0,
+          'error',
+        );
         foreignKeyError.code = '23503';
         foreignKeyError.constraint = 'challenges_waypoints_ref_fkey';
-        
+
         const mockQuery = {
           values: jest.fn().mockReturnThis(),
           returning: jest.fn().mockRejectedValue(foreignKeyError),
@@ -346,7 +356,9 @@ describe('ChallengeModel', () => {
         mockDb.insert.mockReturnValue(mockQuery);
 
         // Act & Assert
-        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(ConflictError);
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
+          ConflictError,
+        );
         await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
           'Invalid reference in challenge (constraint: challenges_waypoints_ref_fkey)',
         );
@@ -354,10 +366,14 @@ describe('ChallengeModel', () => {
 
       it('should throw ConflictError for duplicate challenge ID constraint (23505)', async () => {
         // Arrange
-        const duplicateIdError = new DatabaseError('duplicate key value violates unique constraint', 0, 'error');
+        const duplicateIdError = new DatabaseError(
+          'duplicate key value violates unique constraint',
+          0,
+          'error',
+        );
         duplicateIdError.code = '23505';
         duplicateIdError.constraint = 'idx_challenges_challengeid_active';
-        
+
         const mockQuery = {
           values: jest.fn().mockReturnThis(),
           returning: jest.fn().mockRejectedValue(duplicateIdError),
@@ -365,7 +381,9 @@ describe('ChallengeModel', () => {
         mockDb.insert.mockReturnValue(mockQuery);
 
         // Act & Assert
-        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(ConflictError);
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
+          ConflictError,
+        );
         await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
           'Challenge already exists (constraint: idx_challenges_challengeid_active)',
         );
@@ -375,7 +393,7 @@ describe('ChallengeModel', () => {
         // Arrange
         const genericError = new DatabaseError('Some other database error', 0, 'error');
         genericError.code = '42000'; // SQL syntax error code
-        
+
         const mockQuery = {
           values: jest.fn().mockReturnThis(),
           returning: jest.fn().mockRejectedValue(genericError),
@@ -383,7 +401,9 @@ describe('ChallengeModel', () => {
         mockDb.insert.mockReturnValue(mockQuery);
 
         // Act & Assert
-        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(DatabaseError);
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
+          DatabaseError,
+        );
         await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
           'Some other database error',
         );
@@ -392,7 +412,7 @@ describe('ChallengeModel', () => {
       it('should re-throw non-database errors unchanged', async () => {
         // Arrange
         const nonDbError = new Error('Some application error');
-        
+
         const mockQuery = {
           values: jest.fn().mockReturnThis(),
           returning: jest.fn().mockRejectedValue(nonDbError),
@@ -403,7 +423,9 @@ describe('ChallengeModel', () => {
         await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
           'Some application error',
         );
-        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.not.toThrow(ConflictError);
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.not.toThrow(
+          ConflictError,
+        );
       });
 
       it('should throw error when database connection fails', async () => {
@@ -480,7 +502,9 @@ describe('ChallengeModel', () => {
         // Assert
         expect(result.challenge_name).toBe('Updated Adventure Hunt');
         expect(mockDb.transaction).toHaveBeenCalledTimes(1);
-        expect(mockUpdate.set).toHaveBeenCalledWith({ valid_until: expect.any(Date) });
+        expect(mockUpdate.set).toHaveBeenCalledWith({
+          valid_until: expect.any(Date),
+        });
         expect(mockUpdate.where).toHaveBeenCalledWith(expect.any(Object));
         expect(mockInsert.values).toHaveBeenCalledWith({
           challenge_id: challengeId,
@@ -685,7 +709,9 @@ describe('ChallengeModel', () => {
 
         // Assert
         expect(mockDb.update).toHaveBeenCalledWith(expect.any(Object)); // challenges table
-        expect(mockUpdate.set).toHaveBeenCalledWith({ valid_until: expect.any(Date) });
+        expect(mockUpdate.set).toHaveBeenCalledWith({
+          valid_until: expect.any(Date),
+        });
 
         const setCallArgs = mockUpdate.set.mock.calls[0][0];
         expect(setCallArgs.valid_until).toBeInstanceOf(Date);
@@ -916,7 +942,10 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act
-        const result = await ChallengeModel.findParticipantByChallengeAndUser(challengeId, username);
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(
+          challengeId,
+          username,
+        );
 
         // Assert
         expect(result).toEqual(sampleChallengeParticipant);
@@ -938,7 +967,10 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act
-        const result = await ChallengeModel.findParticipantByChallengeAndUser(challengeId, nonExistentUsername);
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(
+          challengeId,
+          nonExistentUsername,
+        );
 
         // Assert
         expect(result).toBeUndefined();
@@ -957,7 +989,10 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act
-        const result = await ChallengeModel.findParticipantByChallengeAndUser(challengeId, nonParticipantUser);
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(
+          challengeId,
+          nonParticipantUser,
+        );
 
         // Assert
         expect(result).toBeUndefined();
@@ -976,7 +1011,10 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act
-        const result = await ChallengeModel.findParticipantByChallengeAndUser(challengeId, username);
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(
+          challengeId,
+          username,
+        );
 
         // Assert
         expect(result).toBeUndefined();
@@ -990,7 +1028,7 @@ describe('ChallengeModel', () => {
         const differentParticipant = {
           ...sampleChallengeParticipant,
           challenge_id: challengeId,
-          user_name: username,
+          username: username,
         };
         const mockQuery = {
           from: jest.fn().mockReturnThis(),
@@ -1000,12 +1038,15 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act
-        const result = await ChallengeModel.findParticipantByChallengeAndUser(challengeId, username);
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(
+          challengeId,
+          username,
+        );
 
         // Assert
         expect(result).toEqual(differentParticipant);
         expect(result.challenge_id).toBe(challengeId);
-        expect(result.user_name).toBe(username);
+        expect(result.username).toBe(username);
       });
     });
 
@@ -1022,7 +1063,10 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act
-        const result = await ChallengeModel.findParticipantByChallengeAndUser(nonExistentChallengeId, username);
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(
+          nonExistentChallengeId,
+          username,
+        );
 
         // Assert
         expect(result).toBeUndefined();
@@ -1040,7 +1084,9 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act & Assert
-        await expect(ChallengeModel.findParticipantByChallengeAndUser(emptyChallengeId, username)).rejects.toThrow();
+        await expect(
+          ChallengeModel.findParticipantByChallengeAndUser(emptyChallengeId, username),
+        ).rejects.toThrow();
       });
 
       it('should handle empty username', async () => {
@@ -1055,7 +1101,10 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act
-        const result = await ChallengeModel.findParticipantByChallengeAndUser(challengeId, emptyUsername);
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(
+          challengeId,
+          emptyUsername,
+        );
 
         // Assert
         expect(result).toBeUndefined();
@@ -1073,7 +1122,9 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act & Assert
-        await expect(ChallengeModel.findParticipantByChallengeAndUser(challengeId, nullUsername)).rejects.toThrow();
+        await expect(
+          ChallengeModel.findParticipantByChallengeAndUser(challengeId, nullUsername),
+        ).rejects.toThrow();
       });
     });
 
@@ -1091,9 +1142,9 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act & Assert
-        await expect(ChallengeModel.findParticipantByChallengeAndUser(challengeId, username)).rejects.toThrow(
-          'Database connection failed',
-        );
+        await expect(
+          ChallengeModel.findParticipantByChallengeAndUser(challengeId, username),
+        ).rejects.toThrow('Database connection failed');
       });
 
       it('should throw error when invalid challenge ID format provided', async () => {
@@ -1108,7 +1159,9 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act & Assert
-        await expect(ChallengeModel.findParticipantByChallengeAndUser(invalidChallengeId, username)).rejects.toThrow();
+        await expect(
+          ChallengeModel.findParticipantByChallengeAndUser(invalidChallengeId, username),
+        ).rejects.toThrow();
       });
 
       it('should handle database timeout errors', async () => {
@@ -1124,9 +1177,9 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act & Assert
-        await expect(ChallengeModel.findParticipantByChallengeAndUser(challengeId, username)).rejects.toThrow(
-          'Query timeout exceeded',
-        );
+        await expect(
+          ChallengeModel.findParticipantByChallengeAndUser(challengeId, username),
+        ).rejects.toThrow('Query timeout exceeded');
       });
 
       it('should handle constraint violations gracefully', async () => {
@@ -1142,9 +1195,9 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act & Assert
-        await expect(ChallengeModel.findParticipantByChallengeAndUser(challengeId, username)).rejects.toThrow(
-          'Foreign key constraint violation',
-        );
+        await expect(
+          ChallengeModel.findParticipantByChallengeAndUser(challengeId, username),
+        ).rejects.toThrow('Foreign key constraint violation');
       });
 
       it('should handle connection lost errors', async () => {
@@ -1160,9 +1213,9 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act & Assert
-        await expect(ChallengeModel.findParticipantByChallengeAndUser(challengeId, username)).rejects.toThrow(
-          'Connection to database lost',
-        );
+        await expect(
+          ChallengeModel.findParticipantByChallengeAndUser(challengeId, username),
+        ).rejects.toThrow('Connection to database lost');
       });
     });
   });
@@ -1177,7 +1230,7 @@ describe('ChallengeModel', () => {
           {
             ...sampleChallengeParticipant,
             challenge_participant_id: 'test-participant-id-2',
-            user_name: 'user2@example.com',
+            username: 'user2@example.com',
           },
         ];
         const mockQuery = {
@@ -1273,14 +1326,14 @@ describe('ChallengeModel', () => {
         const expectedParticipants = [
           {
             ...sampleChallengeParticipant,
-            user_name: 'user1@example.com',
+            username: 'user1@example.com',
             participant_name: '',
             state: 'PENDING',
           },
           {
             ...sampleChallengeParticipant,
             challenge_participant_id: 'test-uuid-v7-2',
-            user_name: 'user2@example.com',
+            username: 'user2@example.com',
             participant_name: '',
             state: 'PENDING',
           },
@@ -1302,7 +1355,7 @@ describe('ChallengeModel', () => {
             challenge_participant_id: 'test-uuid-v7',
             challenge_participant_inst_id: 'test-uuid-v7',
             challenge_id: 'test-challenge-id',
-            user_name: 'user1@example.com',
+            username: 'user1@example.com',
             participant_name: '',
             state: 'PENDING',
             valid_from: expect.any(Date),
@@ -1312,7 +1365,7 @@ describe('ChallengeModel', () => {
             challenge_participant_id: 'test-uuid-v7',
             challenge_participant_inst_id: 'test-uuid-v7',
             challenge_id: 'test-challenge-id',
-            user_name: 'user2@example.com',
+            username: 'user2@example.com',
             participant_name: '',
             state: 'PENDING',
             valid_from: expect.any(Date),
@@ -1378,7 +1431,7 @@ describe('ChallengeModel', () => {
         expect(result).toHaveLength(1);
         const calledValues = mockQuery.values.mock.calls[0][0];
         expect(calledValues).toHaveLength(1);
-        expect(calledValues[0].user_name).toBe('user1@example.com');
+        expect(calledValues[0].username).toBe('user1@example.com');
       });
     });
 
@@ -1520,12 +1573,14 @@ describe('ChallengeModel', () => {
         expect(result.state).toBe('ACCEPTED');
         expect(mockDb.transaction).toHaveBeenCalledTimes(1);
         expect(mockSelect.limit).toHaveBeenCalledWith(1);
-        expect(mockUpdate.set).toHaveBeenCalledWith({ valid_until: expect.any(Date) });
+        expect(mockUpdate.set).toHaveBeenCalledWith({
+          valid_until: expect.any(Date),
+        });
         expect(mockInsert.values).toHaveBeenCalledWith({
           challenge_participant_id: sampleChallengeParticipant.challenge_participant_id,
           challenge_participant_inst_id: 'test-uuid-v7',
           challenge_id: sampleChallengeParticipant.challenge_id,
-          user_name: sampleChallengeParticipant.user_name,
+          username: sampleChallengeParticipant.username,
           participant_name: 'John Doe Updated',
           state: 'ACCEPTED',
           valid_from: expect.any(Date),
@@ -1750,7 +1805,9 @@ describe('ChallengeModel', () => {
         // Assert
         expect(result).toBe(2);
         expect(mockDb.update).toHaveBeenCalledWith(expect.any(Object)); // challengeParticipants table
-        expect(mockUpdate.set).toHaveBeenCalledWith({ valid_until: expect.any(Date) });
+        expect(mockUpdate.set).toHaveBeenCalledWith({
+          valid_until: expect.any(Date),
+        });
 
         const setCallArgs = mockUpdate.set.mock.calls[0][0];
         expect(setCallArgs.valid_until).toBeInstanceOf(Date);
@@ -1908,7 +1965,9 @@ describe('ChallengeModel', () => {
 
         // Assert
         expect(mockDb.update).toHaveBeenCalledWith(expect.any(Object)); // challengeParticipants table
-        expect(mockUpdate.set).toHaveBeenCalledWith({ valid_until: expect.any(Date) });
+        expect(mockUpdate.set).toHaveBeenCalledWith({
+          valid_until: expect.any(Date),
+        });
 
         const setCallArgs = mockUpdate.set.mock.calls[0][0];
         expect(setCallArgs.valid_until).toBeInstanceOf(Date);
@@ -1947,7 +2006,9 @@ describe('ChallengeModel', () => {
         mockDb.update.mockReturnValue(mockUpdate);
 
         // Act & Assert
-        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).resolves.not.toThrow();
+        await expect(
+          ChallengeModel.deleteParticipant(challengeId, participantId),
+        ).resolves.not.toThrow();
       });
     });
 
@@ -1963,10 +2024,12 @@ describe('ChallengeModel', () => {
         mockDb.update.mockReturnValue(mockUpdate);
 
         // Act & Assert
-        await expect(ChallengeModel.deleteParticipant(challengeId, nonExistentParticipantId)).rejects.toThrow(NotFoundError);
-        await expect(ChallengeModel.deleteParticipant(challengeId, nonExistentParticipantId)).rejects.toThrow(
-          'Participant ${participantId} @ ${challengeId} was not found',
-        );
+        await expect(
+          ChallengeModel.deleteParticipant(challengeId, nonExistentParticipantId),
+        ).rejects.toThrow(NotFoundError);
+        await expect(
+          ChallengeModel.deleteParticipant(challengeId, nonExistentParticipantId),
+        ).rejects.toThrow('Participant ${participantId} @ ${challengeId} was not found');
       });
 
       it('should throw NotFoundError when challenge not found', async () => {
@@ -1980,10 +2043,12 @@ describe('ChallengeModel', () => {
         mockDb.update.mockReturnValue(mockUpdate);
 
         // Act & Assert
-        await expect(ChallengeModel.deleteParticipant(nonExistentChallengeId, participantId)).rejects.toThrow(NotFoundError);
-        await expect(ChallengeModel.deleteParticipant(nonExistentChallengeId, participantId)).rejects.toThrow(
-          'Participant ${participantId} @ ${challengeId} was not found',
-        );
+        await expect(
+          ChallengeModel.deleteParticipant(nonExistentChallengeId, participantId),
+        ).rejects.toThrow(NotFoundError);
+        await expect(
+          ChallengeModel.deleteParticipant(nonExistentChallengeId, participantId),
+        ).rejects.toThrow('Participant ${participantId} @ ${challengeId} was not found');
       });
 
       it('should throw NotFoundError when multiple or zero rows affected', async () => {
@@ -1997,7 +2062,9 @@ describe('ChallengeModel', () => {
         mockDb.update.mockReturnValue(mockUpdate);
 
         // Act & Assert
-        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(NotFoundError);
+        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(
+          NotFoundError,
+        );
       });
 
       it('should not delete already soft-deleted participants', async () => {
@@ -2011,7 +2078,9 @@ describe('ChallengeModel', () => {
         mockDb.update.mockReturnValue(mockUpdate);
 
         // Act & Assert
-        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(NotFoundError);
+        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(
+          NotFoundError,
+        );
       });
 
       it('should handle empty or invalid participant ID', async () => {
@@ -2025,7 +2094,9 @@ describe('ChallengeModel', () => {
         mockDb.update.mockReturnValue(mockUpdate);
 
         // Act & Assert
-        await expect(ChallengeModel.deleteParticipant(challengeId, invalidParticipantId)).rejects.toThrow();
+        await expect(
+          ChallengeModel.deleteParticipant(challengeId, invalidParticipantId),
+        ).rejects.toThrow();
       });
 
       it('should handle empty or invalid challenge ID', async () => {
@@ -2039,7 +2110,9 @@ describe('ChallengeModel', () => {
         mockDb.update.mockReturnValue(mockUpdate);
 
         // Act & Assert
-        await expect(ChallengeModel.deleteParticipant(invalidChallengeId, participantId)).rejects.toThrow();
+        await expect(
+          ChallengeModel.deleteParticipant(invalidChallengeId, participantId),
+        ).rejects.toThrow();
       });
     });
 
@@ -2125,7 +2198,9 @@ describe('ChallengeModel', () => {
         mockDb.update.mockReturnValue(mockUpdate);
 
         // Act & Assert
-        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(DatabaseError);
+        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(
+          DatabaseError,
+        );
         await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(
           'Connection terminated unexpectedly',
         );

@@ -47,7 +47,7 @@ describe('ChallengeService', () => {
       challenge_participant_id: 'participant-1',
       challenge_participant_inst_id: 'participant-inst-1',
       challenge_id: 'test-challenge-id',
-      user_name: 'user1@example.com',
+      username: 'user1@example.com',
       participant_name: 'User One',
       state: 'PENDING' as const,
       valid_from: new Date('2024-01-01T00:00:00Z'),
@@ -57,7 +57,7 @@ describe('ChallengeService', () => {
       challenge_participant_id: 'participant-2',
       challenge_participant_inst_id: 'participant-inst-2',
       challenge_id: 'test-challenge-id',
-      user_name: 'user2@example.com',
+      username: 'user2@example.com',
       participant_name: 'User Two',
       state: 'ACCEPTED' as const,
       valid_from: new Date('2024-01-01T00:00:00Z'),
@@ -82,7 +82,10 @@ describe('ChallengeService', () => {
       });
 
       it('should handle different challenge IDs correctly', async () => {
-        const differentChallenge = { ...sampleChallenge, challenge_id: 'different-id' };
+        const differentChallenge = {
+          ...sampleChallenge,
+          challenge_id: 'different-id',
+        };
         mockChallengeModel.challengeById.mockResolvedValue(differentChallenge);
 
         const result = await challengeService.getChallenge('different-id');
@@ -159,7 +162,9 @@ describe('ChallengeService', () => {
 
       it('should handle different challenge IDs correctly', async () => {
         const differentParticipants = [sampleParticipants[0]];
-        mockChallengeModel.findAllParticipantsByChallengeId.mockResolvedValue(differentParticipants);
+        mockChallengeModel.findAllParticipantsByChallengeId.mockResolvedValue(
+          differentParticipants,
+        );
 
         const result = await challengeService.getParticipantsByChallengeId('another-challenge');
 
@@ -198,7 +203,7 @@ describe('ChallengeService', () => {
           { ...sampleParticipants[0], state: 'PENDING' as const },
           { ...sampleParticipants[1], state: 'PENDING' as const },
         ];
-        
+
         mockChallengeModel.createChallenge.mockResolvedValue(sampleChallenge);
         mockChallengeModel.createParticipants.mockResolvedValue(createdParticipants);
 
@@ -216,7 +221,10 @@ describe('ChallengeService', () => {
       });
 
       it('should handle challenge creation without invited users', async () => {
-        const inputWithoutUsers = { ...sampleCreateChallengeInput, invitedUsers: undefined };
+        const inputWithoutUsers = {
+          ...sampleCreateChallengeInput,
+          invitedUsers: undefined,
+        };
         mockChallengeModel.createChallenge.mockResolvedValue(sampleChallenge);
         mockChallengeModel.createParticipants.mockResolvedValue([]);
 
@@ -230,7 +238,10 @@ describe('ChallengeService', () => {
       });
 
       it('should handle challenge creation with empty invited users array', async () => {
-        const inputWithEmptyUsers = { ...sampleCreateChallengeInput, invitedUsers: [] };
+        const inputWithEmptyUsers = {
+          ...sampleCreateChallengeInput,
+          invitedUsers: [],
+        };
         mockChallengeModel.createChallenge.mockResolvedValue(sampleChallenge);
         mockChallengeModel.createParticipants.mockResolvedValue([]);
 
@@ -244,12 +255,12 @@ describe('ChallengeService', () => {
       });
 
       it('should handle single invited user', async () => {
-        const inputWithSingleUser = { 
-          ...sampleCreateChallengeInput, 
-          invitedUsers: ['single@example.com'] 
+        const inputWithSingleUser = {
+          ...sampleCreateChallengeInput,
+          invitedUsers: ['single@example.com'],
         };
-        const singleParticipant = [{ ...sampleParticipants[0], user_name: 'single@example.com' }];
-        
+        const singleParticipant = [{ ...sampleParticipants[0], username: 'single@example.com' }];
+
         mockChallengeModel.createChallenge.mockResolvedValue(sampleChallenge);
         mockChallengeModel.createParticipants.mockResolvedValue(singleParticipant);
 
@@ -314,9 +325,9 @@ describe('ChallengeService', () => {
   describe('updateChallenge', () => {
     describe('Happy Path', () => {
       it('should update challenge successfully', async () => {
-        const updatedChallenge = { 
-          ...sampleChallenge, 
-          challenge_desc: 'Updated challenge description' 
+        const updatedChallenge = {
+          ...sampleChallenge,
+          challenge_desc: 'Updated challenge description',
         };
         mockChallengeModel.updateChallenge.mockResolvedValue(updatedChallenge);
 
@@ -338,12 +349,12 @@ describe('ChallengeService', () => {
           challengeName: 'Different Adventure',
           duration: 180,
         };
-        const updatedChallenge = { 
-          ...sampleChallenge, 
+        const updatedChallenge = {
+          ...sampleChallenge,
           challenge_name: 'Different Adventure',
           duration: 180,
         };
-        
+
         mockChallengeModel.updateChallenge.mockResolvedValue(updatedChallenge);
 
         const result = await challengeService.updateChallenge('test-challenge-id', differentUpdate);
@@ -467,7 +478,7 @@ describe('ChallengeService', () => {
         await expect(challengeService.deleteChallenge('test-challenge-id')).rejects.toThrow(
           AppError,
         );
-        
+
         // Verify error is logged
         const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
         try {
@@ -518,7 +529,7 @@ describe('ChallengeService', () => {
     it('should maintain consistent behavior across multiple method calls', async () => {
       // Test service state consistency
       mockChallengeModel.challengeById.mockResolvedValue(sampleChallenge);
-      
+
       const result1 = await challengeService.getChallenge('test-challenge-id');
       const result2 = await challengeService.getChallenge('test-challenge-id');
 
@@ -541,7 +552,9 @@ describe('ChallengeService', () => {
     it('should handle mixed success/failure scenarios gracefully', async () => {
       // Scenario: createChallenge succeeds, but createParticipants fails
       mockChallengeModel.createChallenge.mockResolvedValue(sampleChallenge);
-      mockChallengeModel.createParticipants.mockRejectedValue(new Error('Participant creation failed'));
+      mockChallengeModel.createParticipants.mockRejectedValue(
+        new Error('Participant creation failed'),
+      );
 
       await expect(challengeService.createChallenge(sampleCreateChallengeInput)).rejects.toThrow(
         'Participant creation failed',
@@ -555,22 +568,30 @@ describe('ChallengeService', () => {
   describe('Error Response Consistency', () => {
     it('should maintain error type consistency across methods', async () => {
       const dbError = new Error('Database unavailable');
-      
+
       mockChallengeModel.challengeById.mockRejectedValue(dbError);
       mockChallengeModel.findAllParticipantsByChallengeId.mockRejectedValue(dbError);
       mockChallengeModel.updateChallenge.mockRejectedValue(dbError);
 
-      await expect(challengeService.getChallenge('test-id')).rejects.toThrow('Database unavailable');
-      await expect(challengeService.getParticipantsByChallengeId('test-id')).rejects.toThrow('Database unavailable');
-      await expect(challengeService.updateChallenge('test-id', sampleCreateChallengeInput)).rejects.toThrow('Database unavailable');
+      await expect(challengeService.getChallenge('test-id')).rejects.toThrow(
+        'Database unavailable',
+      );
+      await expect(challengeService.getParticipantsByChallengeId('test-id')).rejects.toThrow(
+        'Database unavailable',
+      );
+      await expect(
+        challengeService.updateChallenge('test-id', sampleCreateChallengeInput),
+      ).rejects.toThrow('Database unavailable');
     });
 
     it('should handle undefined/null edge cases consistently', async () => {
       mockChallengeModel.challengeById.mockResolvedValue(undefined);
       mockChallengeModel.findAllParticipantsByChallengeId.mockResolvedValue([]);
 
-      await expect(challengeService.getChallenge('undefined-challenge')).rejects.toThrow(NotFoundError);
-      
+      await expect(challengeService.getChallenge('undefined-challenge')).rejects.toThrow(
+        NotFoundError,
+      );
+
       const emptyResult = await challengeService.getParticipantsByChallengeId('empty-challenge');
       expect(emptyResult).toEqual([]);
     });
