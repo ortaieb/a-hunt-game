@@ -67,7 +67,7 @@ describe('Challenge Routes', () => {
 
   const mockChallengeParticipantsInput = {
     challengeId: '01234567-89ab-7def-8123-456789abcdef', // UUIDv7 format
-    invitedUsers: ['user1@example.com', 'user2@example.com'],
+    participants: ['user1@example.com', 'user2@example.com'],
   };
 
   beforeEach(() => {
@@ -92,7 +92,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.activeChallenges.mockResolvedValue(mockChallenges);
 
         const response = await request(app)
-          .get('/hunt/challenges')
+          .get('/hunt/manager/challenges')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(200);
@@ -109,7 +109,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.activeChallenges.mockResolvedValue([]);
 
         const response = await request(app)
-          .get('/hunt/challenges')
+          .get('/hunt/manager/challenges')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(200);
@@ -119,7 +119,7 @@ describe('Challenge Routes', () => {
 
     describe('Authorization', () => {
       it('should return 401 for missing token', async () => {
-        const response = await request(app).get('/hunt/challenges');
+        const response = await request(app).get('/hunt/manager/challenges');
 
         expect(response.status).toBe(401);
         expect(response.body).toEqual({
@@ -130,7 +130,7 @@ describe('Challenge Routes', () => {
 
       it('should return 403 for non-admin user', async () => {
         const response = await request(app)
-          .get('/hunt/challenges')
+          .get('/hunt/manager/challenges')
           .set('user-auth-token', mockPlayerToken);
 
         expect(response.status).toBe(403);
@@ -140,7 +140,7 @@ describe('Challenge Routes', () => {
 
       it('should return 401 for invalid token', async () => {
         const response = await request(app)
-          .get('/hunt/challenges')
+          .get('/hunt/manager/challenges')
           .set('user-auth-token', 'invalid-token');
 
         expect(response.status).toBe(401);
@@ -157,7 +157,7 @@ describe('Challenge Routes', () => {
         );
 
         const response = await request(app)
-          .get('/hunt/challenges')
+          .get('/hunt/manager/challenges')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(500);
@@ -172,7 +172,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.getChallenge.mockResolvedValue(mockChallenge);
 
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id')
+          .get('/hunt/manager/challenges/test-challenge-id')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(200);
@@ -191,7 +191,7 @@ describe('Challenge Routes', () => {
         );
 
         const response = await request(app)
-          .get('/hunt/challenges/nonexistent-challenge')
+          .get('/hunt/manager/challenges/nonexistent-challenge')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(404);
@@ -202,7 +202,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.getChallenge.mockRejectedValue(new Error('Database error'));
 
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id')
+          .get('/hunt/manager/challenges/test-challenge-id')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(500);
@@ -212,7 +212,7 @@ describe('Challenge Routes', () => {
 
     describe('Authorization', () => {
       it('should return 401 for missing token', async () => {
-        const response = await request(app).get('/hunt/challenges/test-challenge-id');
+        const response = await request(app).get('/hunt/manager/challenges/test-challenge-id');
 
         expect(response.status).toBe(401);
         expect(mockedChallengeService.getChallenge).not.toHaveBeenCalled();
@@ -220,7 +220,7 @@ describe('Challenge Routes', () => {
 
       it('should return 403 for non-admin user', async () => {
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id')
+          .get('/hunt/manager/challenges/test-challenge-id')
           .set('user-auth-token', mockPlayerToken);
 
         expect(response.status).toBe(403);
@@ -236,7 +236,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.createChallenge.mockResolvedValue(createdChallenge);
 
         const response = await request(app)
-          .post('/hunt/challenges')
+          .post('/hunt/manager/challenges')
           .set('user-auth-token', mockAdminToken)
           .send(mockCreateChallengeInput);
 
@@ -270,7 +270,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.createChallenge.mockResolvedValue(createdChallenge);
 
         const response = await request(app)
-          .post('/hunt/challenges')
+          .post('/hunt/manager/challenges')
           .set('user-auth-token', mockAdminToken)
           .send(kebabCaseInput);
 
@@ -290,7 +290,7 @@ describe('Challenge Routes', () => {
         };
 
         const response = await request(app)
-          .post('/hunt/challenges')
+          .post('/hunt/manager/challenges')
           .set('user-auth-token', mockAdminToken)
           .send(invalidInput);
 
@@ -306,7 +306,7 @@ describe('Challenge Routes', () => {
         };
 
         const response = await request(app)
-          .post('/hunt/challenges')
+          .post('/hunt/manager/challenges')
           .set('user-auth-token', mockAdminToken)
           .send(invalidInput);
 
@@ -321,7 +321,7 @@ describe('Challenge Routes', () => {
         };
 
         const response = await request(app)
-          .post('/hunt/challenges')
+          .post('/hunt/manager/challenges')
           .set('user-auth-token', mockAdminToken)
           .send(invalidInput);
 
@@ -336,7 +336,7 @@ describe('Challenge Routes', () => {
         };
 
         const response = await request(app)
-          .post('/hunt/challenges')
+          .post('/hunt/manager/challenges')
           .set('user-auth-token', mockAdminToken)
           .send(invalidInput);
 
@@ -352,7 +352,7 @@ describe('Challenge Routes', () => {
         );
 
         const response = await request(app)
-          .post('/hunt/challenges')
+          .post('/hunt/manager/challenges')
           .set('user-auth-token', mockAdminToken)
           .send(mockCreateChallengeInput);
 
@@ -366,7 +366,7 @@ describe('Challenge Routes', () => {
         );
 
         const response = await request(app)
-          .post('/hunt/challenges')
+          .post('/hunt/manager/challenges')
           .set('user-auth-token', mockAdminToken)
           .send(mockCreateChallengeInput);
 
@@ -377,7 +377,9 @@ describe('Challenge Routes', () => {
 
     describe('Authorization', () => {
       it('should return 401 for missing token', async () => {
-        const response = await request(app).post('/hunt/challenges').send(mockCreateChallengeInput);
+        const response = await request(app)
+          .post('/hunt/manager/challenges')
+          .send(mockCreateChallengeInput);
 
         expect(response.status).toBe(401);
         expect(mockedChallengeService.createChallenge).not.toHaveBeenCalled();
@@ -385,7 +387,7 @@ describe('Challenge Routes', () => {
 
       it('should return 403 for non-admin user', async () => {
         const response = await request(app)
-          .post('/hunt/challenges')
+          .post('/hunt/manager/challenges')
           .set('user-auth-token', mockPlayerToken)
           .send(mockCreateChallengeInput);
 
@@ -405,7 +407,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.updateChallenge.mockResolvedValue(updatedChallenge);
 
         const response = await request(app)
-          .post('/hunt/challenges/test-challenge-id')
+          .post('/hunt/manager/challenges/test-challenge-id')
           .set('user-auth-token', mockAdminToken)
           .send(mockCreateChallengeInput);
 
@@ -422,7 +424,7 @@ describe('Challenge Routes', () => {
             waypointsRef: mockCreateChallengeInput.waypointsRef,
             startTime: expect.any(Date),
             duration: mockCreateChallengeInput.duration,
-            invitedUsers: mockCreateChallengeInput.invitedUsers,
+            participants: mockCreateChallengeInput.invitedUsers,
           }),
         );
       });
@@ -435,7 +437,7 @@ describe('Challenge Routes', () => {
         );
 
         const response = await request(app)
-          .post('/hunt/challenges/nonexistent-challenge')
+          .post('/hunt/manager/challenges/nonexistent-challenge')
           .set('user-auth-token', mockAdminToken)
           .send(mockCreateChallengeInput);
 
@@ -447,7 +449,7 @@ describe('Challenge Routes', () => {
     describe('Authorization', () => {
       it('should return 401 for missing token', async () => {
         const response = await request(app)
-          .post('/hunt/challenges/test-challenge-id')
+          .post('/hunt/manager/challenges/test-challenge-id')
           .send(mockCreateChallengeInput);
 
         expect(response.status).toBe(401);
@@ -456,7 +458,7 @@ describe('Challenge Routes', () => {
 
       it('should return 403 for non-admin user', async () => {
         const response = await request(app)
-          .post('/hunt/challenges/test-challenge-id')
+          .post('/hunt/manager/challenges/test-challenge-id')
           .set('user-auth-token', mockPlayerToken)
           .send(mockCreateChallengeInput);
 
@@ -476,7 +478,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.getParticipantsByChallengeId.mockResolvedValue(mockParticipants);
 
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id/participants')
+          .get('/hunt/manager/challenges/test-challenge-id/participants')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(200);
@@ -495,7 +497,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.getParticipantsByChallengeId.mockResolvedValue([]);
 
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id/participants')
+          .get('/hunt/manager/challenges/test-challenge-id/participants')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(200);
@@ -510,7 +512,7 @@ describe('Challenge Routes', () => {
         );
 
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id/participants')
+          .get('/hunt/manager/challenges/test-challenge-id/participants')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(500);
@@ -521,7 +523,7 @@ describe('Challenge Routes', () => {
     describe('Authorization', () => {
       it('should return 403 for non-admin user', async () => {
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id/participants')
+          .get('/hunt/manager/challenges/test-challenge-id/participants')
           .set('user-auth-token', mockPlayerToken);
 
         expect(response.status).toBe(403);
@@ -536,7 +538,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.getParticipant.mockResolvedValue(mockParticipant);
 
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id/participants/participant-1')
+          .get('/hunt/manager/challenges/test-challenge-id/participants/participant-1')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(200);
@@ -557,7 +559,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.getParticipant.mockResolvedValue(wrongChallengeParticipant);
 
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id/participants/participant-1')
+          .get('/hunt/manager/challenges/test-challenge-id/participants/participant-1')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(404);
@@ -570,7 +572,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.getParticipant.mockResolvedValue(null as any);
 
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id/participants/nonexistent-participant')
+          .get('/hunt/manager/challenges/test-challenge-id/participants/nonexistent-participant')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(200);
@@ -581,7 +583,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.getParticipant.mockRejectedValue(new Error('Database error'));
 
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id/participants/participant-1')
+          .get('/hunt/manager/challenges/test-challenge-id/participants/participant-1')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(500);
@@ -598,7 +600,7 @@ describe('Challenge Routes', () => {
         );
 
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id/participants/byUser/user1@example.com')
+          .get('/hunt/manager/challenges/test-challenge-id/participants/byUser/user1@example.com')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(200);
@@ -616,7 +618,9 @@ describe('Challenge Routes', () => {
         mockedChallengeService.getParticipantByChallengeAndUsername.mockResolvedValue(null as any);
 
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id/participants/byUser/nonparticipant@example.com')
+          .get(
+            '/hunt/manager/challenges/test-challenge-id/participants/byUser/nonparticipant@example.com',
+          )
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(200);
@@ -631,7 +635,7 @@ describe('Challenge Routes', () => {
         );
 
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id/participants/byUser/user1@example.com')
+          .get('/hunt/manager/challenges/test-challenge-id/participants/byUser/user1@example.com')
           .set('user-auth-token', mockAdminToken);
 
         expect(response.status).toBe(500);
@@ -642,7 +646,7 @@ describe('Challenge Routes', () => {
     describe('Authorization', () => {
       it('should return 403 for non-admin user', async () => {
         const response = await request(app)
-          .get('/hunt/challenges/test-challenge-id/participants/byUser/user1@example.com')
+          .get('/hunt/manager/challenges/test-challenge-id/participants/byUser/user1@example.com')
           .set('user-auth-token', mockPlayerToken);
 
         expect(response.status).toBe(403);
@@ -665,7 +669,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.inviteParticipants.mockResolvedValue(invitedParticipants);
 
         const response = await request(app)
-          .post('/hunt/challenges/test-challenge-id/inviteParticipants')
+          .post('/hunt/manager/challenges/test-challenge-id/inviteParticipants')
           .set('user-auth-token', mockAdminToken)
           .send(mockChallengeParticipantsInput);
 
@@ -678,7 +682,7 @@ describe('Challenge Routes', () => {
         );
         expect(mockedChallengeService.inviteParticipants).toHaveBeenCalledWith({
           challengeId: mockChallengeParticipantsInput.challengeId,
-          invitedUsers: mockChallengeParticipantsInput.invitedUsers,
+          participants: mockChallengeParticipantsInput.participants,
         });
       });
 
@@ -692,7 +696,7 @@ describe('Challenge Routes', () => {
         mockedChallengeService.inviteParticipants.mockResolvedValue(invitedParticipants);
 
         const response = await request(app)
-          .post('/hunt/challenges/test-challenge-id/inviteParticipants')
+          .post('/hunt/manager/challenges/test-challenge-id/inviteParticipants')
           .set('user-auth-token', mockAdminToken)
           .send(kebabCaseInput);
 
@@ -709,12 +713,12 @@ describe('Challenge Routes', () => {
     describe('Validation Errors', () => {
       it('should return 400 for missing challenge ID in body', async () => {
         const invalidInput = {
-          invitedUsers: ['user1@example.com'],
+          participants: ['user1@example.com'],
           // Missing challengeId
         };
 
         const response = await request(app)
-          .post('/hunt/challenges/test-challenge-id/inviteParticipants')
+          .post('/hunt/manager/challenges/test-challenge-id/inviteParticipants')
           .set('user-auth-token', mockAdminToken)
           .send(invalidInput);
 
@@ -730,7 +734,7 @@ describe('Challenge Routes', () => {
         };
 
         const response = await request(app)
-          .post('/hunt/challenges/test-challenge-id/inviteParticipants')
+          .post('/hunt/manager/challenges/test-challenge-id/inviteParticipants')
           .set('user-auth-token', mockAdminToken)
           .send(invalidInput);
 
@@ -745,7 +749,7 @@ describe('Challenge Routes', () => {
         };
 
         const response = await request(app)
-          .post('/hunt/challenges/test-challenge-id/inviteParticipants')
+          .post('/hunt/manager/challenges/test-challenge-id/inviteParticipants')
           .set('user-auth-token', mockAdminToken)
           .send(invalidInput);
 
@@ -761,7 +765,7 @@ describe('Challenge Routes', () => {
         );
 
         const response = await request(app)
-          .post('/hunt/challenges/test-challenge-id/inviteParticipants')
+          .post('/hunt/manager/challenges/test-challenge-id/inviteParticipants')
           .set('user-auth-token', mockAdminToken)
           .send(mockChallengeParticipantsInput);
 
@@ -775,7 +779,7 @@ describe('Challenge Routes', () => {
         );
 
         const response = await request(app)
-          .post('/hunt/challenges/test-challenge-id/inviteParticipants')
+          .post('/hunt/manager/challenges/test-challenge-id/inviteParticipants')
           .set('user-auth-token', mockAdminToken)
           .send(mockChallengeParticipantsInput);
 
@@ -787,7 +791,7 @@ describe('Challenge Routes', () => {
     describe('Authorization', () => {
       it('should return 401 for missing token', async () => {
         const response = await request(app)
-          .post('/hunt/challenges/test-challenge-id/inviteParticipants')
+          .post('/hunt/manager/challenges/test-challenge-id/inviteParticipants')
           .send(mockChallengeParticipantsInput);
 
         expect(response.status).toBe(401);
@@ -796,7 +800,7 @@ describe('Challenge Routes', () => {
 
       it('should return 403 for non-admin user', async () => {
         const response = await request(app)
-          .post('/hunt/challenges/test-challenge-id/inviteParticipants')
+          .post('/hunt/manager/challenges/test-challenge-id/inviteParticipants')
           .set('user-auth-token', mockPlayerToken)
           .send(mockChallengeParticipantsInput);
 
@@ -815,7 +819,7 @@ describe('Challenge Routes', () => {
 
       // Create challenge
       const createResponse = await request(app)
-        .post('/hunt/challenges')
+        .post('/hunt/manager/challenges')
         .set('user-auth-token', mockAdminToken)
         .send(mockCreateChallengeInput);
 
@@ -823,7 +827,7 @@ describe('Challenge Routes', () => {
 
       // Get challenge
       const getResponse = await request(app)
-        .get('/hunt/challenges/test-challenge-id')
+        .get('/hunt/manager/challenges/test-challenge-id')
         .set('user-auth-token', mockAdminToken);
 
       expect(getResponse.status).toBe(200);
@@ -841,11 +845,11 @@ describe('Challenge Routes', () => {
       mockedChallengeService.createChallenge.mockRejectedValue(dbError);
 
       const endpoints = [
-        { method: 'get', path: '/hunt/challenges' },
-        { method: 'get', path: '/hunt/challenges/test-id' },
+        { method: 'get', path: '/hunt/manager/challenges' },
+        { method: 'get', path: '/hunt/manager/challenges/test-id' },
         {
           method: 'post',
-          path: '/hunt/challenges',
+          path: '/hunt/manager/challenges',
           body: mockCreateChallengeInput,
         },
       ];
