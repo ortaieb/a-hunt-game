@@ -563,7 +563,7 @@ describe('Challenge Validators', () => {
         const validData = {
           body: {
             challengeId: '01234567-89ab-7def-8123-456789abcdef', // UUIDv7 format
-            invitedUsers: ['user1@example.com', 'user2@example.com'],
+            participants: ['user1@example.com', 'user2@example.com'],
           },
         };
 
@@ -586,7 +586,7 @@ describe('Challenge Validators', () => {
         const validData = {
           body: {
             challengeId: '01234567-89ab-7def-8123-456789abcdef', // UUIDv7 format
-            invitedUsers: [],
+            participants: [],
           },
         };
 
@@ -638,7 +638,7 @@ describe('Challenge Validators', () => {
         const invalidData = {
           body: {
             challengeId: '01234567-89ab-7def-8123-456789abcdef', // UUIDv7 format
-            invitedUsers: ['valid@example.com', 'invalid-email'],
+            participants: ['valid@example.com', 'invalid-email'],
           },
         };
 
@@ -649,7 +649,7 @@ describe('Challenge Validators', () => {
         const invalidData = {
           body: {
             challengeId: '01234567-89ab-7def-8123-456789abcdef', // UUIDv7 format
-            invitedUsers: 'not-an-array',
+            participants: 'not-an-array',
           },
         };
 
@@ -702,15 +702,15 @@ describe('Challenge Validators', () => {
     it('should handle kebab-case input for challengeParticipantsSchema', () => {
       const kebabCaseInput = {
         body: {
-          'challenge-id': '01234567-89ab-7def-8123-456789abcdef', // UUIDv7 format
-          'invited-users': ['user1@example.com'],
+          challengeId: '01234567-89ab-7def-8123-456789abcdef', // UUIDv7 format
+          participants: ['user1@example.com'],
         },
       };
 
       // The validator should now transform kebab-case to camelCase internally
       const result = challengeParticipantsSchema.parse(kebabCaseInput);
       expect(result.body.challengeId).toBe('01234567-89ab-7def-8123-456789abcdef');
-      expect(result.body.invitedUsers).toEqual(['user1@example.com']);
+      expect(result.body.participants).toEqual(['user1@example.com']);
     });
   });
 });
