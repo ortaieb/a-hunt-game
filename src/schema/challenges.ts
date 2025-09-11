@@ -36,6 +36,10 @@ export const challenges = pgTable(
       .on(table.challenge_id)
       .where(sql`${table.valid_until} IS NULL`),
 
+    challangeNameUniqueIdx: uniqueIndex('idx_challenges_challengename')
+      .on(table.challenge_name)
+      .where(sql`${table.valid_until} IS NULL`),
+
     temporalIdx: index('idx_challenges_temporal').on(
       table.challenge_id,
       table.valid_from,
