@@ -12,7 +12,7 @@ describe('Waypoint Validator Schemas', () => {
   // Sample valid data for testing
   const validWaypoint = {
     waypoint_seq_id: 1,
-    location: { lat: 40.7128, long: -74.0060 },
+    location: { lat: 40.7128, long: -74.006 },
     radius: 50,
     clue: 'Find the statue of liberty',
     hints: ['Look near water', 'Green color'],
@@ -30,7 +30,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should validate valid waypoint sequence creation data', () => {
         const input = { body: validCreateData };
         const result = createWaypointSequenceSchema.safeParse(input);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.body.waypoint_name).toBe('central-park-tour');
@@ -53,7 +53,9 @@ describe('Waypoint Validator Schemas', () => {
           ],
         };
 
-        const result = createWaypointSequenceSchema.safeParse({ body: multiWaypointData });
+        const result = createWaypointSequenceSchema.safeParse({
+          body: multiWaypointData,
+        });
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.body.data).toHaveLength(2);
@@ -70,7 +72,9 @@ describe('Waypoint Validator Schemas', () => {
           data: [waypointWithoutHints],
         };
 
-        const result = createWaypointSequenceSchema.safeParse({ body: dataWithoutHints });
+        const result = createWaypointSequenceSchema.safeParse({
+          body: dataWithoutHints,
+        });
         expect(result.success).toBe(true);
       });
 
@@ -78,14 +82,18 @@ describe('Waypoint Validator Schemas', () => {
         const dataWithWhitespace = {
           waypoint_name: '  central-park-tour  ',
           waypoint_description: '  A guided tour  ',
-          data: [{
-            ...validWaypoint,
-            clue: '  Find the statue  ',
-            image_subject: '  statue  ',
-          }],
+          data: [
+            {
+              ...validWaypoint,
+              clue: '  Find the statue  ',
+              image_subject: '  statue  ',
+            },
+          ],
         };
 
-        const result = createWaypointSequenceSchema.safeParse({ body: dataWithWhitespace });
+        const result = createWaypointSequenceSchema.safeParse({
+          body: dataWithWhitespace,
+        });
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.body.waypoint_name).toBe('central-park-tour');
@@ -99,8 +107,10 @@ describe('Waypoint Validator Schemas', () => {
     describe('Single Rule Breaking', () => {
       it('should fail when waypoint_name is empty', () => {
         const invalidData = { ...validCreateData, waypoint_name: '' };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues[0].message).toBe('Waypoint name is required');
@@ -108,19 +118,28 @@ describe('Waypoint Validator Schemas', () => {
       });
 
       it('should fail when waypoint_name is too long', () => {
-        const invalidData = { ...validCreateData, waypoint_name: 'a'.repeat(256) };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const invalidData = {
+          ...validCreateData,
+          waypoint_name: 'a'.repeat(256),
+        };
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
-          expect(result.error.issues[0].message).toBe('Waypoint name must be 255 characters or less');
+          expect(result.error.issues[0].message).toBe(
+            'Waypoint name must be 255 characters or less',
+          );
         }
       });
 
       it('should fail when waypoint_description is empty', () => {
         const invalidData = { ...validCreateData, waypoint_description: '' };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues[0].message).toBe('Waypoint description is required');
@@ -129,8 +148,10 @@ describe('Waypoint Validator Schemas', () => {
 
       it('should fail when data array is empty', () => {
         const invalidData = { ...validCreateData, data: [] };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues[0].message).toBe('At least one waypoint is required');
@@ -142,24 +163,32 @@ describe('Waypoint Validator Schemas', () => {
           ...validCreateData,
           data: [{ ...validWaypoint, waypoint_seq_id: 0 }],
         };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
-          expect(result.error.issues[0].message).toBe('Waypoint sequence ID must be a positive number');
+          expect(result.error.issues[0].message).toBe(
+            'Waypoint sequence ID must be a positive number',
+          );
         }
       });
 
       it('should fail when latitude is out of bounds', () => {
         const invalidData = {
           ...validCreateData,
-          data: [{ 
-            ...validWaypoint, 
-            location: { lat: 91, long: -74.0060 },
-          }],
+          data: [
+            {
+              ...validWaypoint,
+              location: { lat: 91, long: -74.006 },
+            },
+          ],
         };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues[0].message).toBe('Latitude must be between -90 and 90');
@@ -169,13 +198,17 @@ describe('Waypoint Validator Schemas', () => {
       it('should fail when longitude is out of bounds', () => {
         const invalidData = {
           ...validCreateData,
-          data: [{ 
-            ...validWaypoint, 
-            location: { lat: 40.7128, long: 181 },
-          }],
+          data: [
+            {
+              ...validWaypoint,
+              location: { lat: 40.7128, long: 181 },
+            },
+          ],
         };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues[0].message).toBe('Longitude must be between -180 and 180');
@@ -187,8 +220,10 @@ describe('Waypoint Validator Schemas', () => {
           ...validCreateData,
           data: [{ ...validWaypoint, radius: 0 }],
         };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues[0].message).toBe('Radius must be positive integer');
@@ -200,8 +235,10 @@ describe('Waypoint Validator Schemas', () => {
           ...validCreateData,
           data: [{ ...validWaypoint, clue: '' }],
         };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues[0].message).toBe('Clue must have meaningful description');
@@ -213,11 +250,15 @@ describe('Waypoint Validator Schemas', () => {
           ...validCreateData,
           data: [{ ...validWaypoint, image_subject: '' }],
         };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
-          expect(result.error.issues[0].message).toBe('image subject must be meaningful description');
+          expect(result.error.issues[0].message).toBe(
+            'image subject must be meaningful description',
+          );
         }
       });
 
@@ -226,11 +267,15 @@ describe('Waypoint Validator Schemas', () => {
           ...validCreateData,
           data: [{ ...validWaypoint, hints: ['valid hint', ''] }],
         };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
-          expect(result.error.issues[0].message).toBe('Too small: expected string to have >=1 characters');
+          expect(result.error.issues[0].message).toBe(
+            'Too small: expected string to have >=1 characters',
+          );
         }
       });
     });
@@ -239,7 +284,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should fail with multiple validation errors', () => {
         const invalidData = {
           waypoint_name: '', // empty
-          waypoint_description: '', // empty  
+          waypoint_description: '', // empty
           data: [
             {
               waypoint_seq_id: -1, // negative
@@ -251,13 +296,15 @@ describe('Waypoint Validator Schemas', () => {
             },
           ],
         };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues.length).toBeGreaterThan(5);
-          
-          const errorMessages = result.error.issues.map(issue => issue.message);
+
+          const errorMessages = result.error.issues.map((issue) => issue.message);
           expect(errorMessages).toContain('Waypoint name is required');
           expect(errorMessages).toContain('Waypoint description is required');
           expect(errorMessages).toContain('Waypoint sequence ID must be a positive number');
@@ -271,12 +318,14 @@ describe('Waypoint Validator Schemas', () => {
           waypoint_name: 'valid-name',
           // missing waypoint_description and data
         };
-        const result = createWaypointSequenceSchema.safeParse({ body: invalidData });
-        
+        const result = createWaypointSequenceSchema.safeParse({
+          body: invalidData,
+        });
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues.length).toBe(2);
-          const errorMessages = result.error.issues.map(issue => issue.message);
+          const errorMessages = result.error.issues.map((issue) => issue.message);
           expect(errorMessages).toContain('Invalid input: expected string, received undefined');
           expect(errorMessages).toContain('Invalid input: expected array, received undefined');
         }
@@ -292,7 +341,7 @@ describe('Waypoint Validator Schemas', () => {
           body: validCreateData,
         };
         const result = updateWaypointSequenceSchema.safeParse(input);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.params.waypoint_name).toBe('central-park-tour');
@@ -308,7 +357,7 @@ describe('Waypoint Validator Schemas', () => {
           body: validCreateData,
         };
         const result = updateWaypointSequenceSchema.safeParse(input);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues[0].message).toBe('Waypoint name is required');
@@ -321,7 +370,7 @@ describe('Waypoint Validator Schemas', () => {
           body: { ...validCreateData, waypoint_name: '' },
         };
         const result = updateWaypointSequenceSchema.safeParse(input);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues[0].message).toBe('Waypoint name is required');
@@ -333,19 +382,21 @@ describe('Waypoint Validator Schemas', () => {
       it('should fail with errors in both params and body', () => {
         const input = {
           params: { waypoint_name: '' }, // invalid param
-          body: { 
-            waypoint_name: '',  // invalid body
+          body: {
+            waypoint_name: '', // invalid body
             waypoint_description: '',
             data: [],
           },
         };
         const result = updateWaypointSequenceSchema.safeParse(input);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues.length).toBeGreaterThanOrEqual(3);
-          const errorMessages = result.error.issues.map(issue => issue.message);
-          expect(errorMessages.filter(msg => msg === 'Waypoint name is required')).toHaveLength(2);
+          const errorMessages = result.error.issues.map((issue) => issue.message);
+          expect(errorMessages.filter((msg) => msg === 'Waypoint name is required')).toHaveLength(
+            2,
+          );
         }
       });
     });
@@ -356,7 +407,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should validate valid waypoint name parameter', () => {
         const input = { params: { waypoint_name: 'central-park-tour' } };
         const result = deleteWaypointSequenceSchema.safeParse(input);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.params.waypoint_name).toBe('central-park-tour');
@@ -368,7 +419,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should fail when waypoint_name is empty', () => {
         const input = { params: { waypoint_name: '' } };
         const result = deleteWaypointSequenceSchema.safeParse(input);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues[0].message).toBe('Waypoint name is required');
@@ -378,10 +429,12 @@ describe('Waypoint Validator Schemas', () => {
       it('should fail when waypoint_name is too long', () => {
         const input = { params: { waypoint_name: 'a'.repeat(256) } };
         const result = deleteWaypointSequenceSchema.safeParse(input);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
-          expect(result.error.issues[0].message).toBe('Waypoint name must be 255 characters or less');
+          expect(result.error.issues[0].message).toBe(
+            'Waypoint name must be 255 characters or less',
+          );
         }
       });
     });
@@ -392,7 +445,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should validate valid waypoint name parameter', () => {
         const input = { params: { waypoint_name: 'central-park-tour' } };
         const result = getWaypointSequenceSchema.safeParse(input);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.params.waypoint_name).toBe('central-park-tour');
@@ -402,7 +455,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should trim whitespace from waypoint name', () => {
         const input = { params: { waypoint_name: '  central-park-tour  ' } };
         const result = getWaypointSequenceSchema.safeParse(input);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.params.waypoint_name).toBe('central-park-tour');
@@ -414,7 +467,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should fail when waypoint_name is empty', () => {
         const input = { params: { waypoint_name: '' } };
         const result = getWaypointSequenceSchema.safeParse(input);
-        
+
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues[0].message).toBe('Waypoint name is required');
@@ -428,7 +481,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should validate with no query parameters', () => {
         const input = {};
         const result = listWaypointSequencesSchema.safeParse(input);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.query).toBeUndefined();
@@ -438,7 +491,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should validate with empty query', () => {
         const input = { query: {} };
         const result = listWaypointSequencesSchema.safeParse(input);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.query).toEqual({});
@@ -448,7 +501,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should validate with includeDeleted parameter', () => {
         const input = { query: { includeDeleted: true } };
         const result = listWaypointSequencesSchema.safeParse(input);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.query?.includeDeleted).toBe(true);
@@ -458,7 +511,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should validate with waypoint_name parameter', () => {
         const input = { query: { waypoint_name: 'central-park' } };
         const result = listWaypointSequencesSchema.safeParse(input);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.query?.waypoint_name).toBe('central-park');
@@ -468,7 +521,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should coerce string boolean to boolean', () => {
         const input = { query: { includeDeleted: 'true' } };
         const result = listWaypointSequencesSchema.safeParse(input);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.query?.includeDeleted).toBe(true);
@@ -476,14 +529,14 @@ describe('Waypoint Validator Schemas', () => {
       });
 
       it('should validate with both parameters', () => {
-        const input = { 
-          query: { 
-            includeDeleted: false, 
-            waypoint_name: 'test-waypoint', 
-          }, 
+        const input = {
+          query: {
+            includeDeleted: false,
+            waypoint_name: 'test-waypoint',
+          },
         };
         const result = listWaypointSequencesSchema.safeParse(input);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           expect(result.data.query?.includeDeleted).toBe(false);
@@ -496,7 +549,7 @@ describe('Waypoint Validator Schemas', () => {
       it('should coerce invalid boolean strings to true', () => {
         const input = { query: { includeDeleted: 'invalid' } };
         const result = listWaypointSequencesSchema.safeParse(input);
-        
+
         expect(result.success).toBe(true);
         if (result.success) {
           // z.coerce.boolean() treats any non-empty string as true

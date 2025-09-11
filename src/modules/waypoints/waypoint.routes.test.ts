@@ -150,7 +150,10 @@ describe('Waypoint Routes', () => {
       });
 
       it('should handle different waypoint names correctly', async () => {
-        const differentWaypointSequence = { ...mockWaypointSequence, waypoint_name: 'museum-tour' };
+        const differentWaypointSequence = {
+          ...mockWaypointSequence,
+          waypoint_name: 'museum-tour',
+        };
         mockedWaypointService.getWaypointSequence.mockResolvedValue(differentWaypointSequence);
 
         await request(app)
@@ -662,7 +665,10 @@ describe('Waypoint Routes', () => {
       });
 
       it('should handle updating different waypoint names', async () => {
-        const differentNameUpdate = { ...validUpdatePayload, waypoint_name: 'nature-trail' };
+        const differentNameUpdate = {
+          ...validUpdatePayload,
+          waypoint_name: 'nature-trail',
+        };
         mockedWaypointService.updateWaypointSequence.mockResolvedValue(mockWaypointSequence);
 
         await request(app)
@@ -724,7 +730,10 @@ describe('Waypoint Routes', () => {
       });
 
       it('should return 400 with mismatched waypoint names', async () => {
-        const mismatchedPayload = { ...validUpdatePayload, waypoint_name: 'different-name' };
+        const mismatchedPayload = {
+          ...validUpdatePayload,
+          waypoint_name: 'different-name',
+        };
 
         // The service layer validation should catch this mismatch and throw an error
         mockedWaypointService.updateWaypointSequence.mockRejectedValue(
@@ -737,8 +746,14 @@ describe('Waypoint Routes', () => {
           .send(mismatchedPayload)
           .expect(400);
 
-        expect(response.body).toHaveProperty('error', 'URL waypoint_name must match body waypoint_name');
-        expect(mockedWaypointService.updateWaypointSequence).toHaveBeenCalledWith('central-park-tour', mismatchedPayload);
+        expect(response.body).toHaveProperty(
+          'error',
+          'URL waypoint_name must match body waypoint_name',
+        );
+        expect(mockedWaypointService.updateWaypointSequence).toHaveBeenCalledWith(
+          'central-park-tour',
+          mismatchedPayload,
+        );
       });
 
       it('should return 400 with invalid waypoint data structure', async () => {
@@ -860,7 +875,10 @@ describe('Waypoint Routes', () => {
       });
 
       it('should handle URL-encoded waypoint names in path', async () => {
-        const encodedNameUpdate = { ...validUpdatePayload, waypoint_name: 'central park tour' };
+        const encodedNameUpdate = {
+          ...validUpdatePayload,
+          waypoint_name: 'central park tour',
+        };
         mockedWaypointService.updateWaypointSequence.mockResolvedValue(mockWaypointSequence);
 
         await request(app)
@@ -966,7 +984,9 @@ describe('Waypoint Routes', () => {
           .send({})
           .expect(204); // DELETE should succeed using URL param, body is ignored
 
-        expect(mockedWaypointService.deleteWaypointSequence).toHaveBeenCalledWith('central-park-tour');
+        expect(mockedWaypointService.deleteWaypointSequence).toHaveBeenCalledWith(
+          'central-park-tour',
+        );
       });
 
       it('should return 400 with invalid JSON payload', async () => {
@@ -990,7 +1010,9 @@ describe('Waypoint Routes', () => {
           .send('plain text data')
           .expect(204); // DELETE succeeds, body content is ignored
 
-        expect(mockedWaypointService.deleteWaypointSequence).toHaveBeenCalledWith('central-park-tour');
+        expect(mockedWaypointService.deleteWaypointSequence).toHaveBeenCalledWith(
+          'central-park-tour',
+        );
       });
 
       it('should succeed with extra properties since body is ignored', async () => {
@@ -1007,7 +1029,9 @@ describe('Waypoint Routes', () => {
           .send(extraPropsPayload)
           .expect(204); // DELETE succeeds, body is ignored
 
-        expect(mockedWaypointService.deleteWaypointSequence).toHaveBeenCalledWith('central-park-tour');
+        expect(mockedWaypointService.deleteWaypointSequence).toHaveBeenCalledWith(
+          'central-park-tour',
+        );
       });
     });
 

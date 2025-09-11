@@ -35,7 +35,7 @@ describe('WaypointService', () => {
   const sampleWaypointData = [
     {
       waypoint_seq_id: 1,
-      location: { lat: 40.7128, long: -74.0060 },
+      location: { lat: 40.7128, long: -74.006 },
       radius: 50,
       clue: 'Find the statue of liberty',
       hints: ['Look near water', 'Green color'],
@@ -64,7 +64,10 @@ describe('WaypointService', () => {
     valid_until: null,
   };
 
-  const transformedWaypointData = { ...sampleWaypointData[0], transformed: true };
+  const transformedWaypointData = {
+    ...sampleWaypointData[0],
+    transformed: true,
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -205,10 +208,16 @@ describe('WaypointService', () => {
   describe('updateWaypointSequence', () => {
     describe('Happy Path', () => {
       it('should update waypoint sequence successfully', async () => {
-        const updatedRecord = { ...sampleWaypointsRecord, waypoint_description: 'Updated description' };
+        const updatedRecord = {
+          ...sampleWaypointsRecord,
+          waypoint_description: 'Updated description',
+        };
         mockWaypointModel.update.mockResolvedValue(updatedRecord);
 
-        const result = await waypointService.updateWaypointSequence('central-park-tour', sampleUpdateInput);
+        const result = await waypointService.updateWaypointSequence(
+          'central-park-tour',
+          sampleUpdateInput,
+        );
 
         expect(mockPlainToClass).toHaveBeenCalledTimes(1);
         expect(mockWaypointModel.update).toHaveBeenCalledWith('central-park-tour', {
@@ -239,7 +248,10 @@ describe('WaypointService', () => {
 
     describe('Missing Data/Error Cases', () => {
       it('should throw ValidationError when URL and body waypoint names do not match', async () => {
-        const mismatchedInput = { ...sampleUpdateInput, waypoint_name: 'different-name' };
+        const mismatchedInput = {
+          ...sampleUpdateInput,
+          waypoint_name: 'different-name',
+        };
 
         await expect(
           waypointService.updateWaypointSequence('central-park-tour', mismatchedInput),
@@ -332,12 +344,12 @@ describe('WaypointService', () => {
       it('should throw NotFoundError when waypoint sequence does not exist', async () => {
         mockWaypointModel.findByName.mockResolvedValue(null);
 
-        await expect(waypointService.deleteWaypointSequence('nonexistent-waypoint')).rejects.toThrow(
-          NotFoundError,
-        );
-        await expect(waypointService.deleteWaypointSequence('nonexistent-waypoint')).rejects.toThrow(
-          'Waypoint sequence not found',
-        );
+        await expect(
+          waypointService.deleteWaypointSequence('nonexistent-waypoint'),
+        ).rejects.toThrow(NotFoundError);
+        await expect(
+          waypointService.deleteWaypointSequence('nonexistent-waypoint'),
+        ).rejects.toThrow('Waypoint sequence not found');
 
         expect(mockWaypointModel.delete).not.toHaveBeenCalled();
       });
@@ -394,7 +406,10 @@ describe('WaypointService', () => {
       });
 
       it('should handle different waypoint names correctly', async () => {
-        const foundRecord = { ...sampleWaypointsRecord, waypoint_name: 'different-tour' };
+        const foundRecord = {
+          ...sampleWaypointsRecord,
+          waypoint_name: 'different-tour',
+        };
         mockWaypointModel.findByName.mockResolvedValue(foundRecord);
 
         const result = await waypointService.getWaypointSequence('different-tour');

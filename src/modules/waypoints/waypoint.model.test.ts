@@ -135,8 +135,14 @@ describe('WaypointModel', () => {
   describe('update', () => {
     describe('Happy Path', () => {
       it('should update waypoint sequence successfully', async () => {
-        const currentRecord = { ...sampleWaypointsRecord, waypoints_id: 'existing-uuid' };
-        const updatedRecord = { ...sampleWaypointsRecord, waypoints_id: 'new-uuid' };
+        const currentRecord = {
+          ...sampleWaypointsRecord,
+          waypoints_id: 'existing-uuid',
+        };
+        const updatedRecord = {
+          ...sampleWaypointsRecord,
+          waypoints_id: 'new-uuid',
+        };
 
         // Mock transaction
         const mockTxSelect = jest.fn().mockReturnValue({
@@ -373,7 +379,9 @@ describe('WaypointModel', () => {
         const result = await WaypointModel.waypointNameExists('central park tour');
 
         expect(result).toBe(true);
-        expect(mockDb.select).toHaveBeenCalledWith({ count: expect.anything() });
+        expect(mockDb.select).toHaveBeenCalledWith({
+          count: expect.anything(),
+        });
         expect(mockLimit).toHaveBeenCalledWith(1);
       });
 

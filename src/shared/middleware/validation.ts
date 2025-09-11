@@ -1,15 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError, ZodType } from 'zod';
 
-function toKebabKeys<T extends Record<string, unknown>>(obj: T): Record<string, unknown> {
-  return Object.fromEntries(
-    Object.entries(obj).map(([key, value]) => [
-      key.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase()),
-      value,
-    ]),
-  );
-}
-
 export const validate = (schema: ZodType) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -19,8 +10,8 @@ export const validate = (schema: ZodType) => {
         params: req.params,
       });
 
-      // 🔄 Transform camelCase → kebab-case on body/query/params
-      req.body = toKebabKeys((parsed as any).body ?? {});
+      // Use the validated data as-is (the validator handles transformations)
+      req.body = (parsed as any).body ?? {};
 
       next();
     } catch (error) {
