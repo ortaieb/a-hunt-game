@@ -424,7 +424,7 @@ describe('Challenge Routes', () => {
             waypointsRef: mockCreateChallengeInput.waypointsRef,
             startTime: expect.any(Date),
             duration: mockCreateChallengeInput.duration,
-            participants: mockCreateChallengeInput.invitedUsers,
+            invitedUsers: mockCreateChallengeInput.invitedUsers,
           }),
         );
       });
