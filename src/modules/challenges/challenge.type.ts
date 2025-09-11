@@ -10,7 +10,10 @@ export type Challenge = DbChallenge;
 export type ChallengeParticipant = DbChallengeParticipant;
 
 // Transform for API responses (hiding password_hash)
-export type ChallengeResponse = Omit<Challenge, 'valid_from' | 'valid_until' | 'challenge_inst_id'>;
+export type ChallengeResponse = Omit<
+  Challenge,
+  'valid_from' | 'valid_until' | 'challenge_inst_id'
+> & { invitedCount?: number };
 export type ChallengeParticipantResponse = Omit<
   ChallengeParticipant,
   'valid_from' | 'valid_until' | 'challenge_participant_inst_id'
@@ -19,7 +22,7 @@ export type ChallengeParticipantResponse = Omit<
 export interface CreateChallengeData {
   challengeName: string;
   challengeDesc: string;
-  waypointsRef: string;
+  waypointsRef?: string;
   startTime: Date;
   duration: number;
 }

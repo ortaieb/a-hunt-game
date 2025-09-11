@@ -37,7 +37,7 @@ export const createChallengeSchema = z.object({
           .max(255, 'Challenge description should not be more than 255 characters')
           .trim(),
         waypointsRef: z.string().optional(),
-        startTime: z.string().datetime({ offset: true }),
+        startTime: z.iso.datetime({ offset: true }).transform((val) => new Date(val)),
         duration: z.number().min(0, 'Duration cannot be negative value'),
         invitedUsers: z.array(emailSchema).optional(),
       }),
@@ -54,10 +54,13 @@ export const challengeWaypointSchema = z.object({
     })
     .pipe(
       z.object({
-        challengeId: z.string().uuid().refine((val) => {
-          // Check if it's UUIDv7 format (version 7 in the 13th character)
-          return val.charAt(14) === '7';
-        }, 'Must be a UUIDv7 format'),
+        challengeId: z
+          .string()
+          .uuid()
+          .refine((val) => {
+            // Check if it's UUIDv7 format (version 7 in the 13th character)
+            return val.charAt(14) === '7';
+          }, 'Must be a UUIDv7 format'),
         waypointsRef: z.string(),
       }),
     ),
@@ -73,15 +76,18 @@ export const challengeParticipantsSchema = z.object({
     })
     .pipe(
       z.object({
-        challengeId: z.string().uuid().refine((val) => {
-          // Check if it's UUIDv7 format (version 7 in the 13th character)
-          return val.charAt(14) === '7';
-        }, 'Must be a UUIDv7 format'),
+        challengeId: z
+          .string()
+          .uuid()
+          .refine((val) => {
+            // Check if it's UUIDv7 format (version 7 in the 13th character)
+            return val.charAt(14) === '7';
+          }, 'Must be a UUIDv7 format'),
         invitedUsers: z.array(emailSchema).optional(),
       }),
     ),
 });
 
-export type CreateChallengeSchema = z.infer<typeof createChallengeSchema>['body'];
-export type ChallengeWaypointSchema = z.infer<typeof challengeWaypointSchema>['body'];
-export type ChallengeParticipantsSchema = z.infer<typeof challengeParticipantsSchema>['body'];
+export type CreateChallengeInput = z.infer<typeof createChallengeSchema>['body'];
+export type ChallengeWaypointInput = z.infer<typeof challengeWaypointSchema>['body'];
+export type ChallengeParticipantsInput = z.infer<typeof challengeParticipantsSchema>['body'];

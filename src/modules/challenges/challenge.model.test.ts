@@ -1,11 +1,13 @@
 import { ChallengeModel } from './challenge.model';
-import { 
-  CreateChallengeData, 
-  Challenge, 
+import {
+  CreateChallengeData,
+  Challenge,
   ChallengeParticipant,
   ChallengeParticipantsData,
-  UpdateChallengeParticipantDetails, 
+  UpdateChallengeParticipantDetails,
 } from './challenge.type';
+import { DatabaseError } from 'pg';
+import { ConflictError, NotFoundError } from '../../shared/types/errors';
 
 // Mock the database module
 jest.mock('../../shared/database', () => ({
@@ -312,6 +314,98 @@ describe('ChallengeModel', () => {
         );
       });
 
+      it('should throw ConflictError for duplicate challenge name (23505)', async () => {
+        // Arrange
+        const duplicateError = new DatabaseError('duplicate key value violates unique constraint', 0, 'error');
+        duplicateError.code = '23505';
+        duplicateError.constraint = 'idx_challenges_challengename';
+        
+        const mockQuery = {
+          values: jest.fn().mockReturnThis(),
+          returning: jest.fn().mockRejectedValue(duplicateError),
+        };
+        mockDb.insert.mockReturnValue(mockQuery);
+
+        // Act & Assert
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(ConflictError);
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
+          'Challenge already exists (constraint: idx_challenges_challengename)',
+        );
+      });
+
+      it('should throw ConflictError for invalid waypoint reference (23503)', async () => {
+        // Arrange
+        const foreignKeyError = new DatabaseError('insert or update on table violates foreign key constraint', 0, 'error');
+        foreignKeyError.code = '23503';
+        foreignKeyError.constraint = 'challenges_waypoints_ref_fkey';
+        
+        const mockQuery = {
+          values: jest.fn().mockReturnThis(),
+          returning: jest.fn().mockRejectedValue(foreignKeyError),
+        };
+        mockDb.insert.mockReturnValue(mockQuery);
+
+        // Act & Assert
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(ConflictError);
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
+          'Invalid reference in challenge (constraint: challenges_waypoints_ref_fkey)',
+        );
+      });
+
+      it('should throw ConflictError for duplicate challenge ID constraint (23505)', async () => {
+        // Arrange
+        const duplicateIdError = new DatabaseError('duplicate key value violates unique constraint', 0, 'error');
+        duplicateIdError.code = '23505';
+        duplicateIdError.constraint = 'idx_challenges_challengeid_active';
+        
+        const mockQuery = {
+          values: jest.fn().mockReturnThis(),
+          returning: jest.fn().mockRejectedValue(duplicateIdError),
+        };
+        mockDb.insert.mockReturnValue(mockQuery);
+
+        // Act & Assert
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(ConflictError);
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
+          'Challenge already exists (constraint: idx_challenges_challengeid_active)',
+        );
+      });
+
+      it('should re-throw generic database errors unchanged', async () => {
+        // Arrange
+        const genericError = new DatabaseError('Some other database error', 0, 'error');
+        genericError.code = '42000'; // SQL syntax error code
+        
+        const mockQuery = {
+          values: jest.fn().mockReturnThis(),
+          returning: jest.fn().mockRejectedValue(genericError),
+        };
+        mockDb.insert.mockReturnValue(mockQuery);
+
+        // Act & Assert
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(DatabaseError);
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
+          'Some other database error',
+        );
+      });
+
+      it('should re-throw non-database errors unchanged', async () => {
+        // Arrange
+        const nonDbError = new Error('Some application error');
+        
+        const mockQuery = {
+          values: jest.fn().mockReturnThis(),
+          returning: jest.fn().mockRejectedValue(nonDbError),
+        };
+        mockDb.insert.mockReturnValue(mockQuery);
+
+        // Act & Assert
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.toThrow(
+          'Some application error',
+        );
+        await expect(ChallengeModel.createChallenge(sampleChallengeData)).rejects.not.toThrow(ConflictError);
+      });
+
       it('should throw error when database connection fails', async () => {
         // Arrange
         const databaseError = new Error('Database connection failed');
@@ -361,11 +455,13 @@ describe('ChallengeModel', () => {
 
         const mockInsert = {
           values: jest.fn().mockReturnThis(),
-          returning: jest.fn().mockResolvedValue([{
-            ...sampleDbChallenge,
-            challenge_name: 'Updated Adventure Hunt',
-            challenge_inst_id: 'test-uuid-v7',
-          }]),
+          returning: jest.fn().mockResolvedValue([
+            {
+              ...sampleDbChallenge,
+              challenge_name: 'Updated Adventure Hunt',
+              challenge_inst_id: 'test-uuid-v7',
+            },
+          ]),
         };
 
         const mockTransaction = jest.fn().mockImplementation((callback) => {
@@ -410,10 +506,12 @@ describe('ChallengeModel', () => {
             }),
             insert: jest.fn().mockReturnValue({
               values: jest.fn().mockReturnThis(),
-              returning: jest.fn().mockResolvedValue([{
-                ...sampleDbChallenge,
-                challenge_id: challengeId,
-              }]),
+              returning: jest.fn().mockResolvedValue([
+                {
+                  ...sampleDbChallenge,
+                  challenge_id: challengeId,
+                },
+              ]),
             }),
           };
           return callback(tx);
@@ -441,10 +539,12 @@ describe('ChallengeModel', () => {
             }),
             insert: jest.fn().mockReturnValue({
               values: jest.fn().mockReturnThis(),
-              returning: jest.fn().mockResolvedValue([{
-                ...sampleDbChallenge,
-                challenge_inst_id: 'new-inst-id',
-              }]),
+              returning: jest.fn().mockResolvedValue([
+                {
+                  ...sampleDbChallenge,
+                  challenge_inst_id: 'new-inst-id',
+                },
+              ]),
             }),
           };
           return callback(tx);
@@ -586,12 +686,12 @@ describe('ChallengeModel', () => {
         // Assert
         expect(mockDb.update).toHaveBeenCalledWith(expect.any(Object)); // challenges table
         expect(mockUpdate.set).toHaveBeenCalledWith({ valid_until: expect.any(Date) });
-        
+
         const setCallArgs = mockUpdate.set.mock.calls[0][0];
         expect(setCallArgs.valid_until).toBeInstanceOf(Date);
         expect(setCallArgs.valid_until.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
         expect(setCallArgs.valid_until.getTime()).toBeLessThanOrEqual(afterTime.getTime());
-        
+
         expect(mockUpdate.where).toHaveBeenCalledWith(expect.any(Object)); // AND condition with isNull
       });
 
@@ -802,6 +902,271 @@ describe('ChallengeModel', () => {
     });
   });
 
+  describe('findParticipantByChallengeAndUser', () => {
+    describe('Happy Path', () => {
+      it('should return participant when found by challenge ID and username', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const username = 'test-user@example.com';
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockResolvedValue([sampleChallengeParticipant]),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(challengeId, username);
+
+        // Assert
+        expect(result).toEqual(sampleChallengeParticipant);
+        expect(mockDb.select).toHaveBeenCalledTimes(1);
+        expect(mockQuery.from).toHaveBeenCalledWith(expect.any(Object)); // challengeParticipants table
+        expect(mockQuery.where).toHaveBeenCalledWith(expect.any(Object)); // AND condition with challengeId, username, and active filter
+        expect(mockQuery.limit).toHaveBeenCalledWith(1);
+      });
+
+      it('should return undefined when participant not found', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const nonExistentUsername = 'nonexistent@example.com';
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockResolvedValue([]),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(challengeId, nonExistentUsername);
+
+        // Assert
+        expect(result).toBeUndefined();
+        expect(mockDb.select).toHaveBeenCalledTimes(1);
+      });
+
+      it('should return undefined when challenge exists but user is not a participant', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const nonParticipantUser = 'notparticipant@example.com';
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockResolvedValue([]),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(challengeId, nonParticipantUser);
+
+        // Assert
+        expect(result).toBeUndefined();
+        expect(mockQuery.where).toHaveBeenCalledWith(expect.any(Object));
+      });
+
+      it('should filter out soft-deleted participants', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const username = 'deleted-participant@example.com';
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockResolvedValue([]), // No active participants found
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(challengeId, username);
+
+        // Assert
+        expect(result).toBeUndefined();
+        expect(mockQuery.where).toHaveBeenCalledWith(expect.any(Object)); // Should include isNull condition for valid_until
+      });
+
+      it('should handle different challenge and user combinations', async () => {
+        // Arrange
+        const challengeId = 'different-challenge-id';
+        const username = 'different-user@example.com';
+        const differentParticipant = {
+          ...sampleChallengeParticipant,
+          challenge_id: challengeId,
+          user_name: username,
+        };
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockResolvedValue([differentParticipant]),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(challengeId, username);
+
+        // Assert
+        expect(result).toEqual(differentParticipant);
+        expect(result.challenge_id).toBe(challengeId);
+        expect(result.user_name).toBe(username);
+      });
+    });
+
+    describe('Invalid Input', () => {
+      it('should return undefined when challenge ID does not exist', async () => {
+        // Arrange
+        const nonExistentChallengeId = 'non-existent-challenge';
+        const username = 'test-user@example.com';
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockResolvedValue([]),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(nonExistentChallengeId, username);
+
+        // Assert
+        expect(result).toBeUndefined();
+      });
+
+      it('should handle empty challenge ID', async () => {
+        // Arrange
+        const emptyChallengeId = '';
+        const username = 'test-user@example.com';
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockRejectedValue(new Error('Invalid UUID format')),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act & Assert
+        await expect(ChallengeModel.findParticipantByChallengeAndUser(emptyChallengeId, username)).rejects.toThrow();
+      });
+
+      it('should handle empty username', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const emptyUsername = '';
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockResolvedValue([]),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act
+        const result = await ChallengeModel.findParticipantByChallengeAndUser(challengeId, emptyUsername);
+
+        // Assert
+        expect(result).toBeUndefined();
+      });
+
+      it('should handle null/undefined parameters gracefully', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const nullUsername = null as any;
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockRejectedValue(new Error('Invalid parameter')),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act & Assert
+        await expect(ChallengeModel.findParticipantByChallengeAndUser(challengeId, nullUsername)).rejects.toThrow();
+      });
+    });
+
+    describe('Database Errors', () => {
+      it('should throw error when database query fails', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const username = 'test-user@example.com';
+        const databaseError = new Error('Database connection failed');
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockRejectedValue(databaseError),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act & Assert
+        await expect(ChallengeModel.findParticipantByChallengeAndUser(challengeId, username)).rejects.toThrow(
+          'Database connection failed',
+        );
+      });
+
+      it('should throw error when invalid challenge ID format provided', async () => {
+        // Arrange
+        const invalidChallengeId = 'invalid-uuid-format';
+        const username = 'test-user@example.com';
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockRejectedValue(new Error('Invalid UUID format')),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act & Assert
+        await expect(ChallengeModel.findParticipantByChallengeAndUser(invalidChallengeId, username)).rejects.toThrow();
+      });
+
+      it('should handle database timeout errors', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const username = 'test-user@example.com';
+        const timeoutError = new Error('Query timeout exceeded');
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockRejectedValue(timeoutError),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act & Assert
+        await expect(ChallengeModel.findParticipantByChallengeAndUser(challengeId, username)).rejects.toThrow(
+          'Query timeout exceeded',
+        );
+      });
+
+      it('should handle constraint violations gracefully', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const username = 'test-user@example.com';
+        const constraintError = new Error('Foreign key constraint violation');
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockRejectedValue(constraintError),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act & Assert
+        await expect(ChallengeModel.findParticipantByChallengeAndUser(challengeId, username)).rejects.toThrow(
+          'Foreign key constraint violation',
+        );
+      });
+
+      it('should handle connection lost errors', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const username = 'test-user@example.com';
+        const connectionError = new Error('Connection to database lost');
+        const mockQuery = {
+          from: jest.fn().mockReturnThis(),
+          where: jest.fn().mockReturnThis(),
+          limit: jest.fn().mockRejectedValue(connectionError),
+        };
+        mockDb.select.mockReturnValue(mockQuery);
+
+        // Act & Assert
+        await expect(ChallengeModel.findParticipantByChallengeAndUser(challengeId, username)).rejects.toThrow(
+          'Connection to database lost',
+        );
+      });
+    });
+  });
+
   describe('findAllParticipantsByChallengeId', () => {
     describe('Happy Path', () => {
       it('should return all active participants for a challenge', async () => {
@@ -879,9 +1244,9 @@ describe('ChallengeModel', () => {
         mockDb.select.mockReturnValue(mockQuery);
 
         // Act & Assert
-        await expect(
-          ChallengeModel.findAllParticipantsByChallengeId(challengeId),
-        ).rejects.toThrow('Database connection failed');
+        await expect(ChallengeModel.findAllParticipantsByChallengeId(challengeId)).rejects.toThrow(
+          'Database connection failed',
+        );
       });
 
       it('should throw error when invalid challenge ID provided', async () => {
@@ -1189,10 +1554,12 @@ describe('ChallengeModel', () => {
             }),
             insert: jest.fn().mockReturnValue({
               values: jest.fn().mockReturnThis(),
-              returning: jest.fn().mockResolvedValue([{
-                ...sampleChallengeParticipant,
-                state: 'REJECTED',
-              }]),
+              returning: jest.fn().mockResolvedValue([
+                {
+                  ...sampleChallengeParticipant,
+                  state: 'REJECTED',
+                },
+              ]),
             }),
           };
           return callback(tx);
@@ -1226,10 +1593,12 @@ describe('ChallengeModel', () => {
             }),
             insert: jest.fn().mockReturnValue({
               values: jest.fn().mockReturnThis(),
-              returning: jest.fn().mockResolvedValue([{
-                ...sampleChallengeParticipant,
-                challenge_participant_inst_id: 'new-inst-id',
-              }]),
+              returning: jest.fn().mockResolvedValue([
+                {
+                  ...sampleChallengeParticipant,
+                  challenge_participant_inst_id: 'new-inst-id',
+                },
+              ]),
             }),
           };
           return callback(tx);
@@ -1299,9 +1668,9 @@ describe('ChallengeModel', () => {
         mockDb.transaction.mockImplementation(mockTransaction);
 
         // Act & Assert
-        await expect(
-          ChallengeModel.updateParticipantDetails(invalidData),
-        ).rejects.toThrow('invalid input value for enum');
+        await expect(ChallengeModel.updateParticipantDetails(invalidData)).rejects.toThrow(
+          'invalid input value for enum',
+        );
       });
     });
 
@@ -1382,12 +1751,12 @@ describe('ChallengeModel', () => {
         expect(result).toBe(2);
         expect(mockDb.update).toHaveBeenCalledWith(expect.any(Object)); // challengeParticipants table
         expect(mockUpdate.set).toHaveBeenCalledWith({ valid_until: expect.any(Date) });
-        
+
         const setCallArgs = mockUpdate.set.mock.calls[0][0];
         expect(setCallArgs.valid_until).toBeInstanceOf(Date);
         expect(setCallArgs.valid_until.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
         expect(setCallArgs.valid_until.getTime()).toBeLessThanOrEqual(afterTime.getTime());
-        
+
         expect(mockUpdate.where).toHaveBeenCalledWith(expect.any(Object)); // AND condition
       });
 
@@ -1515,6 +1884,250 @@ describe('ChallengeModel', () => {
         // Act & Assert
         await expect(ChallengeModel.deleteParticipants(challengeId)).rejects.toThrow(
           'Query timeout exceeded',
+        );
+      });
+    });
+  });
+
+  describe('deleteParticipant', () => {
+    describe('Happy Path', () => {
+      it('should soft delete specific participant from challenge', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const participantId = 'test-participant-id';
+        const beforeTime = new Date();
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockResolvedValue({ rowCount: 1 }),
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act
+        await ChallengeModel.deleteParticipant(challengeId, participantId);
+        const afterTime = new Date();
+
+        // Assert
+        expect(mockDb.update).toHaveBeenCalledWith(expect.any(Object)); // challengeParticipants table
+        expect(mockUpdate.set).toHaveBeenCalledWith({ valid_until: expect.any(Date) });
+
+        const setCallArgs = mockUpdate.set.mock.calls[0][0];
+        expect(setCallArgs.valid_until).toBeInstanceOf(Date);
+        expect(setCallArgs.valid_until.getTime()).toBeGreaterThanOrEqual(beforeTime.getTime());
+        expect(setCallArgs.valid_until.getTime()).toBeLessThanOrEqual(afterTime.getTime());
+
+        expect(mockUpdate.where).toHaveBeenCalledWith(expect.any(Object)); // AND condition with challenge and participant IDs
+      });
+
+      it('should only delete active participant records', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const participantId = 'test-participant-id';
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockResolvedValue({ rowCount: 1 }),
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act
+        await ChallengeModel.deleteParticipant(challengeId, participantId);
+
+        // Assert
+        expect(mockUpdate.where).toHaveBeenCalledWith(expect.any(Object));
+        // The where clause should filter for active records only (valid_until IS NULL)
+      });
+
+      it('should handle successful deletion with exact row count validation', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const participantId = 'test-participant-id';
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockResolvedValue({ rowCount: 1 }), // Exactly 1 row affected
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act & Assert
+        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).resolves.not.toThrow();
+      });
+    });
+
+    describe('Invalid Input', () => {
+      it('should throw NotFoundError when participant not found', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const nonExistentParticipantId = 'non-existent-participant-id';
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockResolvedValue({ rowCount: 0 }), // No participants found
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act & Assert
+        await expect(ChallengeModel.deleteParticipant(challengeId, nonExistentParticipantId)).rejects.toThrow(NotFoundError);
+        await expect(ChallengeModel.deleteParticipant(challengeId, nonExistentParticipantId)).rejects.toThrow(
+          'Participant ${participantId} @ ${challengeId} was not found',
+        );
+      });
+
+      it('should throw NotFoundError when challenge not found', async () => {
+        // Arrange
+        const nonExistentChallengeId = 'non-existent-challenge-id';
+        const participantId = 'test-participant-id';
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockResolvedValue({ rowCount: 0 }), // No participants found
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act & Assert
+        await expect(ChallengeModel.deleteParticipant(nonExistentChallengeId, participantId)).rejects.toThrow(NotFoundError);
+        await expect(ChallengeModel.deleteParticipant(nonExistentChallengeId, participantId)).rejects.toThrow(
+          'Participant ${participantId} @ ${challengeId} was not found',
+        );
+      });
+
+      it('should throw NotFoundError when multiple or zero rows affected', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const participantId = 'test-participant-id';
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockResolvedValue({ rowCount: 2 }), // Unexpected multiple rows
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act & Assert
+        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(NotFoundError);
+      });
+
+      it('should not delete already soft-deleted participants', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const participantId = 'already-deleted-participant';
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockResolvedValue({ rowCount: 0 }), // Already soft-deleted, not found
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act & Assert
+        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(NotFoundError);
+      });
+
+      it('should handle empty or invalid participant ID', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const invalidParticipantId = '';
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockRejectedValue(new Error('Invalid UUID format')),
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act & Assert
+        await expect(ChallengeModel.deleteParticipant(challengeId, invalidParticipantId)).rejects.toThrow();
+      });
+
+      it('should handle empty or invalid challenge ID', async () => {
+        // Arrange
+        const invalidChallengeId = '';
+        const participantId = 'test-participant-id';
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockRejectedValue(new Error('Invalid UUID format')),
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act & Assert
+        await expect(ChallengeModel.deleteParticipant(invalidChallengeId, participantId)).rejects.toThrow();
+      });
+    });
+
+    describe('Database Errors', () => {
+      it('should throw error when database update fails', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const participantId = 'test-participant-id';
+        const databaseError = new Error('Database connection failed');
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockRejectedValue(databaseError),
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act & Assert
+        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(
+          'Database connection failed',
+        );
+      });
+
+      it('should handle constraint violations during participant delete', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const participantId = 'test-participant-id';
+        const constraintError = new Error('Cannot delete: foreign key constraint violation');
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockRejectedValue(constraintError),
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act & Assert
+        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(
+          'Cannot delete: foreign key constraint violation',
+        );
+      });
+
+      it('should handle database timeout during delete operation', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const participantId = 'test-participant-id';
+        const timeoutError = new Error('Query timeout exceeded');
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockRejectedValue(timeoutError),
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act & Assert
+        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(
+          'Query timeout exceeded',
+        );
+      });
+
+      it('should handle database connection failures', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const participantId = 'test-participant-id';
+        const connectionError = new Error('Connection to database lost');
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockRejectedValue(connectionError),
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act & Assert
+        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(
+          'Connection to database lost',
+        );
+      });
+
+      it('should handle PostgreSQL-specific errors', async () => {
+        // Arrange
+        const challengeId = 'test-challenge-id';
+        const participantId = 'test-participant-id';
+        const pgError = new DatabaseError('Connection terminated unexpectedly', 0, 'error');
+        pgError.code = '08006';
+        const mockUpdate = {
+          set: jest.fn().mockReturnThis(),
+          where: jest.fn().mockRejectedValue(pgError),
+        };
+        mockDb.update.mockReturnValue(mockUpdate);
+
+        // Act & Assert
+        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(DatabaseError);
+        await expect(ChallengeModel.deleteParticipant(challengeId, participantId)).rejects.toThrow(
+          'Connection terminated unexpectedly',
         );
       });
     });

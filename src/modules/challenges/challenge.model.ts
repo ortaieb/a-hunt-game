@@ -13,6 +13,8 @@ import { db } from './../../shared/database';
 import { challengeParticipants, challenges } from '../../schema/challenges';
 
 import { v7 as uuidv7 } from 'uuid';
+import { DatabaseError } from 'pg';
+import { ConflictError, NotFoundError } from '../../shared/types/errors';
 
 export class ChallengeModel {
   static async challengeById(challengeId: string): Promise<ChallengeResponse | undefined> {
@@ -26,25 +28,38 @@ export class ChallengeModel {
   }
 
   static async createChallenge(challengeData: CreateChallengeData): Promise<ChallengeResponse> {
-    const result = await db
-      .insert(challenges)
-      .values({
-        challenge_id: uuidv7(),
-        challenge_inst_id: uuidv7(),
-        challenge_name: challengeData.challengeName,
-        challenge_desc: challengeData.challengeDesc,
-        waypoints: challengeData.waypointsRef,
-        start_time: challengeData.startTime,
-        duration: challengeData.duration,
-        valid_from: new Date(),
-        valid_until: null,
-      })
-      .returning();
+    try {
+      const result = await db
+        .insert(challenges)
+        .values({
+          challenge_id: uuidv7(),
+          challenge_inst_id: uuidv7(),
+          challenge_name: challengeData.challengeName,
+          challenge_desc: challengeData.challengeDesc,
+          waypoints: challengeData.waypointsRef ?? '',
+          start_time: challengeData.startTime,
+          duration: challengeData.duration,
+          valid_from: new Date(),
+          valid_until: null,
+        })
+        .returning();
 
-    if (!result[0]) {
-      throw new Error('Failed to create Challenge record');
+      if (!result[0]) {
+        throw new Error('Failed to create Challenge record');
+      }
+      return result[0];
+    } catch (error) {
+      if (error instanceof DatabaseError) {
+        if (error.code === '23505') {
+          throw new ConflictError(`Challenge already exists (constraint: ${error.constraint})`);
+        } else if (error.code === '23503') {
+          throw new ConflictError(
+            `Invalid reference in challenge (constraint: ${error.constraint})`,
+          );
+        }
+      }
+      throw error;
     }
-    return result[0];
   }
 
   static async updateChallenge(
@@ -64,7 +79,7 @@ export class ChallengeModel {
         challenge_inst_id: uuidv7(),
         challenge_name: challengeData.challengeName,
         challenge_desc: challengeData.challengeDesc,
-        waypoints: challengeData.waypointsRef,
+        waypoints: challengeData.waypointsRef ?? '',
         start_time: challengeData.startTime,
         duration: challengeData.duration,
         valid_from: now,
@@ -90,6 +105,26 @@ export class ChallengeModel {
     if (result.rowCount === 0) {
       throw new Error('Challenge with id [${challengeId}] was not found');
     }
+  }
+
+  static async findParticipantByChallengeAndUser(
+    challengeId: string,
+    username: string,
+  ): Promise<ChallengeParticipant> {
+    // Find current active participant record
+    const result = await db
+      .select()
+      .from(challengeParticipants)
+      .where(
+        and(
+          eq(challengeParticipants.challenge_id, challengeId),
+          eq(challengeParticipants.user_name, username),
+          isNull(challengeParticipants.valid_until),
+        ),
+      )
+      .limit(1);
+
+    return result[0];
   }
 
   static async findByParticipantId(participantId: string): Promise<ChallengeParticipant> {
@@ -216,5 +251,22 @@ export class ChallengeModel {
     }
 
     return result.rowCount;
+  }
+
+  static async deleteParticipant(challengeId: string, participantId: string): Promise<void> {
+    const result = await db
+      .update(challengeParticipants)
+      .set({ valid_until: new Date() })
+      .where(
+        and(
+          eq(challengeParticipants.challenge_id, challengeId),
+          eq(challengeParticipants.challenge_participant_id, participantId),
+          isNull(challenges.valid_until),
+        ),
+      );
+
+    if (result.rowCount != 1) {
+      throw new NotFoundError('Participant ${participantId} @ ${challengeId} was not found');
+    }
   }
 }
