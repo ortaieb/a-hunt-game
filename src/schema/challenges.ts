@@ -5,13 +5,11 @@ import {
   timestamp,
   uniqueIndex,
   index,
-  foreignKey,
   uuid,
   pgEnum,
   integer,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { users } from './users';
 
 export const challenges = pgTable(
   'challenges',
@@ -20,13 +18,10 @@ export const challenges = pgTable(
     challenge_inst_id: uuid('challenge_instance_id').primaryKey(),
     challenge_name: varchar('challenge_name', { length: 60 }).notNull(),
     challenge_desc: text('challenge_desc').notNull(),
-    waypoints: varchar('waypoints_ref', { length: 255 })
-      .notNull()
-      .references(() => require('./waypoints').waypoints.waypoint_name, {
-        onDelete: 'no action',
-        onUpdate: 'no action',
-      }),
-    start_time: timestamp('challenge_start_time', { withTimezone: true }).notNull(),
+    waypoints: varchar('waypoints_ref', { length: 255 }).notNull(),
+    start_time: timestamp('challenge_start_time', {
+      withTimezone: true,
+    }).notNull(),
     duration: integer('challenge_duration').notNull().default(90),
     valid_from: timestamp('valid_from', { withTimezone: true }).notNull().defaultNow(),
     valid_until: timestamp('valid_until', { withTimezone: true }),
@@ -60,8 +55,8 @@ export const challengeParticipants = pgTable(
   {
     challenge_participant_id: uuid('challenge_participant_id').notNull(),
     challenge_participant_inst_id: uuid('challenge_participant_inst_id').primaryKey(),
-    challenge_id: varchar('challenge_id', { length: 60 }).notNull(),
-    user_name: varchar('user_name', { length: 60 }).notNull(),
+    challenge_id: uuid('challenge_id').notNull(),
+    username: varchar('username', { length: 60 }).notNull(),
     participant_name: varchar('participant_name', { length: 60 }).notNull(),
     state: challengeParticipantState('participant_state').notNull(),
     valid_from: timestamp('valid_from', { withTimezone: true }).notNull().defaultNow(),
@@ -79,22 +74,6 @@ export const challengeParticipants = pgTable(
       table.valid_from,
       table.valid_until,
     ),
-
-    challengesFK: foreignKey({
-      name: 'fk_challengesparticipants_challenges',
-      columns: [table.challenge_id],
-      foreignColumns: [challenges.challenge_id],
-    })
-      .onDelete('no action')
-      .onUpdate('no action'),
-
-    participantUsersFK: foreignKey({
-      name: 'fk_challengesparticipants_users',
-      columns: [table.user_name],
-      foreignColumns: [users.username],
-    })
-      .onDelete('no action')
-      .onUpdate('no action'),
   }),
 );
 
