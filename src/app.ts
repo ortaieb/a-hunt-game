@@ -27,7 +27,7 @@ app.use('/hunt/auth', authRoutes);
 app.use('/hunt/manager/waypoints', waypointRoutes);
 
 // Challenge management routes
-app.use('/hunt/challenges', challengeRoutes);
+app.use('/hunt/manager/challenges', challengeRoutes);
 
 app.use(errorHandler);
 

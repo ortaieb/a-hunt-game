@@ -15,9 +15,7 @@ describe('Server Endpoints', () => {
     it('should return a valid timestamp in ISO format', async () => {
       const response = await request(app).get('/health');
 
-      expect(response.body.timestamp).toMatch(
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
-      );
+      expect(response.body.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     });
   });
 
