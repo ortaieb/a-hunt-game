@@ -70,7 +70,7 @@ describe('WaypointModel', () => {
         // Mock the chain of drizzle methods
         const mockReturning = jest.fn().mockResolvedValue([sampleWaypointsRecord]);
         const mockValues = jest.fn().mockReturnValue({ returning: mockReturning });
-        const mockInsert = jest.fn().mockReturnValue({ values: mockValues });
+        // const mockInsert = jest.fn().mockReturnValue({ values: mockValues }); // Unused variable removed
 
         mockDb.insert.mockReturnValue({ values: mockValues });
 
@@ -135,8 +135,14 @@ describe('WaypointModel', () => {
   describe('update', () => {
     describe('Happy Path', () => {
       it('should update waypoint sequence successfully', async () => {
-        const currentRecord = { ...sampleWaypointsRecord, waypoints_id: 'existing-uuid' };
-        const updatedRecord = { ...sampleWaypointsRecord, waypoints_id: 'new-uuid' };
+        const currentRecord = {
+          ...sampleWaypointsRecord,
+          waypoints_id: 'existing-uuid',
+        };
+        const updatedRecord = {
+          ...sampleWaypointsRecord,
+          waypoints_id: 'new-uuid',
+        };
 
         // Mock transaction
         const mockTxSelect = jest.fn().mockReturnValue({
@@ -314,7 +320,7 @@ describe('WaypointModel', () => {
         // Restore the original implementation for this test
         (WaypointModel.findByName as jest.Mock).mockRestore?.();
 
-        const result = await WaypointModel.findByName('test-name');
+        await WaypointModel.findByName('test-name');
 
         expect(mockDb.select).toHaveBeenCalledTimes(1);
         expect(mockFrom).toHaveBeenCalledTimes(1);
@@ -373,7 +379,9 @@ describe('WaypointModel', () => {
         const result = await WaypointModel.waypointNameExists('central park tour');
 
         expect(result).toBe(true);
-        expect(mockDb.select).toHaveBeenCalledWith({ count: expect.anything() });
+        expect(mockDb.select).toHaveBeenCalledWith({
+          count: expect.anything(),
+        });
         expect(mockLimit).toHaveBeenCalledWith(1);
       });
 

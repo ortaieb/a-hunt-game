@@ -15,6 +15,7 @@ export class UserService {
    * Transform user for API response (remove password_hash)
    */
   private toResponse(user: User): UserResponse {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password_hash, ...userResponse } = user;
     return userResponse;
   }

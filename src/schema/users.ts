@@ -5,9 +5,9 @@ export const users = pgTable(
   'users',
   {
     user_id: uuid('user_id').primaryKey(),
-    username: varchar('username', { length: 255 }).notNull(),
+    username: varchar('username', { length: 60 }).notNull(),
     password_hash: varchar('password_hash', { length: 255 }).notNull(),
-    nickname: varchar('nickname', { length: 255 }).notNull(),
+    nickname: varchar('nickname', { length: 60 }).notNull(),
     roles: text('roles')
       .array()
       .notNull()

@@ -7,7 +7,7 @@ const passwordSchema = z
   .regex(/[a-zA-Z]/, 'Password must contain at least one letter')
   .regex(/\d/, 'Password must contain at least one number');
 
-const emailSchema = z.email('Must be a valid email address').toLowerCase().trim();
+export const emailSchema = z.email('Must be a valid email address').toLowerCase().trim();
 
 const rolesSchema = z
   .array(z.enum(['game.admin', 'game.player', 'viewer']))
