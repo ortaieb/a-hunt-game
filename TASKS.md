@@ -122,3 +122,52 @@
 - Uses class-transformer instanceToPlain() for proper JSON serialization with kebab-case format
 - All validation gates pass: 101/101 tests, ESLint clean, TypeScript builds successfully
 - Created Pull Request #15: https://github.com/ortaieb/a-hunt-game/pull/15
+
+### 2025-01-20: Docker Packaging
+**Status:** Completed  
+**Description:** Package the application in a Docker image for testing and deployment
+**Requirements:**
+- ✅ Create production-ready Dockerfile with multi-stage build pattern
+- ✅ Use Node.js 20+ runtime
+- ✅ Minimize image size by excluding build artifacts
+- ✅ Implement security best practices (non-root user, minimal base image)
+- ✅ Add Docker Compose configuration for full stack deployment
+- ✅ Create convenience scripts for building and running containers
+- ✅ Comprehensive documentation for Docker deployment
+
+**Implementation Details:**
+- Multi-stage Dockerfile with builder, deps, and runtime stages
+- Final image based on node:20-alpine for minimal size (~150MB)
+- Non-root user (nodejs:1001) for enhanced security
+- Proper signal handling with dumb-init for graceful shutdown
+- Built-in health checks at /health endpoint
+- Docker Compose configuration for PostgreSQL + application stack
+- Separate migration service for database schema updates
+- Convenience bash scripts: docker-build.sh and docker-run.sh
+- Comprehensive DOCKER.md documentation with deployment guides for various platforms
+- .dockerignore file to optimize build context and exclude unnecessary files
+- Support for environment variable configuration via .env file
+- Production-ready with restart policies and health monitoring
+
+### 2025-01-20: Docker Directory Organization
+**Status:** Completed  
+**Description:** Reorganize Docker-related files into a clean package directory structure
+**Requirements:**
+- ✅ Move all Docker files (Dockerfiles, scripts) to package/ directory
+- ✅ Ensure scripts work from both package directory and root directory
+- ✅ Create wrapper scripts in root for easy access
+- ✅ Update all documentation to reflect new structure
+- ✅ Maintain backward compatibility for existing workflows
+
+**Implementation Details:**
+- Created package/ directory for all Docker-related files
+- Moved Dockerfile, Dockerfile.dev, and all docker-*.sh scripts to package/
+- Updated all scripts to detect execution location and work from both directories
+- Created root-level wrapper scripts: docker-build, docker-run, docker-setup
+- Updated path resolution in scripts to always use project root as build context
+- Modified .dockerignore to exclude package scripts but keep Dockerfile accessible
+- Updated all documentation (README.md, DOCKER.md) to reflect new structure
+- Created comprehensive package/README.md explaining the organization
+- All scripts now use dynamic path detection for cross-directory compatibility
+- Verified functionality from both package directory and project root
+- Cleaner top-level directory with Docker complexity hidden in package/
