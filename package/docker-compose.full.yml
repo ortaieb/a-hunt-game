@@ -1,0 +1,102 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: scavenger-hunt-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-scavenger_hunt}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-scavenger_hunt}
+      POSTGRES_DB: ${DB_NAME:-scavenger_hunt}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-scavenger_hunt} -d ${DB_NAME:-scavenger_hunt}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - scavenger-hunt-network
+
+  # Application Server
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: scavenger-hunt-server:latest
+    container_name: scavenger-hunt-app
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3000}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-scavenger_hunt}
+      DB_USER: ${DB_USER:-scavenger_hunt}
+      DB_PASSWORD: ${DB_PASSWORD:-scavenger_hunt}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-24h}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - "${PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - scavenger-hunt-network
+    # Note: Drizzle migrations can be mounted as needed:
+    # volumes:
+    #   - ./drizzle:/app/drizzle:ro
+
+  # Optional: Database migration runner (one-shot container)
+  # Uncomment when you have drizzle migrations to run
+  # migrate:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #     target: builder
+  #   image: scavenger-hunt-migrate:latest
+  #   container_name: scavenger-hunt-migrate
+  #   environment:
+  #     DB_HOST: postgres
+  #     DB_PORT: 5432
+  #     DB_NAME: ${DB_NAME:-scavenger_hunt}
+  #     DB_USER: ${DB_USER:-scavenger_hunt}
+  #     DB_PASSWORD: ${DB_PASSWORD:-scavenger_hunt}
+  #   command: ["npm", "run", "db:migrate"]
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - scavenger-hunt-network
+  #   volumes:
+  #     - ./drizzle:/app/drizzle:ro
+  #     - ./src:/app/src:ro
+  #   profiles:
+  #     - migrate
+
+networks:
+  scavenger-hunt-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
