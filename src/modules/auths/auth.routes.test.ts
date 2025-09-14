@@ -15,7 +15,7 @@ describe('Authentication Routes', () => {
     jest.clearAllMocks();
   });
 
-  describe('GET /auth/login', () => {
+  describe('POST /auth/login', () => {
     it('should login successfully with valid credentials', async () => {
       const mockUser = {
         user_id: uuidV7ForTest(0, 1),
@@ -39,7 +39,7 @@ describe('Authentication Routes', () => {
       mockedUserService.getUser.mockResolvedValue(mockUser);
       mockedUserService.validateUser.mockResolvedValue(mockUserResponse);
 
-      const response = await request(app).get('/hunt/auth/login').send({
+      const response = await request(app).post('/hunt/auth/login').send({
         username: 'test@example.com',
         password: 'validpassword',
       });
@@ -61,7 +61,7 @@ describe('Authentication Routes', () => {
     it('should return 404 for non-existent user', async () => {
       mockedUserService.getUser.mockRejectedValue(new NotFoundError('User not found'));
 
-      const response = await request(app).get('/hunt/auth/login').send({
+      const response = await request(app).post('/hunt/auth/login').send({
         username: 'nonexistent@example.com',
         password: 'password',
       });
@@ -86,7 +86,7 @@ describe('Authentication Routes', () => {
         new UnauthorizedError('Invalid credentials'),
       );
 
-      const response = await request(app).get('/hunt/auth/login').send({
+      const response = await request(app).post('/hunt/auth/login').send({
         username: 'test@example.com',
         password: 'wrongpassword',
       });
@@ -96,7 +96,7 @@ describe('Authentication Routes', () => {
     });
 
     it('should return 400 for missing username', async () => {
-      const response = await request(app).get('/hunt/auth/login').send({
+      const response = await request(app).post('/hunt/auth/login').send({
         password: 'password',
       });
 
@@ -107,7 +107,7 @@ describe('Authentication Routes', () => {
     });
 
     it('should return 400 for missing password', async () => {
-      const response = await request(app).get('/hunt/auth/login').send({
+      const response = await request(app).post('/hunt/auth/login').send({
         username: 'test@example.com',
       });
 
@@ -146,7 +146,7 @@ describe('Authentication Routes', () => {
         throw new Error('Token creation failed');
       });
 
-      const response = await request(app).get('/hunt/auth/login').send({
+      const response = await request(app).post('/hunt/auth/login').send({
         username: 'test@example.com',
         password: 'validpassword',
       });
@@ -292,7 +292,7 @@ describe('Authentication Routes', () => {
       mockedUserService.getUser.mockResolvedValue(mockUser);
       mockedUserService.validateUser.mockResolvedValue(mockUserResponse);
 
-      const response = await request(app).get('/hunt/auth/login').send({
+      const response = await request(app).post('/hunt/auth/login').send({
         username: 'test@example.com',
         password: 'validpassword',
       });

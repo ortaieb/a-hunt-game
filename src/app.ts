@@ -1,4 +1,5 @@
 import express, { Request, Response } from 'express';
+import cors from 'cors';
 import userRoutes from './modules/users/user.routes';
 import authRoutes from './modules/auths/auth.routes';
 import waypointRoutes from './modules/waypoints/waypoint.routes';
@@ -6,6 +7,14 @@ import challengeRoutes from './modules/challenges/challenge.routes';
 import { errorHandler } from './shared/middleware/asyncHandler';
 
 const app = express();
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'user-auth-token'],
+}));
 
 app.use(express.json());
 
