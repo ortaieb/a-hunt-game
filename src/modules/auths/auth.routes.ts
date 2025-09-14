@@ -7,7 +7,7 @@ import { AppError } from '../../shared/types/errors';
 const router = express.Router();
 
 // Login endpoint - GET /auth/login
-router.get('/login', async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -24,7 +24,6 @@ router.get('/login', async (req, res) => {
       return;
     }
     const user = await userService.validateUser(rawUser, password);
-
     const token = generateToken(user.username, user.roles, user.nickname);
 
     res.status(201).json({
