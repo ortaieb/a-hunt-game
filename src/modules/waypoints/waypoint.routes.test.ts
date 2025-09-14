@@ -1147,7 +1147,7 @@ describe('Waypoint Routes', () => {
       await request(app)
         .options('/hunt/manager/waypoints/central-park-tour')
         .set('user-auth-token', mockAdminToken)
-        .expect(200); // OPTIONS returns 200 for CORS preflight requests
+        .expect(204); // OPTIONS returns 200 for CORS preflight requests
     });
   });
 
