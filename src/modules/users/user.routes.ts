@@ -20,7 +20,7 @@ router.get(
   requireRole('game.admin'),
   validate(listUsersSchema),
   asyncHandler(async (req: Request, res: Response) => {
-    const users = await userService.listUsers(req.query);
+    const users = await userService.listUsers(req.query || {});
     res.json(users);
   }),
 );

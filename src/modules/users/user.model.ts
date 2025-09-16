@@ -33,7 +33,14 @@ export class UserModel {
 
   static async list(filters: UserFilters): Promise<User[]> {
     console.log(`list users using filter: ${JSON.stringify(filters, null, 2)}`);
-    return await db.select().from(users).where(isNull(users.valid_until));
+
+    let whereConditions = [isNull(users.valid_until)];
+
+    if (filters.role) {
+      whereConditions.push(sql`${filters.role} = ANY(${users.roles})`);
+    }
+
+    return await db.select().from(users).where(and(...whereConditions));
   }
 
   static async create(userData: CreateUserData): Promise<DbUser> {
