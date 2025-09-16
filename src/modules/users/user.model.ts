@@ -32,8 +32,15 @@ export class UserModel {
   }
 
   static async list(filters: UserFilters): Promise<User[]> {
-    console.log('using filters: ' + filters);
-    throw new Error('Unsupported Operation');
+    console.log(`list users using filter: ${JSON.stringify(filters, null, 2)}`);
+
+    let whereConditions = [isNull(users.valid_until)];
+
+    if (filters.role) {
+      whereConditions.push(sql`${filters.role} = ANY(${users.roles})`);
+    }
+
+    return await db.select().from(users).where(and(...whereConditions));
   }
 
   static async create(userData: CreateUserData): Promise<DbUser> {
