@@ -1,7 +1,6 @@
 // src/modules/challenges/challenge.registry.ts
 
-import { ChallengeModel } from "./challenge.model";
-import { Challenge } from "./challenge.type";
+import { ChallengeModel } from './challenge.model';
 
 export interface ChallengeRegistryEntry {
   challengeId: string;
@@ -34,12 +33,10 @@ export class ChallengeRegistry {
   }
 
   listAll(): ChallengeRegistryEntry[] {
-    return Array.from(this.registry.entries()).map(
-      ([challengeId, startTime]) => ({
-        challengeId,
-        startTime: new Date(startTime),
-      }),
-    );
+    return Array.from(this.registry.entries()).map(([challengeId, startTime]) => ({
+      challengeId,
+      startTime: new Date(startTime),
+    }));
   }
 
   has(challengeId: string): boolean {

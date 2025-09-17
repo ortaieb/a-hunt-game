@@ -12,11 +12,7 @@ export interface ScheduledCallback {
 export class ChallengesDispatcher {
   private readonly scheduledCallbacks = new Map<string, ScheduledCallback>();
 
-  register(
-    challengeId: string,
-    startTime: Date,
-    callback: ChallengeCallback,
-  ): boolean {
+  register(challengeId: string, startTime: Date, callback: ChallengeCallback): boolean {
     if (this.scheduledCallbacks.has(challengeId)) {
       return false;
     }
@@ -58,13 +54,11 @@ export class ChallengesDispatcher {
     return true;
   }
 
-  listAll(): Array<Omit<ScheduledCallback, "timeoutId" | "callback">> {
-    return Array.from(this.scheduledCallbacks.values()).map(
-      ({ challengeId, startTime }) => ({
-        challengeId,
-        startTime: new Date(startTime),
-      }),
-    );
+  listAll(): Array<Omit<ScheduledCallback, 'timeoutId' | 'callback'>> {
+    return Array.from(this.scheduledCallbacks.values()).map(({ challengeId, startTime }) => ({
+      challengeId,
+      startTime: new Date(startTime),
+    }));
   }
 
   has(challengeId: string): boolean {

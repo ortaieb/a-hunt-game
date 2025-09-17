@@ -1,13 +1,13 @@
 // src/modules/challenges/challenge.registry.test.ts
 
-import { ChallengeRegistry } from "./challenge.registry";
-import { ChallengeModel } from "./challenge.model";
+import { ChallengeRegistry } from './challenge.registry';
+import { ChallengeModel } from './challenge.model';
 
-jest.mock("./challenge.model");
+jest.mock('./challenge.model');
 
 const mockChallengeModel = ChallengeModel as jest.Mocked<typeof ChallengeModel>;
 
-describe("ChallengeRegistry", () => {
+describe('ChallengeRegistry', () => {
   let registry: ChallengeRegistry;
 
   beforeEach(() => {
@@ -19,10 +19,10 @@ describe("ChallengeRegistry", () => {
     registry.clear();
   });
 
-  describe("upsert", () => {
-    it("should add new challenge entry", async () => {
-      const challengeId = "test-challenge-1";
-      const startTime = new Date("2025-01-20T10:00:00Z");
+  describe('upsert', () => {
+    it('should add new challenge entry', async () => {
+      const challengeId = 'test-challenge-1';
+      const startTime = new Date('2025-01-20T10:00:00Z');
 
       await registry.upsert(challengeId, startTime);
 
@@ -31,10 +31,10 @@ describe("ChallengeRegistry", () => {
       expect(registry.size()).toBe(1);
     });
 
-    it("should update existing challenge entry", async () => {
-      const challengeId = "test-challenge-1";
-      const originalTime = new Date("2025-01-20T10:00:00Z");
-      const updatedTime = new Date("2025-01-20T11:00:00Z");
+    it('should update existing challenge entry', async () => {
+      const challengeId = 'test-challenge-1';
+      const originalTime = new Date('2025-01-20T10:00:00Z');
+      const updatedTime = new Date('2025-01-20T11:00:00Z');
 
       await registry.upsert(challengeId, originalTime);
       await registry.upsert(challengeId, updatedTime);
@@ -44,9 +44,9 @@ describe("ChallengeRegistry", () => {
       expect(registry.size()).toBe(1);
     });
 
-    it("should create independent date objects", async () => {
-      const challengeId = "test-challenge-1";
-      const startTime = new Date("2025-01-20T10:00:00Z");
+    it('should create independent date objects', async () => {
+      const challengeId = 'test-challenge-1';
+      const startTime = new Date('2025-01-20T10:00:00Z');
 
       await registry.upsert(challengeId, startTime);
       startTime.setHours(15);
@@ -56,10 +56,10 @@ describe("ChallengeRegistry", () => {
     });
   });
 
-  describe("delete", () => {
-    it("should remove existing challenge entry", async () => {
-      const challengeId = "test-challenge-1";
-      const startTime = new Date("2025-01-20T10:00:00Z");
+  describe('delete', () => {
+    it('should remove existing challenge entry', async () => {
+      const challengeId = 'test-challenge-1';
+      const startTime = new Date('2025-01-20T10:00:00Z');
 
       await registry.upsert(challengeId, startTime);
       const result = registry.delete(challengeId);
@@ -69,17 +69,17 @@ describe("ChallengeRegistry", () => {
       expect(registry.size()).toBe(0);
     });
 
-    it("should return false for non-existent challenge", () => {
-      const result = registry.delete("non-existent");
+    it('should return false for non-existent challenge', () => {
+      const result = registry.delete('non-existent');
 
       expect(result).toBe(false);
     });
 
-    it("should not affect other entries when deleting one", async () => {
-      const challengeId1 = "test-challenge-1";
-      const challengeId2 = "test-challenge-2";
-      const startTime1 = new Date("2025-01-20T10:00:00Z");
-      const startTime2 = new Date("2025-01-20T11:00:00Z");
+    it('should not affect other entries when deleting one', async () => {
+      const challengeId1 = 'test-challenge-1';
+      const challengeId2 = 'test-challenge-2';
+      const startTime1 = new Date('2025-01-20T10:00:00Z');
+      const startTime2 = new Date('2025-01-20T11:00:00Z');
 
       await registry.upsert(challengeId1, startTime1);
       await registry.upsert(challengeId2, startTime2);
@@ -91,21 +91,21 @@ describe("ChallengeRegistry", () => {
     });
   });
 
-  describe("loadAll", () => {
-    it("should clear registry and load all challenges from database", async () => {
-      const existingChallengeId = "existing-challenge";
-      const existingStartTime = new Date("2025-01-20T09:00:00Z");
+  describe('loadAll', () => {
+    it('should clear registry and load all challenges from database', async () => {
+      const existingChallengeId = 'existing-challenge';
+      const existingStartTime = new Date('2025-01-20T09:00:00Z');
 
       await registry.upsert(existingChallengeId, existingStartTime);
 
       const mockChallenges = [
         {
-          challenge_id: "challenge-1",
-          start_time: new Date("2025-01-20T10:00:00Z"),
+          challenge_id: 'challenge-1',
+          start_time: new Date('2025-01-20T10:00:00Z'),
         },
         {
-          challenge_id: "challenge-2",
-          start_time: new Date("2025-01-20T11:00:00Z"),
+          challenge_id: 'challenge-2',
+          start_time: new Date('2025-01-20T11:00:00Z'),
         },
       ];
 
@@ -115,12 +115,12 @@ describe("ChallengeRegistry", () => {
 
       expect(mockChallengeModel.allChallenges).toHaveBeenCalledTimes(1);
       expect(registry.has(existingChallengeId)).toBe(false);
-      expect(registry.has("challenge-1")).toBe(true);
-      expect(registry.has("challenge-2")).toBe(true);
+      expect(registry.has('challenge-1')).toBe(true);
+      expect(registry.has('challenge-2')).toBe(true);
       expect(registry.size()).toBe(2);
     });
 
-    it("should handle empty database result", async () => {
+    it('should handle empty database result', async () => {
       mockChallengeModel.allChallenges.mockResolvedValue([]);
 
       await registry.loadAll();
@@ -130,17 +130,17 @@ describe("ChallengeRegistry", () => {
     });
   });
 
-  describe("flushAll", () => {
-    it("should clear registry and reload from database", async () => {
-      const existingChallengeId = "existing-challenge";
-      const existingStartTime = new Date("2025-01-20T09:00:00Z");
+  describe('flushAll', () => {
+    it('should clear registry and reload from database', async () => {
+      const existingChallengeId = 'existing-challenge';
+      const existingStartTime = new Date('2025-01-20T09:00:00Z');
 
       await registry.upsert(existingChallengeId, existingStartTime);
 
       const mockChallenges = [
         {
-          challenge_id: "challenge-1",
-          start_time: new Date("2025-01-20T10:00:00Z"),
+          challenge_id: 'challenge-1',
+          start_time: new Date('2025-01-20T10:00:00Z'),
         },
       ];
 
@@ -150,26 +150,26 @@ describe("ChallengeRegistry", () => {
 
       expect(mockChallengeModel.allChallenges).toHaveBeenCalledTimes(1);
       expect(registry.has(existingChallengeId)).toBe(false);
-      expect(registry.has("challenge-1")).toBe(true);
+      expect(registry.has('challenge-1')).toBe(true);
       expect(registry.size()).toBe(1);
     });
   });
 
-  describe("listAll", () => {
-    it("should return empty array when registry is empty", () => {
+  describe('listAll', () => {
+    it('should return empty array when registry is empty', () => {
       const result = registry.listAll();
 
       expect(result).toEqual([]);
     });
 
-    it("should return all entries in registry", async () => {
+    it('should return all entries in registry', async () => {
       const challenge1 = {
-        id: "challenge-1",
-        time: new Date("2025-01-20T10:00:00Z"),
+        id: 'challenge-1',
+        time: new Date('2025-01-20T10:00:00Z'),
       };
       const challenge2 = {
-        id: "challenge-2",
-        time: new Date("2025-01-20T11:00:00Z"),
+        id: 'challenge-2',
+        time: new Date('2025-01-20T11:00:00Z'),
       };
 
       await registry.upsert(challenge1.id, challenge1.time);
@@ -188,9 +188,9 @@ describe("ChallengeRegistry", () => {
       });
     });
 
-    it("should return independent date objects", async () => {
-      const challengeId = "test-challenge";
-      const startTime = new Date("2025-01-20T10:00:00Z");
+    it('should return independent date objects', async () => {
+      const challengeId = 'test-challenge';
+      const startTime = new Date('2025-01-20T10:00:00Z');
 
       await registry.upsert(challengeId, startTime);
 
@@ -202,25 +202,25 @@ describe("ChallengeRegistry", () => {
     });
   });
 
-  describe("has", () => {
-    it("should return true for existing challenge", async () => {
-      const challengeId = "test-challenge";
-      const startTime = new Date("2025-01-20T10:00:00Z");
+  describe('has', () => {
+    it('should return true for existing challenge', async () => {
+      const challengeId = 'test-challenge';
+      const startTime = new Date('2025-01-20T10:00:00Z');
 
       await registry.upsert(challengeId, startTime);
 
       expect(registry.has(challengeId)).toBe(true);
     });
 
-    it("should return false for non-existent challenge", () => {
-      expect(registry.has("non-existent")).toBe(false);
+    it('should return false for non-existent challenge', () => {
+      expect(registry.has('non-existent')).toBe(false);
     });
   });
 
-  describe("get", () => {
-    it("should return start time for existing challenge", async () => {
-      const challengeId = "test-challenge";
-      const startTime = new Date("2025-01-20T10:00:00Z");
+  describe('get', () => {
+    it('should return start time for existing challenge', async () => {
+      const challengeId = 'test-challenge';
+      const startTime = new Date('2025-01-20T10:00:00Z');
 
       await registry.upsert(challengeId, startTime);
 
@@ -228,14 +228,14 @@ describe("ChallengeRegistry", () => {
       expect(result).toEqual(startTime);
     });
 
-    it("should return undefined for non-existent challenge", () => {
-      const result = registry.get("non-existent");
+    it('should return undefined for non-existent challenge', () => {
+      const result = registry.get('non-existent');
       expect(result).toBeUndefined();
     });
 
-    it("should return independent date object", async () => {
-      const challengeId = "test-challenge";
-      const startTime = new Date("2025-01-20T10:00:00Z");
+    it('should return independent date object', async () => {
+      const challengeId = 'test-challenge';
+      const startTime = new Date('2025-01-20T10:00:00Z');
 
       await registry.upsert(challengeId, startTime);
 
@@ -247,27 +247,27 @@ describe("ChallengeRegistry", () => {
     });
   });
 
-  describe("size", () => {
-    it("should return 0 for empty registry", () => {
+  describe('size', () => {
+    it('should return 0 for empty registry', () => {
       expect(registry.size()).toBe(0);
     });
 
-    it("should return correct count of entries", async () => {
-      await registry.upsert("challenge-1", new Date());
+    it('should return correct count of entries', async () => {
+      await registry.upsert('challenge-1', new Date());
       expect(registry.size()).toBe(1);
 
-      await registry.upsert("challenge-2", new Date());
+      await registry.upsert('challenge-2', new Date());
       expect(registry.size()).toBe(2);
 
-      registry.delete("challenge-1");
+      registry.delete('challenge-1');
       expect(registry.size()).toBe(1);
     });
   });
 
-  describe("clear", () => {
-    it("should remove all entries from registry", async () => {
-      await registry.upsert("challenge-1", new Date());
-      await registry.upsert("challenge-2", new Date());
+  describe('clear', () => {
+    it('should remove all entries from registry', async () => {
+      await registry.upsert('challenge-1', new Date());
+      await registry.upsert('challenge-2', new Date());
 
       registry.clear();
 

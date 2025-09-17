@@ -1,13 +1,7 @@
 // src/modules/challenges/challenge.orchestrator.ts
 
-import {
-  ChallengeRegistry,
-  ChallengeRegistryEntry,
-} from "./challenge.registry";
-import {
-  ChallengesDispatcher,
-  ChallengeCallback,
-} from "./challenge.dispatcher";
+import { ChallengeRegistry, ChallengeRegistryEntry } from './challenge.registry';
+import { ChallengesDispatcher, ChallengeCallback } from './challenge.dispatcher';
 
 export interface ChallengeOrchestratorEntry extends ChallengeRegistryEntry {
   isScheduled: boolean;
@@ -23,9 +17,7 @@ export class ChallengesOrchestrator {
     this.dispatcher = new ChallengesDispatcher();
 
     this.defaultCallback = (challengeId: string, startTime: Date) => {
-      console.log(
-        `Challenge ${challengeId} started at ${startTime.toISOString()}`,
-      );
+      console.log(`Challenge ${challengeId} started at ${startTime.toISOString()}`);
     };
   }
 
@@ -66,10 +58,7 @@ export class ChallengesOrchestrator {
     let scheduledCount = 0;
 
     for (const entry of entries) {
-      if (
-        entry.startTime > now &&
-        !this.dispatcher.isScheduled(entry.challengeId)
-      ) {
+      if (entry.startTime > now && !this.dispatcher.isScheduled(entry.challengeId)) {
         const success = this.registerScheduledCallback(
           entry.challengeId,
           entry.startTime,

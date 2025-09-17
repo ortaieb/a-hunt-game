@@ -1,8 +1,8 @@
 // src/modules/challenges/challenge.dispatcher.test.ts
 
-import { ChallengesDispatcher } from "./challenge.dispatcher";
+import { ChallengesDispatcher } from './challenge.dispatcher';
 
-describe("ChallengesDispatcher", () => {
+describe('ChallengesDispatcher', () => {
   let dispatcher: ChallengesDispatcher;
 
   beforeEach(() => {
@@ -15,9 +15,9 @@ describe("ChallengesDispatcher", () => {
     jest.useRealTimers();
   });
 
-  describe("register", () => {
-    it("should register future callback and execute at scheduled time", () => {
-      const challengeId = "test-challenge";
+  describe('register', () => {
+    it('should register future callback and execute at scheduled time', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(Date.now() + 5000); // 5 seconds from now
       const callback = jest.fn();
 
@@ -33,8 +33,8 @@ describe("ChallengesDispatcher", () => {
       expect(dispatcher.has(challengeId)).toBe(false);
     });
 
-    it("should execute callback immediately for past start time", () => {
-      const challengeId = "test-challenge";
+    it('should execute callback immediately for past start time', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(Date.now() - 1000); // 1 second ago
       const callback = jest.fn();
 
@@ -45,8 +45,8 @@ describe("ChallengesDispatcher", () => {
       expect(dispatcher.has(challengeId)).toBe(false);
     });
 
-    it("should execute callback immediately for current time", () => {
-      const challengeId = "test-challenge";
+    it('should execute callback immediately for current time', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(); // Current time
       const callback = jest.fn();
 
@@ -57,8 +57,8 @@ describe("ChallengesDispatcher", () => {
       expect(dispatcher.has(challengeId)).toBe(false);
     });
 
-    it("should return false when trying to register duplicate challenge", () => {
-      const challengeId = "test-challenge";
+    it('should return false when trying to register duplicate challenge', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(Date.now() + 5000);
       const callback1 = jest.fn();
       const callback2 = jest.fn();
@@ -71,28 +71,20 @@ describe("ChallengesDispatcher", () => {
       expect(dispatcher.size()).toBe(1);
     });
 
-    it("should handle multiple different challenges", () => {
+    it('should handle multiple different challenges', () => {
       const challenge1 = {
-        id: "challenge-1",
+        id: 'challenge-1',
         time: new Date(Date.now() + 5000),
         callback: jest.fn(),
       };
       const challenge2 = {
-        id: "challenge-2",
+        id: 'challenge-2',
         time: new Date(Date.now() + 7000),
         callback: jest.fn(),
       };
 
-      const result1 = dispatcher.register(
-        challenge1.id,
-        challenge1.time,
-        challenge1.callback,
-      );
-      const result2 = dispatcher.register(
-        challenge2.id,
-        challenge2.time,
-        challenge2.callback,
-      );
+      const result1 = dispatcher.register(challenge1.id, challenge1.time, challenge1.callback);
+      const result2 = dispatcher.register(challenge2.id, challenge2.time, challenge2.callback);
 
       expect(result1).toBe(true);
       expect(result2).toBe(true);
@@ -108,8 +100,8 @@ describe("ChallengesDispatcher", () => {
       expect(dispatcher.size()).toBe(0);
     });
 
-    it("should create independent date objects", () => {
-      const challengeId = "test-challenge";
+    it('should create independent date objects', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(Date.now() + 5000);
       const callback = jest.fn();
 
@@ -121,9 +113,9 @@ describe("ChallengesDispatcher", () => {
     });
   });
 
-  describe("cancel", () => {
-    it("should cancel scheduled callback and return true", () => {
-      const challengeId = "test-challenge";
+  describe('cancel', () => {
+    it('should cancel scheduled callback and return true', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(Date.now() + 5000);
       const callback = jest.fn();
 
@@ -137,20 +129,20 @@ describe("ChallengesDispatcher", () => {
       expect(callback).not.toHaveBeenCalled();
     });
 
-    it("should return false for non-existent challenge", () => {
-      const result = dispatcher.cancel("non-existent");
+    it('should return false for non-existent challenge', () => {
+      const result = dispatcher.cancel('non-existent');
 
       expect(result).toBe(false);
     });
 
-    it("should not affect other scheduled callbacks when canceling one", () => {
+    it('should not affect other scheduled callbacks when canceling one', () => {
       const challenge1 = {
-        id: "challenge-1",
+        id: 'challenge-1',
         time: new Date(Date.now() + 5000),
         callback: jest.fn(),
       };
       const challenge2 = {
-        id: "challenge-2",
+        id: 'challenge-2',
         time: new Date(Date.now() + 7000),
         callback: jest.fn(),
       };
@@ -170,21 +162,21 @@ describe("ChallengesDispatcher", () => {
     });
   });
 
-  describe("listAll", () => {
-    it("should return empty array when no callbacks are scheduled", () => {
+  describe('listAll', () => {
+    it('should return empty array when no callbacks are scheduled', () => {
       const result = dispatcher.listAll();
 
       expect(result).toEqual([]);
     });
 
-    it("should return all scheduled callbacks without sensitive data", () => {
+    it('should return all scheduled callbacks without sensitive data', () => {
       const challenge1 = {
-        id: "challenge-1",
+        id: 'challenge-1',
         time: new Date(Date.now() + 5000),
         callback: jest.fn(),
       };
       const challenge2 = {
-        id: "challenge-2",
+        id: 'challenge-2',
         time: new Date(Date.now() + 7000),
         callback: jest.fn(),
       };
@@ -205,13 +197,13 @@ describe("ChallengesDispatcher", () => {
       });
 
       result.forEach((item) => {
-        expect(item).not.toHaveProperty("callback");
-        expect(item).not.toHaveProperty("timeoutId");
+        expect(item).not.toHaveProperty('callback');
+        expect(item).not.toHaveProperty('timeoutId');
       });
     });
 
-    it("should return independent date objects", () => {
-      const challengeId = "test-challenge";
+    it('should return independent date objects', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(Date.now() + 5000);
       const callback = jest.fn();
 
@@ -225,9 +217,9 @@ describe("ChallengesDispatcher", () => {
     });
   });
 
-  describe("has", () => {
-    it("should return true for scheduled challenge", () => {
-      const challengeId = "test-challenge";
+  describe('has', () => {
+    it('should return true for scheduled challenge', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(Date.now() + 5000);
       const callback = jest.fn();
 
@@ -236,12 +228,12 @@ describe("ChallengesDispatcher", () => {
       expect(dispatcher.has(challengeId)).toBe(true);
     });
 
-    it("should return false for non-scheduled challenge", () => {
-      expect(dispatcher.has("non-existent")).toBe(false);
+    it('should return false for non-scheduled challenge', () => {
+      expect(dispatcher.has('non-existent')).toBe(false);
     });
 
-    it("should return false after callback execution", () => {
-      const challengeId = "test-challenge";
+    it('should return false after callback execution', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(Date.now() + 1000);
       const callback = jest.fn();
 
@@ -253,27 +245,27 @@ describe("ChallengesDispatcher", () => {
     });
   });
 
-  describe("size", () => {
-    it("should return 0 for empty dispatcher", () => {
+  describe('size', () => {
+    it('should return 0 for empty dispatcher', () => {
       expect(dispatcher.size()).toBe(0);
     });
 
-    it("should return correct count of scheduled callbacks", () => {
+    it('should return correct count of scheduled callbacks', () => {
       const startTime = new Date(Date.now() + 5000);
       const callback = jest.fn();
 
-      dispatcher.register("challenge-1", startTime, callback);
+      dispatcher.register('challenge-1', startTime, callback);
       expect(dispatcher.size()).toBe(1);
 
-      dispatcher.register("challenge-2", startTime, callback);
+      dispatcher.register('challenge-2', startTime, callback);
       expect(dispatcher.size()).toBe(2);
 
-      dispatcher.cancel("challenge-1");
+      dispatcher.cancel('challenge-1');
       expect(dispatcher.size()).toBe(1);
     });
 
-    it("should decrease size after callback execution", () => {
-      const challengeId = "test-challenge";
+    it('should decrease size after callback execution', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(Date.now() + 1000);
       const callback = jest.fn();
 
@@ -285,15 +277,15 @@ describe("ChallengesDispatcher", () => {
     });
   });
 
-  describe("clear", () => {
-    it("should cancel all scheduled callbacks", () => {
+  describe('clear', () => {
+    it('should cancel all scheduled callbacks', () => {
       const challenge1 = {
-        id: "challenge-1",
+        id: 'challenge-1',
         time: new Date(Date.now() + 5000),
         callback: jest.fn(),
       };
       const challenge2 = {
-        id: "challenge-2",
+        id: 'challenge-2',
         time: new Date(Date.now() + 7000),
         callback: jest.fn(),
       };
@@ -312,9 +304,9 @@ describe("ChallengesDispatcher", () => {
     });
   });
 
-  describe("isScheduled", () => {
-    it("should return true for scheduled challenge", () => {
-      const challengeId = "test-challenge";
+  describe('isScheduled', () => {
+    it('should return true for scheduled challenge', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(Date.now() + 5000);
       const callback = jest.fn();
 
@@ -323,14 +315,14 @@ describe("ChallengesDispatcher", () => {
       expect(dispatcher.isScheduled(challengeId)).toBe(true);
     });
 
-    it("should return false for non-scheduled challenge", () => {
-      expect(dispatcher.isScheduled("non-existent")).toBe(false);
+    it('should return false for non-scheduled challenge', () => {
+      expect(dispatcher.isScheduled('non-existent')).toBe(false);
     });
   });
 
-  describe("getScheduled", () => {
-    it("should return start time for scheduled challenge", () => {
-      const challengeId = "test-challenge";
+  describe('getScheduled', () => {
+    it('should return start time for scheduled challenge', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(Date.now() + 5000);
       const callback = jest.fn();
 
@@ -340,13 +332,13 @@ describe("ChallengesDispatcher", () => {
       expect(result).toEqual(startTime);
     });
 
-    it("should return undefined for non-scheduled challenge", () => {
-      const result = dispatcher.getScheduled("non-existent");
+    it('should return undefined for non-scheduled challenge', () => {
+      const result = dispatcher.getScheduled('non-existent');
       expect(result).toBeUndefined();
     });
 
-    it("should return independent date object", () => {
-      const challengeId = "test-challenge";
+    it('should return independent date object', () => {
+      const challengeId = 'test-challenge';
       const startTime = new Date(Date.now() + 5000);
       const callback = jest.fn();
 
