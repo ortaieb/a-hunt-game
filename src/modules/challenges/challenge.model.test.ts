@@ -486,7 +486,7 @@ describe('ChallengeModel', () => {
           ]),
         };
 
-        const mockTransaction = jest.fn().mockImplementation((callback) => {
+        const mockTransaction = jest.fn().mockImplementation(callback => {
           const tx = {
             update: jest.fn().mockReturnValue(mockUpdate),
             insert: jest.fn().mockReturnValue(mockInsert),
@@ -522,7 +522,7 @@ describe('ChallengeModel', () => {
       it('should preserve the original challenge_id during update', async () => {
         // Arrange
         const challengeId = 'original-challenge-id';
-        const mockTransaction = jest.fn().mockImplementation((callback) => {
+        const mockTransaction = jest.fn().mockImplementation(callback => {
           const tx = {
             update: jest.fn().mockReturnValue({
               set: jest.fn().mockReturnThis(),
@@ -555,7 +555,7 @@ describe('ChallengeModel', () => {
         const mockUuid = require('uuid');
         mockUuid.v7.mockReturnValueOnce('new-inst-id');
 
-        const mockTransaction = jest.fn().mockImplementation((callback) => {
+        const mockTransaction = jest.fn().mockImplementation(callback => {
           const tx = {
             update: jest.fn().mockReturnValue({
               set: jest.fn().mockReturnThis(),
@@ -588,7 +588,7 @@ describe('ChallengeModel', () => {
       it('should handle invalid challenge ID', async () => {
         // Arrange
         const invalidChallengeId = 'non-existent-id';
-        const mockTransaction = jest.fn().mockImplementation((callback) => {
+        const mockTransaction = jest.fn().mockImplementation(callback => {
           const tx = {
             update: jest.fn().mockReturnValue({
               set: jest.fn().mockReturnThis(),
@@ -617,7 +617,7 @@ describe('ChallengeModel', () => {
           waypointsRef: 'non-existent-waypoint',
         };
 
-        const mockTransaction = jest.fn().mockImplementation((callback) => {
+        const mockTransaction = jest.fn().mockImplementation(callback => {
           const tx = {
             update: jest.fn().mockReturnValue({
               set: jest.fn().mockReturnThis(),
@@ -656,7 +656,7 @@ describe('ChallengeModel', () => {
       it('should rollback transaction when insert fails', async () => {
         // Arrange
         const challengeId = 'test-challenge-id';
-        const mockTransaction = jest.fn().mockImplementation((callback) => {
+        const mockTransaction = jest.fn().mockImplementation(callback => {
           const tx = {
             update: jest.fn().mockReturnValue({
               set: jest.fn().mockReturnThis(),
@@ -1554,7 +1554,7 @@ describe('ChallengeModel', () => {
           returning: jest.fn().mockResolvedValue([updatedParticipant]),
         };
 
-        const mockTransaction = jest.fn().mockImplementation((callback) => {
+        const mockTransaction = jest.fn().mockImplementation(callback => {
           const tx = {
             select: jest.fn().mockReturnValue(mockSelect),
             update: jest.fn().mockReturnValue(mockUpdate),
@@ -1596,7 +1596,7 @@ describe('ChallengeModel', () => {
           state: 'REJECTED' as const,
         };
 
-        const mockTransaction = jest.fn().mockImplementation((callback) => {
+        const mockTransaction = jest.fn().mockImplementation(callback => {
           const tx = {
             select: jest.fn().mockReturnValue({
               from: jest.fn().mockReturnThis(),
@@ -1635,7 +1635,7 @@ describe('ChallengeModel', () => {
         const mockUuid = require('uuid');
         mockUuid.v7.mockReturnValueOnce('new-inst-id');
 
-        const mockTransaction = jest.fn().mockImplementation((callback) => {
+        const mockTransaction = jest.fn().mockImplementation(callback => {
           const tx = {
             select: jest.fn().mockReturnValue({
               from: jest.fn().mockReturnThis(),
@@ -1673,7 +1673,7 @@ describe('ChallengeModel', () => {
     describe('Invalid Input', () => {
       it('should throw error when participant not found', async () => {
         // Arrange
-        const mockTransaction = jest.fn().mockImplementation((callback) => {
+        const mockTransaction = jest.fn().mockImplementation(callback => {
           const tx = {
             select: jest.fn().mockReturnValue({
               from: jest.fn().mockReturnThis(),
@@ -1701,7 +1701,7 @@ describe('ChallengeModel', () => {
           state: 'INVALID_STATE' as any,
         };
 
-        const mockTransaction = jest.fn().mockImplementation((callback) => {
+        const mockTransaction = jest.fn().mockImplementation(callback => {
           const tx = {
             select: jest.fn().mockReturnValue({
               from: jest.fn().mockReturnThis(),
@@ -1744,7 +1744,7 @@ describe('ChallengeModel', () => {
 
       it('should rollback transaction when insert fails', async () => {
         // Arrange
-        const mockTransaction = jest.fn().mockImplementation((callback) => {
+        const mockTransaction = jest.fn().mockImplementation(callback => {
           const tx = {
             select: jest.fn().mockReturnValue({
               from: jest.fn().mockReturnThis(),

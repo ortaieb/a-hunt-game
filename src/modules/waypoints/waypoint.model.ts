@@ -31,7 +31,7 @@ export class WaypointModel {
     waypointName: string,
     data: UpdateWaypointSequenceData,
   ): Promise<WaypointsRecord> {
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async tx => {
       const now = new Date();
 
       const currentRecord = await tx

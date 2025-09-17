@@ -11,7 +11,7 @@ async function runMigrations(): Promise<void> {
   process.exit(0);
 }
 
-runMigrations().catch((err) => {
+runMigrations().catch(err => {
   console.error('Migration failed!', err);
   process.exit(1);
 });

@@ -145,6 +145,12 @@
 
 ## 🔎 Style & Conventions
 
+### Code Formatting
+- **Prettier Configuration**: Uses single quotes, semicolons, and trailing commas for consistent formatting
+- **Quote Style**: Single quotes (`'`) for strings, consistent with ESLint configuration
+- **Line Length**: 100 characters maximum
+- **Indentation**: 2 spaces, no tabs
+
 ### Naming Conventions
 
 - Use camelCase for functions, variables, and method names

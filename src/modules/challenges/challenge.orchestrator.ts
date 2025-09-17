@@ -46,7 +46,7 @@ export class ChallengesOrchestrator {
   listEntries(): ChallengeOrchestratorEntry[] {
     const registryEntries = this.registry.listAll();
 
-    return registryEntries.map((entry) => ({
+    return registryEntries.map(entry => ({
       ...entry,
       isScheduled: this.dispatcher.has(entry.challengeId),
     }));
@@ -77,7 +77,7 @@ export class ChallengesOrchestrator {
     const entries = this.registry.listAll();
     const now = new Date();
 
-    return entries.filter((entry) => entry.startTime > now).length;
+    return entries.filter(entry => entry.startTime > now).length;
   }
 
   getScheduledChallengesCount(): number {
