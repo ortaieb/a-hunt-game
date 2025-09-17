@@ -40,7 +40,10 @@ export class UserModel {
       whereConditions.push(sql`${filters.role} = ANY(${users.roles})`);
     }
 
-    return await db.select().from(users).where(and(...whereConditions));
+    return await db
+      .select()
+      .from(users)
+      .where(and(...whereConditions));
   }
 
   static async create(userData: CreateUserData): Promise<DbUser> {
@@ -67,7 +70,7 @@ export class UserModel {
   }
 
   static async update(username: string, userData: UpdateUserData): Promise<DbUser> {
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async tx => {
       const now = new Date();
 
       // Find current active user

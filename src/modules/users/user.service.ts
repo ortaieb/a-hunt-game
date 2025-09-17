@@ -81,7 +81,7 @@ export class UserService {
 
   async listUsers(filters: UserFilters): Promise<UserResponse[]> {
     const users = await UserModel.list(filters);
-    return users.map((user) => this.toResponse(user));
+    return users.map(user => this.toResponse(user));
   }
 
   async getUserHistory(username: string): Promise<UserResponse[]> {
@@ -89,7 +89,7 @@ export class UserService {
     if (history.length === 0) {
       throw new NotFoundError('User not found');
     }
-    return history.map((user) => this.toResponse(user));
+    return history.map(user => this.toResponse(user));
   }
 }
 

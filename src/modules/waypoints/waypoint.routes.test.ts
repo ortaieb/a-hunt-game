@@ -95,7 +95,7 @@ describe('Waypoint Routes', () => {
     jest.clearAllMocks();
 
     // Mock UserModel for authentication middleware
-    mockedUserModel.findByUsername.mockImplementation((username) => {
+    mockedUserModel.findByUsername.mockImplementation(username => {
       if (username === 'admin@example.com') {
         return Promise.resolve({
           user_id: 'admin-user-id',
@@ -1163,7 +1163,7 @@ describe('Waypoint Routes', () => {
 
       const responses = await Promise.all(requests);
 
-      responses.forEach((response) => {
+      responses.forEach(response => {
         expect(response.status).toBe(200);
         expect(response.body).toEqual(expectedWaypointSequence);
       });

@@ -242,7 +242,7 @@ describe('Challenge Validators', () => {
           '2024-08-15T10:00:00.123Z',
         ];
 
-        validTimes.forEach((startTime) => {
+        validTimes.forEach(startTime => {
           const validData = {
             body: {
               challengeName: 'Valid Name',
@@ -265,7 +265,7 @@ describe('Challenge Validators', () => {
           123456789,
         ];
 
-        invalidTimes.forEach((startTime) => {
+        invalidTimes.forEach(startTime => {
           const invalidData = {
             body: {
               challengeName: 'Valid Name',
@@ -284,7 +284,7 @@ describe('Challenge Validators', () => {
       it('should accept positive duration values', () => {
         const validDurations = [1, 30, 60, 90, 120, 1440]; // 1 minute to 24 hours
 
-        validDurations.forEach((duration) => {
+        validDurations.forEach(duration => {
           const validData = {
             body: {
               challengeName: 'Valid Name',
@@ -353,7 +353,7 @@ describe('Challenge Validators', () => {
           ['john.doe@example.org', 'jane.smith@company.net'],
         ];
 
-        validEmails.forEach((invitedUsers) => {
+        validEmails.forEach(invitedUsers => {
           const validData = {
             body: {
               challengeName: 'Valid Name',
@@ -376,7 +376,7 @@ describe('Challenge Validators', () => {
           ['spaces in@email.com'],
         ];
 
-        invalidEmails.forEach((invitedUsers) => {
+        invalidEmails.forEach(invitedUsers => {
           const invalidData = {
             body: {
               challengeName: 'Valid Name',
@@ -522,7 +522,7 @@ describe('Challenge Validators', () => {
           'complex-waypoint-reference-name',
         ];
 
-        validRefs.forEach((waypointsRef) => {
+        validRefs.forEach(waypointsRef => {
           const validData = {
             body: {
               challengeId: '01234567-89ab-7def-8123-456789abcdef', // UUIDv7 format

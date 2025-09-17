@@ -52,7 +52,7 @@ export const waypoints = pgTable(
     valid_from: timestamp('valid_from', { withTimezone: true }).notNull().defaultNow(),
     valid_until: timestamp('valid_until', { withTimezone: true }),
   },
-  (table) => ({
+  table => ({
     // Temporal constraint for active waypoint sequences
     waypointNameActiveIdx: uniqueIndex('idx_waypoints_name_active')
       .on(table.waypoint_name)

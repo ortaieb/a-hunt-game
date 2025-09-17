@@ -26,7 +26,7 @@ export const challenges = pgTable(
     valid_from: timestamp('valid_from', { withTimezone: true }).notNull().defaultNow(),
     valid_until: timestamp('valid_until', { withTimezone: true }),
   },
-  (table) => ({
+  table => ({
     challangeActiveIdx: uniqueIndex('idx_challenges_challengeid_active')
       .on(table.challenge_id)
       .where(sql`${table.valid_until} IS NULL`),
@@ -62,7 +62,7 @@ export const challengeParticipants = pgTable(
     valid_from: timestamp('valid_from', { withTimezone: true }).notNull().defaultNow(),
     valid_until: timestamp('valid_until', { withTimezone: true }),
   },
-  (table) => ({
+  table => ({
     challangeParticipantActiveIdx: uniqueIndex(
       'idx_challenges_participant_challengeparticipantid_active',
     )

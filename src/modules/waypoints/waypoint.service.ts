@@ -18,7 +18,7 @@ export class WaypointService {
     }
 
     // Convert kebab-case JSON data to internal format using class-transformer
-    const internalData = data.data.map((jsonWaypoint) => plainToClass(Waypoint, jsonWaypoint));
+    const internalData = data.data.map(jsonWaypoint => plainToClass(Waypoint, jsonWaypoint));
 
     const sequence = await WaypointModel.create({
       ...data,
@@ -37,7 +37,7 @@ export class WaypointService {
     }
 
     // Convert kebab-case JSON data to internal format using class-transformer
-    const internalData = data.data.map((jsonWaypoint) => plainToClass(Waypoint, jsonWaypoint));
+    const internalData = data.data.map(jsonWaypoint => plainToClass(Waypoint, jsonWaypoint));
 
     const updatedRecord = await WaypointModel.update(waypointName, {
       ...data,

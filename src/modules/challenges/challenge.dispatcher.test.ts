@@ -196,7 +196,7 @@ describe('ChallengesDispatcher', () => {
         startTime: challenge2.time,
       });
 
-      result.forEach((item) => {
+      result.forEach(item => {
         expect(item).not.toHaveProperty('callback');
         expect(item).not.toHaveProperty('timeoutId');
       });

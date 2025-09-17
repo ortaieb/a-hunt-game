@@ -99,7 +99,7 @@ export class ChallengeService {
   async inviteParticipants(
     participantsData: ChallengeParticipantsData,
   ): Promise<ChallengeParticipantResponse[]> {
-    const invitedParticipants = participantsData.participants.map((part) =>
+    const invitedParticipants = participantsData.participants.map(part =>
       this.inviteParticipant(participantsData.challengeId, part),
     );
 

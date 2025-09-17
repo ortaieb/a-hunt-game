@@ -304,7 +304,7 @@ describe('Waypoint Validator Schemas', () => {
         if (!result.success) {
           expect(result.error.issues.length).toBeGreaterThan(5);
 
-          const errorMessages = result.error.issues.map((issue) => issue.message);
+          const errorMessages = result.error.issues.map(issue => issue.message);
           expect(errorMessages).toContain('Waypoint name is required');
           expect(errorMessages).toContain('Waypoint description is required');
           expect(errorMessages).toContain('Waypoint sequence ID must be a positive number');
@@ -325,7 +325,7 @@ describe('Waypoint Validator Schemas', () => {
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues.length).toBe(2);
-          const errorMessages = result.error.issues.map((issue) => issue.message);
+          const errorMessages = result.error.issues.map(issue => issue.message);
           expect(errorMessages).toContain('Invalid input: expected string, received undefined');
           expect(errorMessages).toContain('Invalid input: expected array, received undefined');
         }
@@ -393,10 +393,8 @@ describe('Waypoint Validator Schemas', () => {
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(result.error.issues.length).toBeGreaterThanOrEqual(3);
-          const errorMessages = result.error.issues.map((issue) => issue.message);
-          expect(errorMessages.filter((msg) => msg === 'Waypoint name is required')).toHaveLength(
-            2,
-          );
+          const errorMessages = result.error.issues.map(issue => issue.message);
+          expect(errorMessages.filter(msg => msg === 'Waypoint name is required')).toHaveLength(2);
         }
       });
     });

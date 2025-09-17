@@ -15,7 +15,7 @@ export const users = pgTable(
     valid_from: timestamp('valid_from', { withTimezone: true }).notNull().defaultNow(),
     valid_until: timestamp('valid_until', { withTimezone: true }),
   },
-  (table) => ({
+  table => ({
     // Temporal constraint for active users
     usernameActiveIdx: uniqueIndex('idx_users_username_active')
       .on(table.username)
