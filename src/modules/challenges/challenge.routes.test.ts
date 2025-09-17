@@ -97,7 +97,7 @@ describe('Challenge Routes', () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toEqual(
-          mockChallenges.map((challenge) => ({
+          mockChallenges.map(challenge => ({
             ...challenge,
             start_time: challenge.start_time.toISOString(),
           })),
@@ -483,7 +483,7 @@ describe('Challenge Routes', () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toEqual(
-          mockParticipants.map((participant) => ({
+          mockParticipants.map(participant => ({
             ...participant,
             valid_from: participant.valid_from.toISOString(),
           })),
@@ -675,7 +675,7 @@ describe('Challenge Routes', () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toEqual(
-          invitedParticipants.map((participant) => ({
+          invitedParticipants.map(participant => ({
             ...participant,
             valid_from: participant.valid_from.toISOString(),
           })),
@@ -702,7 +702,7 @@ describe('Challenge Routes', () => {
 
         expect(response.status).toBe(200);
         expect(response.body).toEqual(
-          invitedParticipants.map((participant) => ({
+          invitedParticipants.map(participant => ({
             ...participant,
             valid_from: participant.valid_from.toISOString(),
           })),

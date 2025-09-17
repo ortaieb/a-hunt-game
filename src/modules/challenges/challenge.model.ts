@@ -70,7 +70,7 @@ export class ChallengeModel {
     challengeId: string,
     challengeData: CreateChallengeData,
   ): Promise<ChallengeResponse> {
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async tx => {
       const now = new Date();
 
       await tx
@@ -168,7 +168,7 @@ export class ChallengeModel {
     participantsData: ChallengeParticipantsData,
   ): Promise<ChallengeParticipantResponse[]> {
     // Prepare all records at once
-    const participantRecords = participantsData.participants.map((userName) => ({
+    const participantRecords = participantsData.participants.map(userName => ({
       challenge_participant_id: uuidv7(),
       challenge_participant_inst_id: uuidv7(),
       challenge_id: participantsData.challengeId,
@@ -187,7 +187,7 @@ export class ChallengeModel {
   static async updateParticipantDetails(
     updateStateData: UpdateChallengeParticipantDetails,
   ): Promise<ChallengeParticipantResponse> {
-    return await db.transaction(async (tx) => {
+    return await db.transaction(async tx => {
       const now = new Date();
 
       // Find current active participant record

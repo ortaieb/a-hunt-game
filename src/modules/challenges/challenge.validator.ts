@@ -20,7 +20,7 @@ const transformKeysToUserExp = <T extends Record<string, any>>(obj: T): any => {
 export const createChallengeSchema = z.object({
   body: z
     .record(z.string(), z.any()) // Accept any string keys with any values initially
-    .transform((data) => {
+    .transform(data => {
       // Transform kebab-case keys to camelCase
       const transformed = transformKeysToUserExp(data);
       return transformed;
@@ -37,7 +37,7 @@ export const createChallengeSchema = z.object({
           .max(255, 'Challenge description should not be more than 255 characters')
           .trim(),
         waypointsRef: z.string().optional(),
-        startTime: z.iso.datetime({ offset: true }).transform((val) => new Date(val)),
+        startTime: z.iso.datetime({ offset: true }).transform(val => new Date(val)),
         duration: z.number().min(0, 'Duration cannot be negative value'),
         invitedUsers: z.array(emailSchema).optional(),
       }),
@@ -47,7 +47,7 @@ export const createChallengeSchema = z.object({
 export const challengeWaypointSchema = z.object({
   body: z
     .record(z.string(), z.any()) // Accept any string keys with any values initially
-    .transform((data) => {
+    .transform(data => {
       // Transform kebab-case keys to camelCase
       const transformed = transformKeysToUserExp(data);
       return transformed;
@@ -57,7 +57,7 @@ export const challengeWaypointSchema = z.object({
         challengeId: z
           .string()
           .uuid()
-          .refine((val) => {
+          .refine(val => {
             // Check if it's UUIDv7 format (version 7 in the 13th character)
             return val.charAt(14) === '7';
           }, 'Must be a UUIDv7 format'),
@@ -69,7 +69,7 @@ export const challengeWaypointSchema = z.object({
 export const challengeParticipantsSchema = z.object({
   body: z
     .record(z.string(), z.any()) // Accept any string keys with any values initially
-    .transform((data) => {
+    .transform(data => {
       // Transform kebab-case keys to camelCase
       const transformed = transformKeysToUserExp(data);
       return transformed;
@@ -79,7 +79,7 @@ export const challengeParticipantsSchema = z.object({
         challengeId: z
           .string()
           .uuid()
-          .refine((val) => {
+          .refine(val => {
             // Check if it's UUIDv7 format (version 7 in the 13th character)
             return val.charAt(14) === '7';
           }, 'Must be a UUIDv7 format'),
