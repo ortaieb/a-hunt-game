@@ -615,4 +615,298 @@ describe('ChallengeService', () => {
       expect(emptyResult).toEqual([]);
     });
   });
+
+  describe('activeChallenges', () => {
+    describe('Happy Path', () => {
+      it('should return all active challenges', async () => {
+        const activeChallenges = [sampleChallenge, { ...sampleChallenge, challenge_id: 'challenge-2' }];
+        mockChallengeModel.allChallenges.mockResolvedValue(activeChallenges);
+
+        const result = await challengeService.activeChallenges();
+
+        expect(mockChallengeModel.allChallenges).toHaveBeenCalledTimes(1);
+        expect(result).toEqual(activeChallenges);
+      });
+
+      it('should return empty array when no challenges exist', async () => {
+        mockChallengeModel.allChallenges.mockResolvedValue([]);
+
+        const result = await challengeService.activeChallenges();
+
+        expect(mockChallengeModel.allChallenges).toHaveBeenCalledTimes(1);
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('Error Propagation', () => {
+      it('should propagate database errors', async () => {
+        const dbError = new Error('Database connection failed');
+        mockChallengeModel.allChallenges.mockRejectedValue(dbError);
+
+        await expect(challengeService.activeChallenges()).rejects.toThrow('Database connection failed');
+      });
+    });
+  });
+
+  describe('getParticipant', () => {
+    describe('Happy Path', () => {
+      it('should return participant when found', async () => {
+        const participant = sampleParticipants[0];
+        mockChallengeModel.findByParticipantId.mockResolvedValue(participant);
+
+        const result = await challengeService.getParticipant('participant-1');
+
+        expect(mockChallengeModel.findByParticipantId).toHaveBeenCalledWith('participant-1');
+        expect(result).toEqual(participant);
+      });
+
+      it('should handle different participant IDs', async () => {
+        const participant = sampleParticipants[1];
+        mockChallengeModel.findByParticipantId.mockResolvedValue(participant);
+
+        const result = await challengeService.getParticipant('participant-2');
+
+        expect(mockChallengeModel.findByParticipantId).toHaveBeenCalledWith('participant-2');
+        expect(result).toEqual(participant);
+      });
+    });
+
+    describe('Error Cases', () => {
+      it('should handle participant not found', async () => {
+        mockChallengeModel.findByParticipantId.mockResolvedValue(null as any);
+
+        const result = await challengeService.getParticipant('non-existent');
+
+        expect(mockChallengeModel.findByParticipantId).toHaveBeenCalledWith('non-existent');
+        expect(result).toBeNull();
+      });
+
+      it('should propagate database errors', async () => {
+        const dbError = new Error('Database error');
+        mockChallengeModel.findByParticipantId.mockRejectedValue(dbError);
+
+        await expect(challengeService.getParticipant('participant-1')).rejects.toThrow('Database error');
+      });
+    });
+  });
+
+  describe('getParticipantByChallengeAndUsername', () => {
+    describe('Happy Path', () => {
+      it('should return participant when found by challenge and username', async () => {
+        const participant = sampleParticipants[0];
+        mockChallengeModel.findParticipantByChallengeAndUser.mockResolvedValue(participant);
+
+        const result = await challengeService.getParticipantByChallengeAndUsername(
+          'test-challenge-id',
+          'user1@example.com',
+        );
+
+        expect(mockChallengeModel.findParticipantByChallengeAndUser).toHaveBeenCalledWith(
+          'test-challenge-id',
+          'user1@example.com',
+        );
+        expect(result).toEqual(participant);
+      });
+
+      it('should handle different challenge and username combinations', async () => {
+        const participant = sampleParticipants[1];
+        mockChallengeModel.findParticipantByChallengeAndUser.mockResolvedValue(participant);
+
+        const result = await challengeService.getParticipantByChallengeAndUsername(
+          'different-challenge',
+          'user2@example.com',
+        );
+
+        expect(mockChallengeModel.findParticipantByChallengeAndUser).toHaveBeenCalledWith(
+          'different-challenge',
+          'user2@example.com',
+        );
+        expect(result).toEqual(participant);
+      });
+    });
+
+    describe('Error Cases', () => {
+      it('should handle participant not found for challenge and username', async () => {
+        mockChallengeModel.findParticipantByChallengeAndUser.mockResolvedValue(null as any);
+
+        const result = await challengeService.getParticipantByChallengeAndUsername(
+          'test-challenge-id',
+          'non-existent@example.com',
+        );
+
+        expect(result).toBeNull();
+      });
+
+      it('should propagate database errors', async () => {
+        const dbError = new Error('Connection timeout');
+        mockChallengeModel.findParticipantByChallengeAndUser.mockRejectedValue(dbError);
+
+        await expect(
+          challengeService.getParticipantByChallengeAndUsername('challenge-id', 'user@example.com'),
+        ).rejects.toThrow('Connection timeout');
+      });
+    });
+  });
+
+  describe('inviteParticipant', () => {
+    describe('Happy Path', () => {
+      it('should return existing participant if already invited', async () => {
+        const existingParticipant = sampleParticipants[0];
+        mockChallengeModel.findParticipantByChallengeAndUser.mockResolvedValue(existingParticipant);
+
+        const result = await challengeService.inviteParticipant(
+          'test-challenge-id',
+          'user1@example.com',
+        );
+
+        expect(mockChallengeModel.findParticipantByChallengeAndUser).toHaveBeenCalledWith(
+          'test-challenge-id',
+          'user1@example.com',
+        );
+        expect(mockChallengeModel.createParticipants).not.toHaveBeenCalled();
+        expect(result).toEqual(existingParticipant);
+      });
+
+      it('should create new participant if not already invited', async () => {
+        const newParticipant = sampleParticipants[0];
+        mockChallengeModel.findParticipantByChallengeAndUser.mockResolvedValue(null as any);
+        mockChallengeModel.createParticipants.mockResolvedValue([newParticipant]);
+
+        const result = await challengeService.inviteParticipant(
+          'test-challenge-id',
+          'newuser@example.com',
+        );
+
+        expect(mockChallengeModel.findParticipantByChallengeAndUser).toHaveBeenCalledWith(
+          'test-challenge-id',
+          'newuser@example.com',
+        );
+        expect(mockChallengeModel.createParticipants).toHaveBeenCalledWith({
+          challengeId: 'test-challenge-id',
+          participants: ['newuser@example.com'],
+        });
+        expect(result).toEqual(newParticipant);
+      });
+
+      it('should handle different challenge and username combinations', async () => {
+        const newParticipant = sampleParticipants[1];
+        mockChallengeModel.findParticipantByChallengeAndUser.mockResolvedValue(null as any);
+        mockChallengeModel.createParticipants.mockResolvedValue([newParticipant]);
+
+        const result = await challengeService.inviteParticipant(
+          'different-challenge',
+          'different@example.com',
+        );
+
+        expect(result).toEqual(newParticipant);
+      });
+    });
+
+    describe('Error Cases', () => {
+      it('should propagate errors from participant lookup', async () => {
+        const dbError = new Error('Database lookup failed');
+        mockChallengeModel.findParticipantByChallengeAndUser.mockRejectedValue(dbError);
+
+        await expect(
+          challengeService.inviteParticipant('challenge-id', 'user@example.com'),
+        ).rejects.toThrow('Database lookup failed');
+      });
+
+      it('should propagate errors from participant creation', async () => {
+        const creationError = new Error('Failed to create participant');
+        mockChallengeModel.findParticipantByChallengeAndUser.mockResolvedValue(null as any);
+        mockChallengeModel.createParticipants.mockRejectedValue(creationError);
+
+        await expect(
+          challengeService.inviteParticipant('challenge-id', 'user@example.com'),
+        ).rejects.toThrow('Failed to create participant');
+      });
+    });
+  });
+
+  describe('inviteParticipants', () => {
+    describe('Happy Path', () => {
+      it('should invite multiple participants successfully', async () => {
+        const participantsData = {
+          challengeId: 'test-challenge-id',
+          participants: ['user1@example.com', 'user2@example.com'],
+        };
+
+        // Mock both participants as new (not existing)
+        mockChallengeModel.findParticipantByChallengeAndUser.mockResolvedValue(null as any);
+        mockChallengeModel.createParticipants
+          .mockResolvedValueOnce([sampleParticipants[0]])
+          .mockResolvedValueOnce([sampleParticipants[1]]);
+
+        const result = await challengeService.inviteParticipants(participantsData);
+
+        expect(mockChallengeModel.findParticipantByChallengeAndUser).toHaveBeenCalledTimes(2);
+        expect(mockChallengeModel.createParticipants).toHaveBeenCalledTimes(2);
+        expect(result).toEqual([sampleParticipants[0], sampleParticipants[1]]);
+      });
+
+      it('should handle mix of existing and new participants', async () => {
+        const participantsData = {
+          challengeId: 'test-challenge-id',
+          participants: ['existing@example.com', 'new@example.com'],
+        };
+
+        // First call returns existing participant, second returns undefined (new)
+        mockChallengeModel.findParticipantByChallengeAndUser
+          .mockResolvedValueOnce(sampleParticipants[0])
+          .mockResolvedValueOnce(null as any);
+        mockChallengeModel.createParticipants.mockResolvedValueOnce([sampleParticipants[1]]);
+
+        const result = await challengeService.inviteParticipants(participantsData);
+
+        expect(result).toEqual([sampleParticipants[0], sampleParticipants[1]]);
+      });
+
+      it('should handle empty participants array', async () => {
+        const participantsData = {
+          challengeId: 'test-challenge-id',
+          participants: [],
+        };
+
+        const result = await challengeService.inviteParticipants(participantsData);
+
+        expect(mockChallengeModel.findParticipantByChallengeAndUser).not.toHaveBeenCalled();
+        expect(mockChallengeModel.createParticipants).not.toHaveBeenCalled();
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('Error Cases', () => {
+      it('should handle partial failures gracefully', async () => {
+        const participantsData = {
+          challengeId: 'test-challenge-id',
+          participants: ['success@example.com', 'fail@example.com'],
+        };
+
+        // First participant succeeds, second fails
+        mockChallengeModel.findParticipantByChallengeAndUser
+          .mockResolvedValueOnce(null as any)
+          .mockRejectedValueOnce(new Error('Database error'));
+        mockChallengeModel.createParticipants.mockResolvedValueOnce([sampleParticipants[0]]);
+
+        await expect(challengeService.inviteParticipants(participantsData)).rejects.toThrow(
+          'Database error',
+        );
+      });
+
+      it('should propagate all participant invitation errors', async () => {
+        const participantsData = {
+          challengeId: 'test-challenge-id',
+          participants: ['user1@example.com'],
+        };
+
+        const invitationError = new Error('Invitation failed');
+        mockChallengeModel.findParticipantByChallengeAndUser.mockRejectedValue(invitationError);
+
+        await expect(challengeService.inviteParticipants(participantsData)).rejects.toThrow(
+          'Invitation failed',
+        );
+      });
+    });
+  });
 });
