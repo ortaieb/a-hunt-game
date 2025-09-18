@@ -51,12 +51,10 @@ export class ChallengeService {
     };
     const participants = await ChallengeModel.createParticipants(challengeParticipants);
 
-    // Emit challenge created event (non-blocking)
-    setImmediate(() => {
-      challengeEventBus.emitChallengeCreated({
-        challengeId: challenge.challenge_id,
-        startTime: challenge.start_time,
-      });
+    // Emit challenge created event
+    challengeEventBus.emitChallengeCreated({
+      challengeId: challenge.challenge_id,
+      startTime: challenge.start_time,
     });
 
     return {
@@ -76,13 +74,11 @@ export class ChallengeService {
 
     const updatedChallenge = await ChallengeModel.updateChallenge(challengeId, data);
 
-    // Emit challenge updated event (non-blocking)
-    setImmediate(() => {
-      challengeEventBus.emitChallengeUpdated({
-        challengeId,
-        startTime: data.startTime,
-        previousStartTime,
-      });
+    // Emit challenge updated event
+    challengeEventBus.emitChallengeUpdated({
+      challengeId,
+      startTime: data.startTime,
+      previousStartTime,
     });
 
     return updatedChallenge;
@@ -93,10 +89,8 @@ export class ChallengeService {
       await ChallengeModel.deleteParticipants(challengeId);
       await ChallengeModel.deleteChallenge(challengeId);
 
-      // Emit challenge deleted event (non-blocking)
-      setImmediate(() => {
-        challengeEventBus.emitChallengeDeleted({ challengeId });
-      });
+      // Emit challenge deleted event
+      challengeEventBus.emitChallengeDeleted({ challengeId });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('Error: ' + errorMessage);

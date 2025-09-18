@@ -217,9 +217,6 @@ describe('ChallengeService', () => {
           challengeId: 'test-challenge-id',
           participants: ['user1@example.com', 'user2@example.com'],
         });
-        // Wait for setImmediate to complete event emission
-        await new Promise(resolve => setImmediate(resolve));
-
         expect(mockChallengeEventBus.emitChallengeCreated).toHaveBeenCalledWith({
           challengeId: 'test-challenge-id',
           startTime: sampleChallenge.start_time,
@@ -353,9 +350,6 @@ describe('ChallengeService', () => {
           sampleCreateChallengeInput,
         );
 
-        // Wait for setImmediate to complete event emission
-        await new Promise(resolve => setImmediate(resolve));
-
         expect(mockChallengeEventBus.emitChallengeUpdated).toHaveBeenCalledWith({
           challengeId: 'test-challenge-id',
           startTime: sampleCreateChallengeInput.startTime,
@@ -440,9 +434,6 @@ describe('ChallengeService', () => {
 
         expect(mockChallengeModel.deleteParticipants).toHaveBeenCalledWith('test-challenge-id');
         expect(mockChallengeModel.deleteChallenge).toHaveBeenCalledWith('test-challenge-id');
-
-        // Wait for setImmediate to complete event emission
-        await new Promise(resolve => setImmediate(resolve));
 
         expect(mockChallengeEventBus.emitChallengeDeleted).toHaveBeenCalledWith({
           challengeId: 'test-challenge-id',
