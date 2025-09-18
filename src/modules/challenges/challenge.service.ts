@@ -7,7 +7,7 @@ import {
   ChallengeResponse,
 } from './challenge.type';
 import { CreateChallengeInput } from './challenge.validator';
-import { registerNewChallenge, updateExistingChallenge } from './challenge.orchestration';
+import { challengeEventBus } from './events/challenge.event-bus';
 
 export class ChallengeService {
   private toResponse(challenge: Challenge): ChallengeResponse {
@@ -51,8 +51,11 @@ export class ChallengeService {
     };
     const participants = await ChallengeModel.createParticipants(challengeParticipants);
 
-    // Register challenge with orchestration
-    await registerNewChallenge(challenge.challenge_id, challenge.start_time);
+    // Emit challenge created event
+    challengeEventBus.emitChallengeCreated({
+      challengeId: challenge.challenge_id,
+      startTime: challenge.start_time,
+    });
 
     return {
       ...challenge,
@@ -65,19 +68,29 @@ export class ChallengeService {
     challengeId: string,
     data: CreateChallengeInput,
   ): Promise<ChallengeResponse> {
+    // Get current challenge to compare start times
+    const currentChallenge = await ChallengeModel.challengeById(challengeId);
+    const previousStartTime = currentChallenge?.start_time;
+
     const updatedChallenge = await ChallengeModel.updateChallenge(challengeId, data);
 
-    // Update challenge with orchestration
-    await updateExistingChallenge(challengeId, data.startTime);
+    // Emit challenge updated event
+    challengeEventBus.emitChallengeUpdated({
+      challengeId,
+      startTime: data.startTime,
+      previousStartTime,
+    });
 
     return updatedChallenge;
   }
 
-  // TODO: we should build notification event for `challenge cancelled`.
   async deleteChallenge(challengeId: string): Promise<void> {
     try {
       await ChallengeModel.deleteParticipants(challengeId);
-      return await ChallengeModel.deleteChallenge(challengeId);
+      await ChallengeModel.deleteChallenge(challengeId);
+
+      // Emit challenge deleted event
+      challengeEventBus.emitChallengeDeleted({ challengeId });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('Error: ' + errorMessage);

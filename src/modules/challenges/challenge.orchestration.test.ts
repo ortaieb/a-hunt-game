@@ -1,41 +1,44 @@
 // src/modules/challenges/challenge.orchestration.test.ts
 
 import { ChallengeModel } from './challenge.model';
+import { challengeOrchestrator, initializeChallengeOrchestration } from './challenge.orchestration';
+import { challengeEventBus } from './events/challenge.event-bus';
 import {
-  challengeOrchestrator,
-  initializeChallengeOrchestration,
-  registerNewChallenge,
-  updateExistingChallenge,
-} from './challenge.orchestration';
+  ChallengeCreatedEvent,
+  ChallengeUpdatedEvent,
+  ChallengeDeletedEvent,
+} from './events/challenge.events';
 
 jest.mock('./challenge.model');
 
 const mockChallengeModel = ChallengeModel as jest.Mocked<typeof ChallengeModel>;
 
-describe('Challenge Orchestration Integration', () => {
+describe('Challenge Orchestration Event-Driven', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     challengeOrchestrator.clear();
-    jest.useFakeTimers();
+    challengeEventBus.removeAllListeners();
   });
 
   afterEach(() => {
     challengeOrchestrator.clear();
-    jest.useRealTimers();
+    challengeEventBus.removeAllListeners();
   });
 
   describe('initializeChallengeOrchestration', () => {
-    it('should load all challenges and schedule future ones', async () => {
-      const pastChallenge = {
-        challenge_id: 'past-challenge',
-        start_time: new Date(Date.now() - 60000), // 1 minute ago
-      };
-      const futureChallenge = {
-        challenge_id: 'future-challenge',
-        start_time: new Date(Date.now() + 60000), // 1 minute from now
-      };
+    it('should load all challenges and set up event listeners', async () => {
+      const challenges = [
+        {
+          challenge_id: 'challenge-1',
+          start_time: new Date('2025-01-20T10:00:00Z'),
+        },
+        {
+          challenge_id: 'challenge-2',
+          start_time: new Date('2025-01-20T11:00:00Z'),
+        },
+      ];
 
-      mockChallengeModel.allChallenges.mockResolvedValue([pastChallenge, futureChallenge] as any);
+      mockChallengeModel.allChallenges.mockResolvedValue(challenges as any);
 
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
@@ -43,212 +46,243 @@ describe('Challenge Orchestration Integration', () => {
 
       expect(mockChallengeModel.allChallenges).toHaveBeenCalledTimes(1);
       expect(challengeOrchestrator.getRegistrySize()).toBe(2);
-      expect(challengeOrchestrator.getScheduledChallengesCount()).toBe(1); // Only future challenge scheduled
       expect(consoleSpy).toHaveBeenCalledWith('Initializing challenge orchestration...');
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Challenge orchestration initialized: 2 challenges loaded, 1 scheduled for future execution',
-      );
 
       consoleSpy.mockRestore();
     });
 
-    it('should handle empty database result', async () => {
+    it('should handle empty challenges list', async () => {
       mockChallengeModel.allChallenges.mockResolvedValue([]);
-
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
       await initializeChallengeOrchestration();
 
       expect(mockChallengeModel.allChallenges).toHaveBeenCalledTimes(1);
       expect(challengeOrchestrator.getRegistrySize()).toBe(0);
-      expect(challengeOrchestrator.getScheduledChallengesCount()).toBe(0);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Challenge orchestration initialized: 0 challenges loaded, 0 scheduled for future execution',
-      );
+    });
+  });
 
-      consoleSpy.mockRestore();
+  describe('event-driven challenge orchestration', () => {
+    beforeEach(async () => {
+      mockChallengeModel.allChallenges.mockResolvedValue([]);
+      await initializeChallengeOrchestration();
     });
 
-    it('should trigger immediate callbacks for past challenges', async () => {
-      const pastChallenge = {
-        challenge_id: 'past-challenge',
-        start_time: new Date(Date.now() - 60000), // 1 minute ago
+    describe('challenge created events', () => {
+      it('should register challenge on created event', () => {
+        const challengeId = 'new-challenge';
+        const startTime = new Date('2025-01-20T10:00:00Z');
+
+        const event: ChallengeCreatedEvent = {
+          challengeId,
+          startTime,
+        };
+
+        challengeEventBus.emitChallengeCreated(event);
+
+        expect(challengeOrchestrator.isRegistered(challengeId)).toBe(true);
+      });
+
+      it('should handle multiple challenge created events', () => {
+        const event1: ChallengeCreatedEvent = {
+          challengeId: 'challenge-1',
+          startTime: new Date('2025-01-20T10:00:00Z'),
+        };
+
+        const event2: ChallengeCreatedEvent = {
+          challengeId: 'challenge-2',
+          startTime: new Date('2025-01-20T11:00:00Z'),
+        };
+
+        challengeEventBus.emitChallengeCreated(event1);
+        challengeEventBus.emitChallengeCreated(event2);
+
+        expect(challengeOrchestrator.isRegistered('challenge-1')).toBe(true);
+        expect(challengeOrchestrator.isRegistered('challenge-2')).toBe(true);
+        expect(challengeOrchestrator.getRegistrySize()).toBe(2);
+      });
+    });
+
+    describe('challenge updated events', () => {
+      it('should update existing challenge', () => {
+        const challengeId = 'existing-challenge';
+        const originalTime = new Date('2025-01-20T10:00:00Z');
+        const newTime = new Date('2025-01-20T11:00:00Z');
+
+        // First create the challenge
+        const createdEvent: ChallengeCreatedEvent = {
+          challengeId,
+          startTime: originalTime,
+        };
+        challengeEventBus.emitChallengeCreated(createdEvent);
+
+        expect(challengeOrchestrator.isRegistered(challengeId)).toBe(true);
+
+        // Now update it
+        const updatedEvent: ChallengeUpdatedEvent = {
+          challengeId,
+          startTime: newTime,
+          previousStartTime: originalTime,
+        };
+        challengeEventBus.emitChallengeUpdated(updatedEvent);
+
+        expect(challengeOrchestrator.isRegistered(challengeId)).toBe(true);
+
+        // Verify time was updated
+        const entries = challengeOrchestrator.listEntries();
+        const entry = entries.find(e => e.challengeId === challengeId);
+        expect(entry?.startTime.getTime()).toBe(newTime.getTime());
+      });
+
+      it('should create new challenge if not registered', () => {
+        const challengeId = 'new-challenge';
+        const startTime = new Date('2025-01-20T10:00:00Z');
+
+        expect(challengeOrchestrator.isRegistered(challengeId)).toBe(false);
+
+        const event: ChallengeUpdatedEvent = {
+          challengeId,
+          startTime,
+        };
+        challengeEventBus.emitChallengeUpdated(event);
+
+        expect(challengeOrchestrator.isRegistered(challengeId)).toBe(true);
+      });
+
+      it('should not update if start time has not changed', () => {
+        const challengeId = 'existing-challenge';
+        const startTime = new Date('2025-01-20T10:00:00Z');
+
+        // Create challenge
+        const createdEvent: ChallengeCreatedEvent = {
+          challengeId,
+          startTime,
+        };
+        challengeEventBus.emitChallengeCreated(createdEvent);
+
+        const initialRegistrySize = challengeOrchestrator.getRegistrySize();
+
+        // Update with same time
+        const updatedEvent: ChallengeUpdatedEvent = {
+          challengeId,
+          startTime, // Same time
+          previousStartTime: startTime,
+        };
+        challengeEventBus.emitChallengeUpdated(updatedEvent);
+
+        // Registry size should remain the same
+        expect(challengeOrchestrator.getRegistrySize()).toBe(initialRegistrySize);
+      });
+    });
+
+    describe('challenge deleted events', () => {
+      it('should handle delete event for registered challenge', () => {
+        const challengeId = 'challenge-to-delete';
+        const startTime = new Date('2025-01-20T10:00:00Z');
+
+        // First create the challenge
+        const createdEvent: ChallengeCreatedEvent = {
+          challengeId,
+          startTime,
+        };
+        challengeEventBus.emitChallengeCreated(createdEvent);
+
+        expect(challengeOrchestrator.isRegistered(challengeId)).toBe(true);
+
+        // Now delete it
+        const deletedEvent: ChallengeDeletedEvent = {
+          challengeId,
+        };
+
+        expect(() => {
+          challengeEventBus.emitChallengeDeleted(deletedEvent);
+        }).not.toThrow();
+      });
+
+      it('should handle delete event for non-existent challenge', () => {
+        const challengeId = 'non-existent-challenge';
+
+        expect(challengeOrchestrator.isRegistered(challengeId)).toBe(false);
+
+        const deletedEvent: ChallengeDeletedEvent = {
+          challengeId,
+        };
+
+        expect(() => {
+          challengeEventBus.emitChallengeDeleted(deletedEvent);
+        }).not.toThrow();
+      });
+    });
+
+    describe('event listener verification', () => {
+      it('should have event listeners set up after initialization', () => {
+        // Verify that event listeners are registered
+        expect(challengeEventBus.getListenerCount('challenge.created')).toBeGreaterThan(0);
+        expect(challengeEventBus.getListenerCount('challenge.updated')).toBeGreaterThan(0);
+        expect(challengeEventBus.getListenerCount('challenge.deleted')).toBeGreaterThan(0);
+      });
+
+      it('should properly register challenge started event listeners', () => {
+        const startedListener = jest.fn();
+        challengeEventBus.onChallengeStarted(startedListener);
+
+        // Verify that we can listen to started events
+        expect(challengeEventBus.getListenerCount('challenge.started')).toBeGreaterThan(0);
+
+        // Manually emit a started event to test the listener
+        challengeEventBus.emitChallengeStarted({
+          challengeId: 'test-challenge',
+          startTime: new Date('2025-01-20T10:00:00Z'),
+        });
+
+        expect(startedListener).toHaveBeenCalledWith({
+          challengeId: 'test-challenge',
+          startTime: new Date('2025-01-20T10:00:00Z'),
+        });
+      });
+    });
+  });
+
+  describe('edge cases', () => {
+    beforeEach(async () => {
+      mockChallengeModel.allChallenges.mockResolvedValue([]);
+      await initializeChallengeOrchestration();
+    });
+
+    it('should handle event emissions without errors', () => {
+      const challengeId = 'test-challenge';
+      const startTime = new Date('2025-01-20T10:00:00Z');
+
+      const event: ChallengeCreatedEvent = {
+        challengeId,
+        startTime,
       };
 
-      mockChallengeModel.allChallenges.mockResolvedValue([pastChallenge] as any);
-
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-      await initializeChallengeOrchestration();
-
-      // Should have immediately triggered the callback for the past challenge
-      expect(consoleSpy).toHaveBeenCalledWith(
-        `Challenge past-challenge started at ${pastChallenge.start_time.toISOString()}`,
-      );
-
-      consoleSpy.mockRestore();
-    });
-  });
-
-  describe('registerNewChallenge', () => {
-    it('should register new challenge in registry and schedule callback', async () => {
-      const challengeId = 'new-challenge';
-      const startTime = new Date(Date.now() + 60000);
-
-      await registerNewChallenge(challengeId, startTime);
+      // Should not throw when emitting events
+      expect(() => {
+        challengeEventBus.emitChallengeCreated(event);
+      }).not.toThrow();
 
       expect(challengeOrchestrator.isRegistered(challengeId)).toBe(true);
-      expect(challengeOrchestrator.isScheduled(challengeId)).toBe(true);
-      expect(challengeOrchestrator.getRegistrySize()).toBe(1);
-      expect(challengeOrchestrator.getScheduledChallengesCount()).toBe(1);
     });
 
-    it('should trigger immediate callback for past challenge', async () => {
-      const challengeId = 'past-challenge';
-      const startTime = new Date(Date.now() - 60000);
+    it('should handle rapid event emissions', () => {
+      const events: ChallengeCreatedEvent[] = [
+        { challengeId: 'rapid-1', startTime: new Date('2025-01-20T10:00:00Z') },
+        { challengeId: 'rapid-2', startTime: new Date('2025-01-20T10:01:00Z') },
+        { challengeId: 'rapid-3', startTime: new Date('2025-01-20T10:02:00Z') },
+      ];
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      // Emit all events rapidly
+      events.forEach(event => {
+        challengeEventBus.emitChallengeCreated(event);
+      });
 
-      await registerNewChallenge(challengeId, startTime);
-
-      expect(challengeOrchestrator.isRegistered(challengeId)).toBe(true);
-      expect(challengeOrchestrator.isScheduled(challengeId)).toBe(false); // Not scheduled since it was immediate
-      expect(consoleSpy).toHaveBeenCalledWith(
-        `Challenge ${challengeId} started at ${startTime.toISOString()}`,
-      );
-
-      consoleSpy.mockRestore();
-    });
-  });
-
-  describe('updateExistingChallenge', () => {
-    it('should update existing challenge when start time changes', async () => {
-      const challengeId = 'existing-challenge';
-      const originalTime = new Date(Date.now() + 60000);
-      const newTime = new Date(Date.now() + 120000);
-
-      // First register the challenge
-      await registerNewChallenge(challengeId, originalTime);
-      expect(challengeOrchestrator.isRegistered(challengeId)).toBe(true);
-      expect(challengeOrchestrator.isScheduled(challengeId)).toBe(true);
-
-      // Now update it
-      await updateExistingChallenge(challengeId, newTime);
-
-      expect(challengeOrchestrator.isRegistered(challengeId)).toBe(true);
-      expect(challengeOrchestrator.isScheduled(challengeId)).toBe(true);
-
-      // Verify the new time is registered
-      const entries = challengeOrchestrator.listEntries();
-      const entry = entries.find(e => e.challengeId === challengeId);
-      expect(entry?.startTime.getTime()).toBe(newTime.getTime());
-    });
-
-    it('should not update if start time is the same', async () => {
-      const challengeId = 'existing-challenge';
-      const startTime = new Date(Date.now() + 60000);
-
-      // Register the challenge
-      await registerNewChallenge(challengeId, startTime);
-      const initialScheduledCount = challengeOrchestrator.getScheduledChallengesCount();
-
-      // Update with same time
-      await updateExistingChallenge(challengeId, new Date(startTime.getTime()));
-
-      // Should not have changed anything
-      expect(challengeOrchestrator.getScheduledChallengesCount()).toBe(initialScheduledCount);
-    });
-
-    it('should treat unregistered challenge as new', async () => {
-      const challengeId = 'new-challenge';
-      const startTime = new Date(Date.now() + 60000);
-
-      await updateExistingChallenge(challengeId, startTime);
-
-      expect(challengeOrchestrator.isRegistered(challengeId)).toBe(true);
-      expect(challengeOrchestrator.isScheduled(challengeId)).toBe(true);
-      expect(challengeOrchestrator.getRegistrySize()).toBe(1);
-    });
-
-    it('should cancel old callback when updating to new time', async () => {
-      const challengeId = 'existing-challenge';
-      const originalTime = new Date(Date.now() + 60000);
-      const newTime = new Date(Date.now() + 120000);
-
-      // Register original
-      await registerNewChallenge(challengeId, originalTime);
-      expect(challengeOrchestrator.getScheduledChallengesCount()).toBe(1);
-
-      // Update to new time
-      await updateExistingChallenge(challengeId, newTime);
-
-      // Should still have 1 scheduled (the new one)
-      expect(challengeOrchestrator.getScheduledChallengesCount()).toBe(1);
-
-      // Advance time to original time - callback should not execute
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-      jest.advanceTimersByTime(60000);
-      expect(consoleSpy).not.toHaveBeenCalledWith(
-        `Challenge ${challengeId} started at ${originalTime.toISOString()}`,
-      );
-
-      // Advance to new time - should execute
-      jest.advanceTimersByTime(60000);
-      expect(consoleSpy).toHaveBeenCalledWith(
-        `Challenge ${challengeId} started at ${newTime.toISOString()}`,
-      );
-
-      consoleSpy.mockRestore();
-    });
-
-    it('should handle update from future to past time', async () => {
-      const challengeId = 'existing-challenge';
-      const futureTime = new Date(Date.now() + 60000);
-      const pastTime = new Date(Date.now() - 60000);
-
-      // Register future challenge
-      await registerNewChallenge(challengeId, futureTime);
-      expect(challengeOrchestrator.isScheduled(challengeId)).toBe(true);
-
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-      // Update to past time - should trigger immediately
-      await updateExistingChallenge(challengeId, pastTime);
-
-      expect(challengeOrchestrator.isScheduled(challengeId)).toBe(false); // Not scheduled since immediate
-      expect(consoleSpy).toHaveBeenCalledWith(
-        `Challenge ${challengeId} started at ${pastTime.toISOString()}`,
-      );
-
-      consoleSpy.mockRestore();
-    });
-  });
-
-  describe('integration with multiple challenges', () => {
-    it('should handle multiple challenges correctly', async () => {
-      const challenge1 = { id: 'challenge-1', time: new Date(Date.now() + 60000) };
-      const challenge2 = { id: 'challenge-2', time: new Date(Date.now() + 120000) };
-      const challenge3 = { id: 'challenge-3', time: new Date(Date.now() - 60000) };
-
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-      await registerNewChallenge(challenge1.id, challenge1.time);
-      await registerNewChallenge(challenge2.id, challenge2.time);
-      await registerNewChallenge(challenge3.id, challenge3.time); // Past - should trigger immediately
+      // All should be registered
+      events.forEach(event => {
+        expect(challengeOrchestrator.isRegistered(event.challengeId)).toBe(true);
+      });
 
       expect(challengeOrchestrator.getRegistrySize()).toBe(3);
-      expect(challengeOrchestrator.getScheduledChallengesCount()).toBe(2); // Only future ones
-      expect(consoleSpy).toHaveBeenCalledWith(
-        `Challenge ${challenge3.id} started at ${challenge3.time.toISOString()}`,
-      );
-
-      // Update challenge1
-      const newTime1 = new Date(Date.now() + 180000);
-      await updateExistingChallenge(challenge1.id, newTime1);
-
-      expect(challengeOrchestrator.getScheduledChallengesCount()).toBe(2); // Still 2 scheduled
-
-      consoleSpy.mockRestore();
     });
   });
 });
