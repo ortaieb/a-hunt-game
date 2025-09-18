@@ -176,7 +176,7 @@ describe('ChallengesOrchestrator', () => {
     });
   });
 
-  describe('scheduleAllFutureChallenges', () => {
+  describe('scheduleAllChallenges', () => {
     it('should schedule all future challenges', async () => {
       const pastChallenge = {
         id: 'past-challenge',
@@ -195,7 +195,7 @@ describe('ChallengesOrchestrator', () => {
       await orchestrator.upsert(futureChallenge1.id, futureChallenge1.time);
       await orchestrator.upsert(futureChallenge2.id, futureChallenge2.time);
 
-      const scheduledCount = orchestrator.scheduleAllFutureChallenges();
+      const scheduledCount = orchestrator.scheduleAllChallenges();
 
       expect(scheduledCount).toBe(2);
       expect(orchestrator.isScheduled(pastChallenge.id)).toBe(false);
@@ -217,7 +217,7 @@ describe('ChallengesOrchestrator', () => {
       await orchestrator.upsert(futureChallenge2.id, futureChallenge2.time);
       orchestrator.registerScheduledCallback(futureChallenge1.id, futureChallenge1.time);
 
-      const scheduledCount = orchestrator.scheduleAllFutureChallenges();
+      const scheduledCount = orchestrator.scheduleAllChallenges();
 
       expect(scheduledCount).toBe(1);
       expect(orchestrator.getScheduledChallengesCount()).toBe(2);
@@ -232,7 +232,7 @@ describe('ChallengesOrchestrator', () => {
 
       await orchestrator.upsert(futureChallenge.id, futureChallenge.time);
 
-      const scheduledCount = orchestrator.scheduleAllFutureChallenges(customCallback);
+      const scheduledCount = orchestrator.scheduleAllChallenges(customCallback);
 
       expect(scheduledCount).toBe(1);
 

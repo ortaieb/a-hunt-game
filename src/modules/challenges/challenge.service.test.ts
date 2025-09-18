@@ -1,12 +1,20 @@
 // Mock the ChallengeModel module - focusing on service behavior
 jest.mock('./challenge.model');
+jest.mock('./challenge.orchestration');
 
 import { ChallengeService } from './challenge.service';
 import { ChallengeModel } from './challenge.model';
 import { AppError, NotFoundError, ConflictError } from '../../shared/types/errors';
 import { CreateChallengeInput } from './challenge.validator';
+import { registerNewChallenge, updateExistingChallenge } from './challenge.orchestration';
 
 const mockChallengeModel = ChallengeModel as jest.Mocked<typeof ChallengeModel>;
+const mockRegisterNewChallenge = registerNewChallenge as jest.MockedFunction<
+  typeof registerNewChallenge
+>;
+const mockUpdateExistingChallenge = updateExistingChallenge as jest.MockedFunction<
+  typeof updateExistingChallenge
+>;
 
 describe('ChallengeService', () => {
   let challengeService: ChallengeService;
@@ -214,6 +222,10 @@ describe('ChallengeService', () => {
           challengeId: 'test-challenge-id',
           participants: ['user1@example.com', 'user2@example.com'],
         });
+        expect(mockRegisterNewChallenge).toHaveBeenCalledWith(
+          'test-challenge-id',
+          sampleChallenge.start_time,
+        );
         expect(result).toEqual({
           ...sampleChallenge,
           invitedCount: 2,
@@ -339,6 +351,10 @@ describe('ChallengeService', () => {
         expect(mockChallengeModel.updateChallenge).toHaveBeenCalledWith(
           'test-challenge-id',
           sampleCreateChallengeInput,
+        );
+        expect(mockUpdateExistingChallenge).toHaveBeenCalledWith(
+          'test-challenge-id',
+          sampleCreateChallengeInput.startTime,
         );
         expect(result).toEqual(updatedChallenge);
       });

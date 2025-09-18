@@ -2,6 +2,7 @@ import app from './app';
 import { config } from './config';
 import { initializeDatabase, closePool } from './db';
 import { initializeDefaultAdmin } from './services/adminInit';
+import { initializeChallengeOrchestration } from './modules/challenges/challenge.orchestration';
 
 const startServer = async (): Promise<void> => {
   try {
@@ -10,6 +11,9 @@ const startServer = async (): Promise<void> => {
 
     console.log('Initializing default admin user...');
     await initializeDefaultAdmin();
+
+    console.log('Initializing challenge orchestration...');
+    await initializeChallengeOrchestration();
 
     const server = app.listen(config.port, () => {
       console.log(`Server running on port ${config.port} in ${config.nodeEnv} mode`);

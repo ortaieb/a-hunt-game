@@ -52,20 +52,24 @@ export class ChallengesOrchestrator {
     }));
   }
 
-  scheduleAllFutureChallenges(callback?: ChallengeCallback): number {
+  scheduleAllChallenges(callback?: ChallengeCallback): number {
     const entries = this.registry.listAll();
-    const now = new Date();
     let scheduledCount = 0;
 
     for (const entry of entries) {
-      if (entry.startTime > now && !this.dispatcher.isScheduled(entry.challengeId)) {
+      if (!this.dispatcher.isScheduled(entry.challengeId)) {
         const success = this.registerScheduledCallback(
           entry.challengeId,
           entry.startTime,
           callback,
         );
         if (success) {
-          scheduledCount++;
+          // Only count as scheduled if it's actually a future challenge
+          // Past challenges are handled immediately by the dispatcher
+          const now = new Date();
+          if (entry.startTime > now) {
+            scheduledCount++;
+          }
         }
       }
     }
@@ -106,7 +110,7 @@ export class ChallengesOrchestrator {
   ): Promise<{ loaded: number; scheduled: number }> {
     await this.resetRegistry();
     const loaded = this.registry.size();
-    const scheduled = this.scheduleAllFutureChallenges(callback);
+    const scheduled = this.scheduleAllChallenges(callback);
 
     return { loaded, scheduled };
   }
