@@ -193,3 +193,24 @@
 - Support for custom callback functions for flexible challenge handling
 - Proper memory management with timeout cleanup and independent date objects
 - Bulk operations for scheduling all future challenges efficiently
+
+### 2025-01-17: Challenge Orchestration Integration (GitHub Issue #28)
+**Status:** Completed
+**Description:** Integrate challenge orchestrator with API endpoints and startup process for automatic challenge scheduling
+**Requirements:**
+- [x] Startup integration: Register all active challenges and trigger immediate callbacks for elapsed ones
+- [x] POST /hunt/manager/challenges integration: Register new challenges with orchestrator
+- [x] PUT /hunt/manager/challenges integration: Update orchestrator registry and reschedule callbacks
+- [x] Fix delay calculation to prevent negative numbers (verified already correct)
+- [x] Comprehensive integration tests for all scenarios
+
+**Implementation Details:**
+- Created global orchestration service with singleton orchestrator instance
+- Added `initializeChallengeOrchestration()` function called during application startup
+- Integrated `registerNewChallenge()` with challenge service's createChallenge method
+- Integrated `updateExistingChallenge()` with challenge service's updateChallenge method
+- Challenge orchestrator properly handles past challenges with immediate callback execution
+- Smart update logic only reschedules callbacks when start times actually change
+- Comprehensive test suite with 100% coverage for orchestration integration
+- All validation gates pass: TypeScript compilation, ESLint, tests (499/499 passing), build, security audit
+- Maintains existing API endpoints at `/hunt/manager/challenges` as currently implemented

@@ -7,6 +7,7 @@ import {
   ChallengeResponse,
 } from './challenge.type';
 import { CreateChallengeInput } from './challenge.validator';
+import { registerNewChallenge, updateExistingChallenge } from './challenge.orchestration';
 
 export class ChallengeService {
   private toResponse(challenge: Challenge): ChallengeResponse {
@@ -50,6 +51,9 @@ export class ChallengeService {
     };
     const participants = await ChallengeModel.createParticipants(challengeParticipants);
 
+    // Register challenge with orchestration
+    await registerNewChallenge(challenge.challenge_id, challenge.start_time);
+
     return {
       ...challenge,
       invitedCount: participants.length,
@@ -61,7 +65,12 @@ export class ChallengeService {
     challengeId: string,
     data: CreateChallengeInput,
   ): Promise<ChallengeResponse> {
-    return await ChallengeModel.updateChallenge(challengeId, data);
+    const updatedChallenge = await ChallengeModel.updateChallenge(challengeId, data);
+
+    // Update challenge with orchestration
+    await updateExistingChallenge(challengeId, data.startTime);
+
+    return updatedChallenge;
   }
 
   // TODO: we should build notification event for `challenge cancelled`.
