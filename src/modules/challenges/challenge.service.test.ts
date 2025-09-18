@@ -1,20 +1,15 @@
 // Mock the ChallengeModel module - focusing on service behavior
 jest.mock('./challenge.model');
-jest.mock('./challenge.orchestration');
+jest.mock('./events/challenge.event-bus');
 
 import { ChallengeService } from './challenge.service';
 import { ChallengeModel } from './challenge.model';
 import { AppError, NotFoundError, ConflictError } from '../../shared/types/errors';
 import { CreateChallengeInput } from './challenge.validator';
-import { registerNewChallenge, updateExistingChallenge } from './challenge.orchestration';
+import { challengeEventBus } from './events/challenge.event-bus';
 
 const mockChallengeModel = ChallengeModel as jest.Mocked<typeof ChallengeModel>;
-const mockRegisterNewChallenge = registerNewChallenge as jest.MockedFunction<
-  typeof registerNewChallenge
->;
-const mockUpdateExistingChallenge = updateExistingChallenge as jest.MockedFunction<
-  typeof updateExistingChallenge
->;
+const mockChallengeEventBus = challengeEventBus as jest.Mocked<typeof challengeEventBus>;
 
 describe('ChallengeService', () => {
   let challengeService: ChallengeService;
@@ -222,10 +217,13 @@ describe('ChallengeService', () => {
           challengeId: 'test-challenge-id',
           participants: ['user1@example.com', 'user2@example.com'],
         });
-        expect(mockRegisterNewChallenge).toHaveBeenCalledWith(
-          'test-challenge-id',
-          sampleChallenge.start_time,
-        );
+        // Wait for setImmediate to complete event emission
+        await new Promise(resolve => setImmediate(resolve));
+
+        expect(mockChallengeEventBus.emitChallengeCreated).toHaveBeenCalledWith({
+          challengeId: 'test-challenge-id',
+          startTime: sampleChallenge.start_time,
+        });
         expect(result).toEqual({
           ...sampleChallenge,
           invitedCount: 2,
@@ -341,6 +339,7 @@ describe('ChallengeService', () => {
           ...sampleChallenge,
           challenge_desc: 'Updated challenge description',
         };
+        mockChallengeModel.challengeById.mockResolvedValue(sampleChallenge);
         mockChallengeModel.updateChallenge.mockResolvedValue(updatedChallenge);
 
         const result = await challengeService.updateChallenge(
@@ -348,14 +347,20 @@ describe('ChallengeService', () => {
           sampleCreateChallengeInput,
         );
 
+        expect(mockChallengeModel.challengeById).toHaveBeenCalledWith('test-challenge-id');
         expect(mockChallengeModel.updateChallenge).toHaveBeenCalledWith(
           'test-challenge-id',
           sampleCreateChallengeInput,
         );
-        expect(mockUpdateExistingChallenge).toHaveBeenCalledWith(
-          'test-challenge-id',
-          sampleCreateChallengeInput.startTime,
-        );
+
+        // Wait for setImmediate to complete event emission
+        await new Promise(resolve => setImmediate(resolve));
+
+        expect(mockChallengeEventBus.emitChallengeUpdated).toHaveBeenCalledWith({
+          challengeId: 'test-challenge-id',
+          startTime: sampleCreateChallengeInput.startTime,
+          previousStartTime: sampleChallenge.start_time,
+        });
         expect(result).toEqual(updatedChallenge);
       });
 
@@ -435,6 +440,13 @@ describe('ChallengeService', () => {
 
         expect(mockChallengeModel.deleteParticipants).toHaveBeenCalledWith('test-challenge-id');
         expect(mockChallengeModel.deleteChallenge).toHaveBeenCalledWith('test-challenge-id');
+
+        // Wait for setImmediate to complete event emission
+        await new Promise(resolve => setImmediate(resolve));
+
+        expect(mockChallengeEventBus.emitChallengeDeleted).toHaveBeenCalledWith({
+          challengeId: 'test-challenge-id',
+        });
       });
 
       it('should handle deletion when no participants exist', async () => {

@@ -214,3 +214,27 @@
 - Comprehensive test suite with 100% coverage for orchestration integration
 - All validation gates pass: TypeScript compilation, ESLint, tests (499/499 passing), build, security audit
 - Maintains existing API endpoints at `/hunt/manager/challenges` as currently implemented
+
+### 2025-01-17: Event-Driven Challenge Notifications (GitHub Issue #30)
+**Status:** Completed
+**Description:** Decouple challenge orchestration notifications from REST API calls using event-driven architecture for better performance
+**Requirements:**
+- [x] Design and implement generic event bus architecture
+- [x] Create ChallengeEventBus singleton for challenge-specific events
+- [x] Define typed event interfaces for challenge operations
+- [x] Refactor orchestration service to use event-driven pattern
+- [x] Update challenge service to emit events instead of direct orchestration calls
+- [x] Implement event listeners for challenge orchestration
+- [x] Ensure REST endpoints are not blocked by orchestration operations
+- [x] Comprehensive testing for event-driven architecture
+
+**Implementation Details:**
+- Created generic EventBus base class with abstract getEventName method for flexible event namespacing
+- Implemented ChallengeEventBus singleton extending EventBus with typed methods for challenge-specific events
+- Defined comprehensive typed event interfaces: ChallengeCreatedEvent, ChallengeUpdatedEvent, ChallengeDeletedEvent, ChallengeStartedEvent
+- Refactored challenge orchestration service to use event listeners instead of direct function calls
+- Updated challenge service to emit events using setImmediate for non-blocking operation
+- Event-driven pattern ensures REST endpoints return immediately while orchestration happens asynchronously
+- Added comprehensive test suite with 100% coverage for event-driven architecture components
+- All validation gates pass: 513 tests passing, 73.29% overall coverage, TypeScript compilation, ESLint clean
+- Successfully decoupled REST API performance from orchestration operations using EventEmitter pattern
