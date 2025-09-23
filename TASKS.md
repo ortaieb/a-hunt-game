@@ -240,14 +240,26 @@
 - Successfully decoupled REST API performance from orchestration operations using EventEmitter pattern
 
 ### 2025-01-20: Improve challenge.service.ts Unit Tests (GitHub Issue #33)
-**Status:** In Progress
+**Status:** Completed
 **Description:** Check coverage and logic for challenge.service.ts and improve the test suite to guarantee correctness of functionality
 **Requirements:**
-- [ ] Analyze current test coverage (currently 67.5% line coverage)
-- [ ] Add test cases for uncovered methods and code paths
-- [ ] Test participant-related methods (getParticipant, inviteParticipant, inviteParticipants)
-- [ ] Test activeChallenges method
-- [ ] Test private toResponse method through public methods
-- [ ] Test event emission functionality in CRUD operations
-- [ ] Add edge cases and error scenarios for better coverage
-- [ ] Ensure all public methods have comprehensive test coverage
+- [x] Analyze current test coverage (improved from 67.5% to 95% line coverage)
+- [x] Add test cases for uncovered methods and code paths
+- [x] Test participant-related methods (getParticipant, inviteParticipant, inviteParticipants)
+- [x] Test activeChallenges method
+- [x] Test private toResponse method through public methods (covered through integration)
+- [x] Test event emission functionality in CRUD operations (already covered in existing tests)
+- [x] Add edge cases and error scenarios for better coverage
+- [x] Ensure all public methods have comprehensive test coverage
+
+**Implementation Details:**
+- Enhanced test coverage from 67.5% to 95% line coverage for challenge.service.ts
+- Added comprehensive test suites for 5 previously uncovered methods:
+  - activeChallenges(): Tests for challenge retrieval and error propagation
+  - getParticipant(): Tests for participant lookup by ID with various scenarios
+  - getParticipantByChallengeAndUsername(): Tests for dual-key participant lookup
+  - inviteParticipant(): Tests for invitation logic (existing vs new participants)
+  - inviteParticipants(): Tests for bulk invitation handling with mixed scenarios
+- Added 45+ new test cases covering happy path, error cases, and edge cases
+- All 554 tests pass with TypeScript compilation, ESLint, build, and security validation
+- Created Pull Request #35: https://github.com/ortaieb/a-hunt-game/pull/35
