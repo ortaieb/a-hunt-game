@@ -1,8 +1,8 @@
-# Effect-Based Database Usage Guide
+# Official @effect/sql-drizzle Database Usage Guide
 
 ## Overview
 
-This guide explains how to use the Effect-based database implementation in the Scavenger Hunt Game server. The Effect library provides functional programming patterns with dependency injection, composable operations, and structured error handling.
+This guide explains how to use the official `@effect/sql-drizzle` package in the Scavenger Hunt Game server. The official Effect SQL ecosystem provides production-ready functional programming patterns with dependency injection, composable operations, and robust error handling.
 
 ## Key Concepts
 
@@ -54,27 +54,39 @@ export class DatabaseError extends Error {
 
 ### Core Components
 
-1. **EffectDatabase Interface** - Defines database operations
-2. **Service Tags** - For dependency injection
-3. **Error Types** - Structured error handling
-4. **Layer Architecture** - Service composition
-5. **Helper Functions** - Simplified database access
+1. **PgDrizzle Service** - Official Drizzle service for PostgreSQL
+2. **PgClient Layer** - PostgreSQL connection management
+3. **Config System** - Environment-based configuration using Effect Config
+4. **Layer Architecture** - Official layer composition patterns
+5. **Built-in Error Handling** - Automatic SQL error management
 
 ### Database Configuration
 
 ```typescript
-// Environment-based configuration
-export const makeDatabaseConfig = (): DatabaseConfig => ({
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT) || 5432,
-  database: process.env.DB_NAME || 'scavenger_hunt',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || '',
-  ssl: process.env.DB_SSL === 'true',
-  max: Number(process.env.DB_MAX_CONNECTIONS) || 20,
-  idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT) || 30000,
-  connectionTimeoutMillis: Number(process.env.DB_CONNECTION_TIMEOUT) || 2000,
+// Official Effect Config system
+export const DatabaseConfig = {
+  host: Config.string("DB_HOST").pipe(Config.withDefault("localhost")),
+  port: Config.integer("DB_PORT").pipe(Config.withDefault(5432)),
+  database: Config.string("DB_NAME").pipe(Config.withDefault("scavenger_hunt")),
+  user: Config.string("DB_USER").pipe(Config.withDefault("postgres")),
+  password: Config.redacted("DB_PASSWORD"),
+  ssl: Config.boolean("DB_SSL").pipe(Config.withDefault(false)),
+  maxConnections: Config.integer("DB_MAX_CONNECTIONS").pipe(Config.withDefault(20)),
+};
+
+// PostgreSQL client layer
+export const PgLive = PgClient.layerConfig({
+  host: DatabaseConfig.host,
+  port: DatabaseConfig.port,
+  database: DatabaseConfig.database,
+  username: DatabaseConfig.user,
+  password: DatabaseConfig.password,
+  ssl: DatabaseConfig.ssl,
+  maxConnections: DatabaseConfig.maxConnections,
 });
+
+// Drizzle layer combining PgClient with Drizzle ORM
+export const DrizzleLive = PgDrizzleLayer.pipe(Layer.provide(PgLive));
 ```
 
 ## Usage Patterns
@@ -82,22 +94,28 @@ export const makeDatabaseConfig = (): DatabaseConfig => ({
 ### 1. Basic Database Query
 
 ```typescript
-import { withDatabaseQuery } from '../../shared/database/effect-database';
+import { PgDrizzle } from '../../shared/database/effect-database';
 import { users } from '../../schema/users';
 import { eq, isNull, and } from 'drizzle-orm';
+import { Array } from 'effect';
 
-// Create an Effect that describes a database query
+// Create an Effect that describes a database query using official patterns
 const findUserById = (userId: string) =>
-  withDatabaseQuery(db =>
-    db.select()
+  Effect.gen(function* () {
+    const drizzle = yield* PgDrizzle;
+    const result = yield* drizzle
+      .select()
       .from(users)
       .where(and(
         eq(users.user_id, userId),
         isNull(users.valid_until)
       ))
-      .limit(1)
-      .then(rows => rows[0] || null)
-  );
+      .limit(1);
+
+    return yield* Array.head(result).pipe(
+      Effect.orElse(() => Effect.succeed(null))
+    );
+  });
 
 // Execute the Effect
 const program = Effect.gen(function* () {
@@ -111,12 +129,14 @@ const result = await Effect.runPromise(program);
 ### 2. Database Transaction
 
 ```typescript
-import { withDatabaseTransaction } from '../../shared/database/effect-database';
+import { PgDrizzle } from '../../shared/database/effect-database';
 import { users } from '../../schema/users';
 
-// Create an Effect that describes a transaction
+// Create an Effect that describes a transaction using official patterns
 const createUser = (userData: CreateUserData) =>
-  withDatabaseTransaction(tx => {
+  Effect.gen(function* () {
+    const drizzle = yield* PgDrizzle;
+
     const newUser = {
       user_id: uuidv7(),
       username: userData.username.toLowerCase(),
@@ -127,17 +147,17 @@ const createUser = (userData: CreateUserData) =>
       valid_until: null,
     };
 
-    return tx.insert(users).values(newUser).returning().then(rows => rows[0]);
+    // Official transaction pattern - no nested Effect.gen
+    const result = yield* drizzle.insert(users).values(newUser).returning();
+
+    return yield* Array.head(result).pipe(
+      Effect.mapError(() => new UserCreationError('Failed to create user'))
+    );
   });
 
-// Execute with error handling
+// Execute with built-in error handling
 const program = Effect.gen(function* () {
   const user = yield* createUser(userData);
-
-  if (!user) {
-    return yield* Effect.fail(new UserCreationError('Failed to create user'));
-  }
-
   return user;
 }).pipe(Effect.provide(DatabaseLive));
 ```
@@ -179,16 +199,15 @@ const result = await Effect.runPromise(
 
 ### Database Layer
 
-The database layer provides the core database service:
+The database layer uses official @effect/sql-drizzle patterns:
 
 ```typescript
-// Complete database layer (config + service)
-export const DatabaseLive = DatabaseConfigLive.pipe(
-  Layer.provide(EffectDatabaseLive)
-);
+// Official layer composition
+export const DrizzleLive = PgDrizzleLayer.pipe(Layer.provide(PgLive));
+export const DatabaseLive = DrizzleLive;
 
-// Custom configuration
-const customDbLayer = makeDatabaseService({
+// Custom configuration using official patterns
+const customDbLayer = makeDatabaseLayer({
   host: 'custom-host',
   port: 5433
 });
@@ -216,31 +235,30 @@ const program = myDatabaseOperation.pipe(
 
 ## Error Handling
 
-### Structured Errors
+### Built-in SQL Error Handling
 
 ```typescript
-// Pattern matching on error types
-const handleDatabaseError = (error: DatabaseError | ConnectionError | QueryError) => {
-  switch (error._tag) {
-    case 'ConnectionError':
-      console.error('Database connection failed:', error.message);
-      break;
-    case 'QueryError':
-      console.error('Query execution failed:', error.message);
-      break;
-    case 'DatabaseError':
-      console.error('General database error:', error.message);
-      break;
-  }
-};
+// @effect/sql-drizzle provides automatic error handling
+// Built-in error types include SQL errors, connection errors, etc.
 
-// Using Effect error handling
+// Using Effect error handling with official patterns
 const safeQuery = userQuery.pipe(
   Effect.catchAll(error => {
-    handleDatabaseError(error);
+    console.error('Database operation failed:', error.message);
     return Effect.succeed(null); // Fallback value
   })
 );
+
+// Custom error handling for business logic
+const findUserSafely = (id: string) =>
+  UserModelEffect.findById(id).pipe(
+    Effect.mapError(error => {
+      if (error instanceof UserNotFoundError) {
+        return new UserNotFoundError(`User not found: ${id}`);
+      }
+      return error;
+    })
+  );
 ```
 
 ### Error Recovery
@@ -347,21 +365,24 @@ const integrationTest = async () => {
 
 ## Best Practices
 
-### 1. Use Helper Functions
+### 1. Use Official Patterns
 
 ```typescript
-// Prefer helper functions for common patterns
-const findUser = (id: string) => withDatabaseQuery(db =>
-  db.select().from(users).where(eq(users.user_id, id)).limit(1)
-);
+// Use the official PgDrizzle service pattern
+const findUser = (id: string) => Effect.gen(function* () {
+  const drizzle = yield* PgDrizzle;
+  const result = yield* drizzle
+    .select()
+    .from(users)
+    .where(eq(users.user_id, id))
+    .limit(1);
 
-// Over direct database access
-const findUserDirect = (id: string) => Effect.gen(function* () {
-  const database = yield* EffectDatabaseService;
-  return yield* database.query(db =>
-    db.select().from(users).where(eq(users.user_id, id)).limit(1)
+  return yield* Array.head(result).pipe(
+    Effect.orElse(() => Effect.succeed(null))
   );
 });
+
+// Avoid custom wrapper functions - use official patterns directly
 ```
 
 ### 2. Compose Operations

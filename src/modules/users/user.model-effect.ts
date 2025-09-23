@@ -1,20 +1,13 @@
 // src/modules/users/user.model-effect.ts
-// Effect library implementation for user.model.ts using Effect-based database service
-// This file demonstrates key Effect concepts: dependency injection, composable operations, and structured error handling
+// Official @effect/sql-drizzle implementation for user.model.ts
+// This file demonstrates Effect concepts using the official Effect SQL ecosystem
 
-import { Effect, Context, pipe } from 'effect';
+import { Effect, Context, pipe, Array } from 'effect';
 import { eq, isNull, and, desc, sql } from 'drizzle-orm';
 import { users, User as DbUser } from '../../schema/users';
 import { User, CreateUserData, UpdateUserData, UserFilters } from './user.types';
 import { v7 as uuidv7 } from 'uuid';
-import {
-  EffectDatabaseService,
-  withDatabaseQuery,
-  withDatabaseTransaction,
-  QueryError,
-  TransactionError,
-  DatabaseLive
-} from '../../shared/database/effect-database';
+import { PgDrizzle, DatabaseLive, makeDatabaseLayer } from '../../shared/database/effect-database';
 
 /**
  * Effect-based User Model Implementation
@@ -60,20 +53,20 @@ export class UserCreationError extends Error {
  */
 export class UserModelEffect {
   /**
-   * Find user by ID using Effect patterns
+   * Find user by ID using official @effect/sql-drizzle patterns
    * Demonstrates: dependency injection, error handling, optional results
    */
   static findById = (userId: string) =>
-    withDatabaseQuery(db =>
-      db.select()
+    Effect.gen(function* () {
+      const drizzle = yield* PgDrizzle;
+      const result = yield* drizzle
+        .select()
         .from(users)
-        .where(and(
-          eq(users.user_id, userId),
-          isNull(users.valid_until)
-        ))
-        .limit(1)
-        .then(rows => rows[0] || null)
-    );
+        .where(and(eq(users.user_id, userId), isNull(users.valid_until)))
+        .limit(1);
+
+      return yield* Array.head(result).pipe(Effect.orElse(() => Effect.succeed(null)));
+    });
 
   /**
    * Create user with dependency injection for database and crypto services
@@ -84,30 +77,26 @@ export class UserModelEffect {
       const crypto = yield* CryptoService;
 
       // Hash password using injected crypto service
-      const hashedPassword = yield* Effect.promise(() =>
-        crypto.hash(userData.password)
+      const hashedPassword = yield* Effect.promise(() => crypto.hash(userData.password));
+
+      // Create user using official Drizzle transaction
+      const drizzle = yield* PgDrizzle;
+
+      const newUser = {
+        user_id: uuidv7(),
+        username: userData.username.toLowerCase(),
+        password_hash: hashedPassword,
+        nickname: userData.nickname,
+        roles: userData.roles,
+        valid_from: new Date(),
+        valid_until: null,
+      };
+
+      const result = yield* drizzle.insert(users).values(newUser).returning();
+
+      return yield* Array.head(result).pipe(
+        Effect.mapError(() => new UserCreationError('Failed to create user')),
       );
-
-      // Create user using Effect database transaction
-      const user = yield* withDatabaseTransaction(tx => {
-        const newUser = {
-          user_id: uuidv7(),
-          username: userData.username.toLowerCase(),
-          password_hash: hashedPassword,
-          nickname: userData.nickname,
-          roles: userData.roles,
-          valid_from: new Date(),
-          valid_until: null,
-        };
-
-        return tx.insert(users).values(newUser).returning().then(rows => rows[0]);
-      });
-
-      if (!user) {
-        return yield* Effect.fail(new UserCreationError('Failed to create user'));
-      }
-
-      return user;
     });
 
   /**
@@ -126,7 +115,7 @@ export class UserModelEffect {
       // Verify password using crypto service
       const crypto = yield* CryptoService;
       const isValid = yield* Effect.promise(() =>
-        crypto.compare(password, (user as any).password_hash)
+        crypto.compare(password, (user as any).password_hash),
       );
 
       return isValid;
@@ -137,16 +126,16 @@ export class UserModelEffect {
    * Demonstrates: basic Effect pattern with service injection
    */
   static findByUsername = (username: string) =>
-    withDatabaseQuery(db =>
-      db.select()
+    Effect.gen(function* () {
+      const drizzle = yield* PgDrizzle;
+      const result = yield* drizzle
+        .select()
         .from(users)
-        .where(and(
-          eq(users.username, username.toLowerCase()),
-          isNull(users.valid_until)
-        ))
-        .limit(1)
-        .then(rows => rows[0] || null)
-    );
+        .where(and(eq(users.username, username.toLowerCase()), isNull(users.valid_until)))
+        .limit(1);
+
+      return yield* Array.head(result).pipe(Effect.orElse(() => Effect.succeed(null)));
+    });
 }
 
 /**
@@ -201,10 +190,12 @@ export const makeCryptoService = () =>
  * - Error handling with try/catch
  * - Immediate execution
  *
- * Effect (user.model-effect.ts):
+ * Effect with @effect/sql-drizzle (user.model-effect.ts):
+ * - Uses official Effect SQL ecosystem
  * - Describes computations as Effect values
  * - Dependency injection through Context
- * - Structured error types and handling
+ * - Built-in SQL error handling and connection management
  * - Deferred execution with Effect.runPromise
  * - Composable and testable operations
+ * - Production-ready with official support
  */

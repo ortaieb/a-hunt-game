@@ -5,11 +5,9 @@ import {
   UserModelEffect,
   UserNotFoundError,
   UserCreationError,
-  makeCryptoService
+  makeCryptoService,
 } from './user.model-effect';
-import {
-  makeDatabaseService
-} from '../../shared/database/effect-database';
+import { makeDatabaseLayer } from '../../shared/database/effect-database';
 import { CreateUserData } from './user.types';
 
 // Mock data for testing
@@ -95,9 +93,10 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
       const effect = UserModelEffect.findById('test-id');
 
       // Effects should be composable using pipe
-      const composedEffect = effect.pipe(
+      const composedEffect = effect
+        .pipe
         // This would normally add error handling, transformations, etc.
-      );
+        ();
 
       expect(composedEffect).toBeDefined();
       expect(typeof composedEffect.pipe).toBe('function');
@@ -105,7 +104,7 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
   });
 
   describe('Service Factory Testing', () => {
-    describe('makeDatabaseService', () => {
+    describe('makeDatabaseLayer', () => {
       it('should create service layer with custom config', () => {
         const customConfig = {
           host: 'test-host',
@@ -115,7 +114,7 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
           password: 'test-pass',
         };
 
-        const serviceLayer = makeDatabaseService(customConfig);
+        const serviceLayer = makeDatabaseLayer(customConfig);
 
         // Service layer should be created
         expect(serviceLayer).toBeDefined();
@@ -135,8 +134,8 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
           port: 3306,
         };
 
-        const postgresService = makeDatabaseService(postgresConfig);
-        const customService = makeDatabaseService(customConfig);
+        const postgresService = makeDatabaseLayer(postgresConfig);
+        const customService = makeDatabaseLayer(customConfig);
 
         // Both should create valid service layers
         expect(postgresService).toBeDefined();
@@ -191,7 +190,7 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
         password: 'mock-pass',
       };
 
-      const dbService = makeDatabaseService(mockConfig);
+      const dbService = makeDatabaseLayer(mockConfig);
       expect(dbService).toBeDefined();
 
       // Example 3: Error types are structured and testable
@@ -220,7 +219,7 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
       };
 
       // Step 2: Service layer creation
-      const databaseService = makeDatabaseService(mockConfig);
+      const databaseService = makeDatabaseLayer(mockConfig);
 
       // Step 3: Effect creation (describes computation)
       const userFindEffect = UserModelEffect.findById('test-user');
@@ -260,7 +259,7 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
       expect(effect).toBeDefined(); // Test the Effect value first
 
       // Then test with dependencies:
-      const mockService = makeDatabaseService({
+      const mockService = makeDatabaseLayer({
         host: 'test-host',
         port: 5432,
       });
@@ -277,8 +276,8 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
       const testConfig = { host: 'test-host', port: 5433 };
 
       // Same service factory, different implementations
-      const prodService = makeDatabaseService(productionConfig);
-      const testService = makeDatabaseService(testConfig);
+      const prodService = makeDatabaseLayer(productionConfig);
+      const testService = makeDatabaseLayer(testConfig);
 
       // Same Effect program, different dependencies
       const userEffect = UserModelEffect.findById('test');

@@ -1,302 +1,111 @@
 // src/shared/database/effect-database.ts
-// Effect-based database service for PostgreSQL with Drizzle ORM
+// Official @effect/sql-drizzle implementation for PostgreSQL with Drizzle ORM
 
-import { Effect, Context, Layer } from 'effect';
-import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { Pool as PgPool } from 'pg';
+import { Config, Layer } from 'effect';
+import { PgClient } from '@effect/sql-pg';
+import { PgDrizzle, layer as PgDrizzleLayer } from '@effect/sql-drizzle/Pg';
 import * as schema from '../../schema';
 
 /**
- * Database configuration interface
+ * Database configuration using Effect Config system
  */
-export interface DatabaseConfig {
-  readonly host: string;
-  readonly port: number;
-  readonly database: string;
-  readonly user: string;
-  readonly password: string;
-  readonly ssl: boolean;
-  readonly max: number;
-  readonly idleTimeoutMillis: number;
-  readonly connectionTimeoutMillis: number;
-}
-
-/**
- * Effect database service interface
- */
-export interface EffectDatabase {
-  readonly client: NodePgDatabase<typeof schema>;
-  readonly pool: PgPool;
-  readonly query: <T>(operation: (db: NodePgDatabase<typeof schema>) => Promise<T>) => Effect.Effect<T, QueryError>;
-  readonly transaction: <T>(
-    operation: (tx: NodePgDatabase<typeof schema>) => Promise<T>
-  ) => Effect.Effect<T, TransactionError>;
-  readonly close: () => Effect.Effect<void, DatabaseError>;
-  readonly healthCheck: () => Effect.Effect<boolean, DatabaseError>;
-}
-
-/**
- * Database error types
- */
-export class DatabaseError extends Error {
-  readonly _tag = 'DatabaseError';
-  constructor(
-    message: string,
-    readonly cause?: Error,
-    readonly code?: string
-  ) {
-    super(message);
-  }
-}
-
-export class ConnectionError extends Error {
-  readonly _tag = 'ConnectionError';
-  constructor(message: string, readonly cause?: Error) {
-    super(`Connection failed: ${message}`);
-  }
-}
-
-export class QueryError extends Error {
-  readonly _tag = 'QueryError';
-  constructor(message: string, readonly cause?: Error) {
-    super(`Query failed: ${message}`);
-  }
-}
-
-export class TransactionError extends Error {
-  readonly _tag = 'TransactionError';
-  constructor(message: string, readonly cause?: Error) {
-    super(`Transaction failed: ${message}`);
-  }
-}
-
-/**
- * Database service tag for dependency injection
- */
-export const EffectDatabaseService = Context.GenericTag<EffectDatabase>('EffectDatabaseService');
-
-/**
- * Database configuration tag
- */
-export const DatabaseConfigService = Context.GenericTag<DatabaseConfig>('DatabaseConfigService');
-
-/**
- * Create database configuration from environment variables
- */
-export const makeDatabaseConfig = (): DatabaseConfig => ({
-  host: process.env.DB_HOST || 'localhost',
-  port: Number(process.env.DB_PORT) || 5432,
-  database: process.env.DB_NAME || 'scavenger_hunt',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || '',
-  ssl: process.env.DB_SSL === 'true',
-  max: Number(process.env.DB_MAX_CONNECTIONS) || 20,
-  idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT) || 30000,
-  connectionTimeoutMillis: Number(process.env.DB_CONNECTION_TIMEOUT) || 2000,
-});
-
-/**
- * Create PostgreSQL pool with configuration
- */
-const createPool = (config: DatabaseConfig): Effect.Effect<PgPool, ConnectionError> =>
-  Effect.gen(function* () {
-    try {
-      const pool = new PgPool({
-        host: config.host,
-        port: config.port,
-        database: config.database,
-        user: config.user,
-        password: config.password,
-        ssl: config.ssl,
-        max: config.max,
-        idleTimeoutMillis: config.idleTimeoutMillis,
-        connectionTimeoutMillis: config.connectionTimeoutMillis,
-      });
-
-      // Test the connection
-      yield* Effect.promise(() =>
-        pool.connect().then(client => {
-          client.release();
-          return pool;
-        })
-      ).pipe(
-        Effect.mapError(error => new ConnectionError('Failed to establish database connection', error))
-      );
-
-      return pool;
-    } catch (error) {
-      return yield* Effect.fail(
-        new ConnectionError('Failed to create database pool', error instanceof Error ? error : new Error(String(error)))
-      );
-    }
-  });
-
-/**
- * Create Effect database service implementation
- */
-const makeEffectDatabase = (pool: PgPool): EffectDatabase => {
-  const client = drizzle(pool, { schema });
-
-  return {
-    client,
-    pool,
-
-    query: <T>(operation: (db: NodePgDatabase<typeof schema>) => Promise<T>) =>
-      Effect.gen(function* () {
-        try {
-          return yield* Effect.promise(() => operation(client)).pipe(
-            Effect.mapError(error => new QueryError('Database query failed', error as Error))
-          );
-        } catch (error) {
-          return yield* Effect.fail(
-            new QueryError('Query execution failed', error instanceof Error ? error : new Error(String(error)))
-          );
-        }
-      }),
-
-    transaction: <T>(operation: (tx: NodePgDatabase<typeof schema>) => Promise<T>) =>
-      Effect.gen(function* () {
-        try {
-          return yield* Effect.promise(() =>
-            client.transaction(async (tx) => operation(tx))
-          ).pipe(
-            Effect.mapError(error => new TransactionError('Transaction failed', error as Error))
-          );
-        } catch (error) {
-          return yield* Effect.fail(
-            new TransactionError('Transaction execution failed', error instanceof Error ? error : new Error(String(error)))
-          );
-        }
-      }),
-
-    close: () =>
-      Effect.gen(function* () {
-        try {
-          yield* Effect.promise(() => pool.end()).pipe(
-            Effect.mapError(error => new DatabaseError('Failed to close database pool', error as Error))
-          );
-        } catch (error) {
-          return yield* Effect.fail(
-            new DatabaseError('Pool closure failed', error instanceof Error ? error : new Error(String(error)))
-          );
-        }
-      }),
-
-    healthCheck: () =>
-      Effect.gen(function* () {
-        try {
-          yield* Effect.promise(() =>
-            pool.query('SELECT 1').then(() => true)
-          ).pipe(
-            Effect.mapError(() => new DatabaseError('Health check failed'))
-          );
-          return true;
-        } catch (error) {
-          return yield* Effect.fail(
-            new DatabaseError('Health check execution failed', error instanceof Error ? error : new Error(String(error)))
-          );
-        }
-      }),
-  };
+export const DatabaseConfig = {
+  host: Config.string('DB_HOST').pipe(Config.withDefault('localhost')),
+  port: Config.integer('DB_PORT').pipe(Config.withDefault(5432)),
+  database: Config.string('DB_NAME').pipe(Config.withDefault('scavenger_hunt')),
+  user: Config.string('DB_USER').pipe(Config.withDefault('postgres')),
+  password: Config.redacted('DB_PASSWORD'),
+  ssl: Config.boolean('DB_SSL').pipe(Config.withDefault(false)),
+  maxConnections: Config.integer('DB_MAX_CONNECTIONS').pipe(Config.withDefault(20)),
+  idleTimeoutMillis: Config.integer('DB_IDLE_TIMEOUT').pipe(Config.withDefault(30000)),
+  connectionTimeoutMillis: Config.integer('DB_CONNECTION_TIMEOUT').pipe(Config.withDefault(2000)),
 };
 
 /**
- * Layer that provides the database service
+ * PostgreSQL client layer with configuration
  */
-export const EffectDatabaseLive = Layer.effect(
-  EffectDatabaseService,
-  Effect.gen(function* () {
-    const config = yield* DatabaseConfigService;
-    const pool = yield* createPool(config);
-    return makeEffectDatabase(pool);
-  })
-);
+export const PgLive = PgClient.layerConfig({
+  host: DatabaseConfig.host,
+  port: DatabaseConfig.port,
+  database: DatabaseConfig.database,
+  username: DatabaseConfig.user,
+  password: DatabaseConfig.password,
+  ssl: DatabaseConfig.ssl,
+  maxConnections: DatabaseConfig.maxConnections,
+});
 
 /**
- * Layer that provides database configuration
+ * Drizzle layer that provides the main database service
+ * This combines the PostgreSQL client with Drizzle ORM
  */
-export const DatabaseConfigLive = Layer.succeed(
-  DatabaseConfigService,
-  makeDatabaseConfig()
-);
+export const DrizzleLive = PgDrizzleLayer.pipe(Layer.provide(PgLive));
 
 /**
- * Complete database layer (config + service)
+ * Complete database layer that can be used throughout the application
  */
-export const DatabaseLive = DatabaseConfigLive.pipe(
-  Layer.provide(EffectDatabaseLive)
-);
+export const DatabaseLive = DrizzleLive;
 
 /**
- * Convenience function to create database service with default config
+ * Re-export the Drizzle service type for use in other modules
  */
-export const makeDatabaseService = (
-  customConfig?: Partial<DatabaseConfig>
-): Layer.Layer<EffectDatabase, ConnectionError> =>
-  Layer.effect(
-    EffectDatabaseService,
-    Effect.gen(function* () {
-      const defaultConfig = makeDatabaseConfig();
-      const config = { ...defaultConfig, ...customConfig };
-      const pool = yield* createPool(config);
-      return makeEffectDatabase(pool);
-    })
-  );
+export { PgDrizzle };
 
 /**
- * Usage helper functions
+ * Convenience function to create a custom database layer with specific configuration
  */
-export const withDatabase = <A, E>(
-  operation: (db: EffectDatabase) => Effect.Effect<A, E>
-) =>
-  Effect.gen(function* () {
-    const database = yield* EffectDatabaseService;
-    return yield* operation(database);
+export const makeDatabaseLayer = (config: {
+  host?: string;
+  port?: number;
+  database?: string;
+  user?: string;
+  password?: string;
+  ssl?: boolean;
+  maxConnections?: number;
+  idleTimeoutMillis?: number;
+  connectionTimeoutMillis?: number;
+}) => {
+  const customPgLayer = PgClient.layerConfig({
+    host: Config.succeed(config.host ?? 'localhost'),
+    port: Config.succeed(config.port ?? 5432),
+    database: Config.succeed(config.database ?? 'scavenger_hunt'),
+    username: Config.succeed(config.user ?? 'postgres'),
+    password: Config.redacted(config.password ?? ''),
+    ssl: Config.succeed(config.ssl ?? false),
+    maxConnections: Config.succeed(config.maxConnections ?? 20),
   });
 
-export const withDatabaseQuery = <A>(
-  operation: (db: NodePgDatabase<typeof schema>) => Promise<A>
-) =>
-  Effect.gen(function* () {
-    const database = yield* EffectDatabaseService;
-    return yield* database.query(operation);
-  });
-
-export const withDatabaseTransaction = <A>(
-  operation: (tx: NodePgDatabase<typeof schema>) => Promise<A>
-) =>
-  Effect.gen(function* () {
-    const database = yield* EffectDatabaseService;
-    return yield* database.transaction(operation);
-  });
+  return PgDrizzleLayer.pipe(Layer.provide(customPgLayer));
+};
 
 /**
- * Export types for use in other modules
+ * Export types and schema for use in other modules
  */
-export type { NodePgDatabase };
 export { schema };
 
 /**
- * Usage Examples:
+ * Usage Example:
  *
- * // Basic usage with Layer
+ * // Basic usage with the default layer
  * const program = Effect.gen(function* () {
- *   const result = yield* withDatabaseQuery(db =>
- *     db.select().from(users).limit(10)
- *   );
- *   return result;
+ *   const drizzle = yield* PgDrizzle;
+ *   const users = yield* drizzle
+ *     .select()
+ *     .from(schema.users)
+ *     .limit(10);
+ *   return users;
  * }).pipe(Effect.provide(DatabaseLive));
  *
  * // Transaction usage
  * const transactionProgram = Effect.gen(function* () {
- *   const result = yield* withDatabaseTransaction(tx =>
- *     tx.insert(users).values({ ... }).returning()
+ *   const drizzle = yield* PgDrizzle;
+ *   const result = yield* drizzle.transaction((tx) =>
+ *     tx.insert(schema.users).values({ ... }).returning()
  *   );
  *   return result;
  * }).pipe(Effect.provide(DatabaseLive));
  *
  * // Custom configuration
- * const customDbLayer = makeDatabaseService({
+ * const customDbLayer = makeDatabaseLayer({
  *   host: 'custom-host',
  *   port: 5433
  * });
