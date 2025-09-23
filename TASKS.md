@@ -312,3 +312,26 @@
 - Updated comprehensive documentation in `docs/effect-database-usage.md` to reflect official package usage
 - All validation gates pass: TypeScript compilation (0 errors), ESLint clean, 570/570 tests passing, successful build
 - Now using production-ready official Effect SQL ecosystem with built-in error handling and connection management
+
+### 2025-01-23: Effect-Based Schema Validation (GitHub Issue #42)
+**Status:** Completed
+**Description:** Create an effect-based solution for user validation using Effect schema to handle validation (similar to user.validator.ts)
+**Requirements:**
+- [x] Research Effect schema validation patterns and best practices
+- [x] Create effect-based user validator similar to user.validator.ts using Effect schema
+- [x] Implement Effect schema validation for user operations (create, update, delete, list)
+- [x] Write comprehensive tests for the Effect validator
+- [x] Ensure integration with existing Effect-based user model
+- [x] Validate all code passes linting and type checking
+
+**Implementation Details:**
+- Created user.validator-effect.ts demonstrating Effect Schema validation patterns
+- Implemented Effect schema validation using Schema.Struct, Schema.String, Schema.filter, and Schema.transform
+- Added custom validation with proper error messages for email, password, nickname, and roles
+- Created comprehensive test suite with 39 test cases achieving 100% coverage
+- Effect-based validation functions return Effects that can be composed with other operations
+- Proper type inference from schemas with exported TypeScript types
+- ValidationError class for structured error handling in Effect context
+- All validation gates pass: TypeScript compilation (0 errors), ESLint clean, 609/609 tests passing, successful build
+- Demonstrates functional programming patterns vs traditional Zod approach with composable Effects
+- Integration ready with existing Effect-based user model for full functional architecture
