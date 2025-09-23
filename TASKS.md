@@ -263,3 +263,29 @@
 - Added 45+ new test cases covering happy path, error cases, and edge cases
 - All 554 tests pass with TypeScript compilation, ESLint, build, and security validation
 - Created Pull Request #35: https://github.com/ortaieb/a-hunt-game/pull/35
+
+### 2025-01-23: Effect Library Integration for User Model (GitHub Issue #37)
+**Status:** Completed
+**Description:** Create an Effect library version of user.model.ts to demonstrate functional programming patterns with dependency injection
+**Requirements:**
+- [x] Research Effect library concepts and dependency injection patterns
+- [x] Install Effect library if not already available
+- [x] Create user.model-effect.ts with the same functionality as user.model.ts
+- [x] Implement Effect-based database operations with proper error handling
+- [x] Use Effect's dependency injection for database and bcrypt services
+- [x] Write tests to verify the Effect version works correctly
+- [x] Ensure compatibility with existing user types and interfaces
+
+**Implementation Details:**
+- Installed Effect library (version 3.17.14) as a project dependency
+- Created user.model-effect.ts demonstrating key Effect concepts:
+  - Dependency injection using Context.GenericTag for DatabaseService and CryptoService
+  - Composable operations using Effect.gen for functional composition
+  - Structured error handling with custom error types (UserNotFoundError, UserCreationError)
+  - Service layer pattern with Effect.provide for dependency resolution
+  - Functional approach over imperative execution patterns
+- Demonstrated Effect patterns for user operations: findById, create, verifyPassword, findByUsername
+- Provided service implementations: makeDatabaseService, makeCryptoService
+- Comprehensive documentation explaining Effect benefits vs traditional approach
+- All TypeScript compilation and linting validation passes
+- Created Pull Request #XX: https://github.com/ortaieb/a-hunt-game/pull/XX
