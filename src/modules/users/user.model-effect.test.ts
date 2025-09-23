@@ -5,9 +5,9 @@ import {
   UserModelEffect,
   UserNotFoundError,
   UserCreationError,
-  makeDatabaseService,
-  makeCryptoService
+  makeCryptoService,
 } from './user.model-effect';
+import { makeDatabaseLayer } from '../../shared/database/effect-database';
 import { CreateUserData } from './user.types';
 
 // Mock data for testing
@@ -93,9 +93,10 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
       const effect = UserModelEffect.findById('test-id');
 
       // Effects should be composable using pipe
-      const composedEffect = effect.pipe(
+      const composedEffect = effect
+        .pipe
         // This would normally add error handling, transformations, etc.
-      );
+        ();
 
       expect(composedEffect).toBeDefined();
       expect(typeof composedEffect.pipe).toBe('function');
@@ -103,42 +104,42 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
   });
 
   describe('Service Factory Testing', () => {
-    describe('makeDatabaseService', () => {
-      it('should create service layer from database instance', () => {
-        const mockDatabase = {
-          raw: jest.fn().mockResolvedValue([{ id: 1, name: 'test' }]),
-          transaction: jest.fn().mockImplementation((callback) => {
-            return Promise.resolve(callback());
-          }),
+    describe('makeDatabaseLayer', () => {
+      it('should create service layer with custom config', () => {
+        const customConfig = {
+          host: 'test-host',
+          port: 5433,
+          database: 'test-db',
+          user: 'test-user',
+          password: 'test-pass',
         };
 
-        const serviceLayer = makeDatabaseService(mockDatabase);
+        const serviceLayer = makeDatabaseLayer(customConfig);
 
         // Service layer should be created
         expect(serviceLayer).toBeDefined();
 
-        // Service should wrap database operations
-        expect(mockDatabase.raw).toBeDefined();
-        expect(mockDatabase.transaction).toBeDefined();
+        // Layer should have provide method for dependency injection
+        expect(typeof serviceLayer.pipe).toBe('function');
       });
 
-      it('should handle different database implementations', () => {
-        const postgresDatabase = {
-          raw: jest.fn().mockName('postgres.raw'),
-          transaction: jest.fn().mockName('postgres.transaction'),
+      it('should handle different database configurations', () => {
+        const postgresConfig = {
+          host: 'postgres-host',
+          port: 5432,
         };
 
-        const sqliteDatabase = {
-          raw: jest.fn().mockName('sqlite.raw'),
-          transaction: jest.fn().mockName('sqlite.transaction'),
+        const customConfig = {
+          host: 'custom-host',
+          port: 3306,
         };
 
-        const postgresService = makeDatabaseService(postgresDatabase);
-        const sqliteService = makeDatabaseService(sqliteDatabase);
+        const postgresService = makeDatabaseLayer(postgresConfig);
+        const customService = makeDatabaseLayer(customConfig);
 
         // Both should create valid service layers
         expect(postgresService).toBeDefined();
-        expect(sqliteService).toBeDefined();
+        expect(customService).toBeDefined();
       });
     });
 
@@ -181,12 +182,15 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
       expect(typeof effect1).toBe(typeof effect2);
 
       // Example 2: Service mocking is straightforward
-      const mockDb = {
-        raw: jest.fn().mockResolvedValue([]),
-        transaction: jest.fn().mockImplementation(fn => fn()),
+      const mockConfig = {
+        host: 'mock-host',
+        port: 5432,
+        database: 'mock-db',
+        user: 'mock-user',
+        password: 'mock-pass',
       };
 
-      const dbService = makeDatabaseService(mockDb);
+      const dbService = makeDatabaseLayer(mockConfig);
       expect(dbService).toBeDefined();
 
       // Example 3: Error types are structured and testable
@@ -206,13 +210,16 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
        */
 
       // Step 1: Mock service creation
-      const mockDatabase = {
-        raw: jest.fn().mockResolvedValue([{ test: 'data' }]),
-        transaction: jest.fn().mockImplementation(fn => fn()),
+      const mockConfig = {
+        host: 'test-host',
+        port: 5432,
+        database: 'test-db',
+        user: 'test-user',
+        password: 'test-pass',
       };
 
       // Step 2: Service layer creation
-      const databaseService = makeDatabaseService(mockDatabase);
+      const databaseService = makeDatabaseLayer(mockConfig);
 
       // Step 3: Effect creation (describes computation)
       const userFindEffect = UserModelEffect.findById('test-user');
@@ -252,9 +259,9 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
       expect(effect).toBeDefined(); // Test the Effect value first
 
       // Then test with dependencies:
-      const mockService = makeDatabaseService({
-        raw: jest.fn(),
-        transaction: jest.fn(),
+      const mockService = makeDatabaseLayer({
+        host: 'test-host',
+        port: 5432,
       });
 
       expect(mockService).toBeDefined();
@@ -265,12 +272,12 @@ describe('UserModelEffect - Testing Approach Demonstration', () => {
   describe('Effect Pattern Benefits Demonstration', () => {
     it('should show dependency injection advantages', () => {
       // Different database implementations
-      const productionDb = { raw: jest.fn(), transaction: jest.fn() };
-      const testDb = { raw: jest.fn(), transaction: jest.fn() };
+      const productionConfig = { host: 'prod-host', port: 5432 };
+      const testConfig = { host: 'test-host', port: 5433 };
 
       // Same service factory, different implementations
-      const prodService = makeDatabaseService(productionDb);
-      const testService = makeDatabaseService(testDb);
+      const prodService = makeDatabaseLayer(productionConfig);
+      const testService = makeDatabaseLayer(testConfig);
 
       // Same Effect program, different dependencies
       const userEffect = UserModelEffect.findById('test');

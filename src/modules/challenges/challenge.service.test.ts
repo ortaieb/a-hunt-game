@@ -619,7 +619,10 @@ describe('ChallengeService', () => {
   describe('activeChallenges', () => {
     describe('Happy Path', () => {
       it('should return all active challenges', async () => {
-        const activeChallenges = [sampleChallenge, { ...sampleChallenge, challenge_id: 'challenge-2' }];
+        const activeChallenges = [
+          sampleChallenge,
+          { ...sampleChallenge, challenge_id: 'challenge-2' },
+        ];
         mockChallengeModel.allChallenges.mockResolvedValue(activeChallenges);
 
         const result = await challengeService.activeChallenges();
@@ -643,7 +646,9 @@ describe('ChallengeService', () => {
         const dbError = new Error('Database connection failed');
         mockChallengeModel.allChallenges.mockRejectedValue(dbError);
 
-        await expect(challengeService.activeChallenges()).rejects.toThrow('Database connection failed');
+        await expect(challengeService.activeChallenges()).rejects.toThrow(
+          'Database connection failed',
+        );
       });
     });
   });
@@ -685,7 +690,9 @@ describe('ChallengeService', () => {
         const dbError = new Error('Database error');
         mockChallengeModel.findByParticipantId.mockRejectedValue(dbError);
 
-        await expect(challengeService.getParticipant('participant-1')).rejects.toThrow('Database error');
+        await expect(challengeService.getParticipant('participant-1')).rejects.toThrow(
+          'Database error',
+        );
       });
     });
   });

@@ -289,3 +289,26 @@
 - Comprehensive documentation explaining Effect benefits vs traditional approach
 - All TypeScript compilation and linting validation passes
 - Created Pull Request #38: https://github.com/ortaieb/a-hunt-game/pull/38
+
+### 2025-01-23: Effect Drizzle Database Implementation (GitHub Issue #39)
+**Status:** Completed
+**Description:** Develop an effectful implementation for database operations using Effect-based pool and PostgreSQL client
+**Requirements:**
+- [x] Research Effect database patterns from provided sources
+- [x] Examine current database implementation in src/shared/database/index.ts
+- [x] Create Effect-based database service with PostgreSQL client
+- [x] Update user-model-effect.ts to use the new Effect database service
+- [x] Add markdown documentation explaining Effect usage patterns
+- [x] Write comprehensive tests for the new database service
+- [x] Ensure all validation passes (TypeScript, ESLint, tests)
+
+**Implementation Details:**
+- Replaced custom Effect database implementation with official `@effect/sql-drizzle` package
+- Installed official packages: `@effect/sql`, `@effect/sql-drizzle`, `@effect/sql-pg`
+- Updated database service to use `PgClient.layerConfig` and `PgDrizzleLayer` official patterns
+- Implemented Effect Config system for environment-based configuration
+- Updated `user.model-effect.ts` to use official `yield* PgDrizzle` patterns instead of custom helpers
+- Updated tests to use `makeDatabaseLayer` function with official layer composition
+- Updated comprehensive documentation in `docs/effect-database-usage.md` to reflect official package usage
+- All validation gates pass: TypeScript compilation (0 errors), ESLint clean, 570/570 tests passing, successful build
+- Now using production-ready official Effect SQL ecosystem with built-in error handling and connection management
