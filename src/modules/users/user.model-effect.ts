@@ -1,5 +1,5 @@
-// src/modules/users/user.model-effect-simple.ts
-// Simplified Effect library demonstration for user.model.ts
+// src/modules/users/user.model-effect.ts
+// Effect library implementation for user.model.ts using Effect-based database service
 // This file demonstrates key Effect concepts: dependency injection, composable operations, and structured error handling
 
 import { Effect, Context, pipe } from 'effect';
@@ -7,6 +7,14 @@ import { eq, isNull, and, desc, sql } from 'drizzle-orm';
 import { users, User as DbUser } from '../../schema/users';
 import { User, CreateUserData, UpdateUserData, UserFilters } from './user.types';
 import { v7 as uuidv7 } from 'uuid';
+import {
+  EffectDatabaseService,
+  withDatabaseQuery,
+  withDatabaseTransaction,
+  QueryError,
+  TransactionError,
+  DatabaseLive
+} from '../../shared/database/effect-database';
 
 /**
  * Effect-based User Model Implementation
@@ -20,11 +28,6 @@ import { v7 as uuidv7 } from 'uuid';
  */
 
 // Service tags for dependency injection
-export const DatabaseService = Context.GenericTag<{
-  readonly query: (query: string) => Promise<any>;
-  readonly transaction: <T>(fn: () => Promise<T>) => Promise<T>;
-}>('DatabaseService');
-
 export const CryptoService = Context.GenericTag<{
   readonly hash: (password: string) => Promise<string>;
   readonly compare: (password: string, hash: string) => Promise<boolean>;
@@ -61,21 +64,16 @@ export class UserModelEffect {
    * Demonstrates: dependency injection, error handling, optional results
    */
   static findById = (userId: string) =>
-    Effect.gen(function* () {
-      const db = yield* DatabaseService;
-
-      try {
-        // In a real implementation, this would use the injected database service
-        // Here we show the pattern structure
-        const result = yield* Effect.promise(() =>
-          Promise.resolve(null) // Simplified for demonstration
-        );
-
-        return result;
-      } catch (error) {
-        return yield* Effect.fail(new Error(`Database query failed: ${error}`));
-      }
-    });
+    withDatabaseQuery(db =>
+      db.select()
+        .from(users)
+        .where(and(
+          eq(users.user_id, userId),
+          isNull(users.valid_until)
+        ))
+        .limit(1)
+        .then(rows => rows[0] || null)
+    );
 
   /**
    * Create user with dependency injection for database and crypto services
@@ -83,7 +81,6 @@ export class UserModelEffect {
    */
   static create = (userData: CreateUserData) =>
     Effect.gen(function* () {
-      const db = yield* DatabaseService;
       const crypto = yield* CryptoService;
 
       // Hash password using injected crypto service
@@ -91,21 +88,20 @@ export class UserModelEffect {
         crypto.hash(userData.password)
       );
 
-      // Create user using injected database service
-      const user = yield* Effect.promise(() =>
-        db.transaction(async () => {
-          // Simplified for demonstration
-          return {
-            user_id: uuidv7(),
-            username: userData.username.toLowerCase(),
-            password_hash: hashedPassword,
-            nickname: userData.nickname,
-            roles: userData.roles,
-            valid_from: new Date(),
-            valid_until: null,
-          } as DbUser;
-        })
-      );
+      // Create user using Effect database transaction
+      const user = yield* withDatabaseTransaction(tx => {
+        const newUser = {
+          user_id: uuidv7(),
+          username: userData.username.toLowerCase(),
+          password_hash: hashedPassword,
+          nickname: userData.nickname,
+          roles: userData.roles,
+          valid_from: new Date(),
+          valid_until: null,
+        };
+
+        return tx.insert(users).values(newUser).returning().then(rows => rows[0]);
+      });
 
       if (!user) {
         return yield* Effect.fail(new UserCreationError('Failed to create user'));
@@ -141,27 +137,22 @@ export class UserModelEffect {
    * Demonstrates: basic Effect pattern with service injection
    */
   static findByUsername = (username: string) =>
-    Effect.gen(function* () {
-      const db = yield* DatabaseService;
-
-      const result = yield* Effect.promise(() =>
-        Promise.resolve(null) // Simplified for demonstration
-      );
-
-      return result;
-    });
+    withDatabaseQuery(db =>
+      db.select()
+        .from(users)
+        .where(and(
+          eq(users.username, username.toLowerCase()),
+          isNull(users.valid_until)
+        ))
+        .limit(1)
+        .then(rows => rows[0] || null)
+    );
 }
 
 /**
  * Service Implementations
  * These create the actual service instances that get injected
  */
-export const makeDatabaseService = (database: any) =>
-  DatabaseService.of({
-    query: (query: string) => database.raw(query),
-    transaction: <T>(fn: () => Promise<T>) => database.transaction(fn),
-  });
-
 export const makeCryptoService = () =>
   CryptoService.of({
     hash: async (password: string) => {
@@ -187,7 +178,7 @@ export const makeCryptoService = () =>
  * // Run with dependency injection
  * const result = await Effect.runPromise(
  *   createUserProgram.pipe(
- *     Effect.provide(makeDatabaseService(database)),
+ *     Effect.provide(DatabaseLive),
  *     Effect.provide(makeCryptoService())
  *   )
  * );
