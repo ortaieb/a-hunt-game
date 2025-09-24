@@ -75,13 +75,10 @@ const TestDatabaseLayer = makeDatabaseLayer({
 /**
  * Mock crypto service for testing
  */
-const MockCryptoService = Layer.succeed(
-  CryptoService,
-  {
-    hash: async (password: string) => `hashed_${password}`,
-    compare: async (password: string, hash: string) => hash === `hashed_${password}`,
-  }
-);
+const MockCryptoService = Layer.succeed(CryptoService, {
+  hash: async (password: string) => `hashed_${password}`,
+  compare: async (password: string, hash: string) => hash === `hashed_${password}`,
+});
 
 /**
  * Combined layer for testing with all dependencies
@@ -204,7 +201,7 @@ describe('UserServiceEffect', () => {
     describe('listUsers', () => {
       it('should return list of users', () => {
         const filters: UserFilters = {};
-        
+
         expect(service.listUsers).toBeDefined();
         expect(typeof service.listUsers).toBe('function');
       });
@@ -241,7 +238,7 @@ describe('UserServiceEffect', () => {
 
     it('should provide all required methods', () => {
       const service = makeUserServiceEffect();
-      
+
       expect(service.createUser).toBeDefined();
       expect(service.updateUser).toBeDefined();
       expect(service.deleteUser).toBeDefined();
@@ -356,12 +353,12 @@ describe('UserServiceEffect', () => {
 
     it('should demonstrate error handling pattern', () => {
       const program = createUser(mockCreateUserData).pipe(
-        Effect.catchAll((error) => {
+        Effect.catchAll(error => {
           if (error._tag === 'UserConflictError') {
             return Effect.succeed({ error: 'User already exists' });
           }
           return Effect.fail(error);
-        })
+        }),
       );
 
       expect(program).toBeDefined();

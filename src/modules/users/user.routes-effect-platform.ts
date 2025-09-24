@@ -5,7 +5,11 @@
 import { Effect, Context, Layer, pipe } from 'effect';
 import { Router, Request, Response, NextFunction } from 'express';
 import { HttpApiDecodeError } from '@effect/platform/HttpApiError';
-import { UserServiceEffectTag, UserServiceEffectLive, UserServiceEffect } from './user.service-effect';
+import {
+  UserServiceEffectTag,
+  UserServiceEffectLive,
+  UserServiceEffect,
+} from './user.service-effect';
 import { validateCreateUser, validateListUsers } from './user.validator-effect';
 import { UserResponse, CreateUserData, UserFilters } from './user.types';
 import { PgDrizzle } from '../../shared/database/effect-database';
@@ -27,22 +31,33 @@ import { makeDatabaseLayer } from '../../shared/database/effect-database';
 // Authentication context and service
 export class AuthenticationError extends Error {
   readonly _tag = 'AuthenticationError';
-  constructor(message: string, public readonly statusCode: number = 401) {
+  constructor(
+    message: string,
+    public readonly statusCode: number = 401,
+  ) {
     super(message);
   }
 }
 
 export class AuthorizationError extends Error {
   readonly _tag = 'AuthorizationError';
-  constructor(message: string, public readonly statusCode: number = 403) {
+  constructor(
+    message: string,
+    public readonly statusCode: number = 403,
+  ) {
     super(message);
   }
 }
 
 // Authentication service interface
 export interface AuthService {
-  readonly authenticateToken: (token: string | undefined) => Effect.Effect<AuthenticatedUser, AuthenticationError>;
-  readonly requireRole: (user: AuthenticatedUser, role: string) => Effect.Effect<AuthenticatedUser, AuthorizationError>;
+  readonly authenticateToken: (
+    token: string | undefined,
+  ) => Effect.Effect<AuthenticatedUser, AuthenticationError>;
+  readonly requireRole: (
+    user: AuthenticatedUser,
+    role: string,
+  ) => Effect.Effect<AuthenticatedUser, AuthorizationError>;
 }
 
 export interface AuthenticatedUser {
@@ -80,7 +95,7 @@ const makeAuthService = (): AuthService => ({
         throw new AuthorizationError('Insufficient permissions');
       }
       return user;
-    })
+    }),
 });
 
 // Auth service layer
@@ -104,19 +119,21 @@ export const listUsersEffect = (req: Request) =>
 
     // Business logic
     const userService = yield* UserServiceEffectTag;
-    const users = yield* userService.listUsers(validated.query || {} as UserFilters);
+    const users = yield* userService.listUsers(validated.query || ({} as UserFilters));
 
     return users;
   }).pipe(
     Effect.provide(AuthServiceLayer),
     Effect.provide(UserServiceEffectLive),
-    Effect.provide(makeDatabaseLayer({
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'test',
-      user: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'password'
-    }))
+    Effect.provide(
+      makeDatabaseLayer({
+        host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT || '5432'),
+        database: process.env.DB_NAME || 'test',
+        user: process.env.DB_USERNAME || 'postgres',
+        password: process.env.DB_PASSWORD || 'password',
+      }),
+    ),
   );
 
 /**
@@ -142,27 +159,28 @@ export const createUserEffect = (req: Request) =>
     // Transform to API response format
     return {
       'user-id': createdUser.user_id,
-      username: createdUser.username
+      username: createdUser.username,
     };
   }).pipe(
     Effect.provide(AuthServiceLayer),
     Effect.provide(UserServiceEffectLive),
-    Effect.provide(makeDatabaseLayer({
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'test',
-      user: process.env.DB_USERNAME || 'postgres',
-      password: process.env.DB_PASSWORD || 'password'
-    }))
+    Effect.provide(
+      makeDatabaseLayer({
+        host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT || '5432'),
+        database: process.env.DB_NAME || 'test',
+        user: process.env.DB_USERNAME || 'postgres',
+        password: process.env.DB_PASSWORD || 'password',
+      }),
+    ),
   );
 
 /**
  * Express integration helper
  * Converts Effect-based handlers to Express middleware
  */
-export const effectToExpress = <T>(
-  effectHandler: (req: Request) => Effect.Effect<T, any, any>
-) =>
+export const effectToExpress =
+  <T>(effectHandler: (req: Request) => Effect.Effect<T, any, any>) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Use explicit typing to handle Effect type resolution
