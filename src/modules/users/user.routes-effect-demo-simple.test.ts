@@ -1,7 +1,7 @@
 // src/modules/users/user.routes-effect-demo-simple.test.ts
 // Comprehensive tests for practical Effect demonstration
 
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { Effect } from 'effect';
 import {
   authenticateToken,
@@ -21,9 +21,32 @@ import {
   RouteError,
   createDemoRouter,
   runEffect,
+  mockUsers,
 } from './user.routes-effect-demo-simple';
 
 describe('Practical Effect User Routes Demo', () => {
+  beforeEach(() => {
+    // Reset mock data to original state before each test
+    mockUsers.length = 0;
+    mockUsers.push(
+      {
+        user_id: '1',
+        username: 'test@example.com',
+        nickname: 'Test User',
+        roles: ['user'],
+        valid_from: new Date('2023-01-01'),
+        valid_until: null,
+      },
+      {
+        user_id: '2',
+        username: 'admin@example.com',
+        nickname: 'Admin User',
+        roles: ['game.admin'],
+        valid_from: new Date('2023-01-01'),
+        valid_until: null,
+      },
+    );
+  });
   describe('RouteError', () => {
     it('should create error with default status 500', () => {
       const error = new RouteError('Test error');
@@ -62,21 +85,21 @@ describe('Practical Effect User Routes Demo', () => {
     });
 
     it('should reject missing authorization header', async () => {
-      await expect(
-        Effect.runPromise(authenticateToken(undefined))
-      ).rejects.toThrow('Missing or invalid authorization header');
+      await expect(Effect.runPromise(authenticateToken(undefined))).rejects.toThrow(
+        'Missing or invalid authorization header',
+      );
     });
 
     it('should reject invalid token format', async () => {
-      await expect(
-        Effect.runPromise(authenticateToken('invalid-format'))
-      ).rejects.toThrow('Missing or invalid authorization header');
+      await expect(Effect.runPromise(authenticateToken('invalid-format'))).rejects.toThrow(
+        'Missing or invalid authorization header',
+      );
     });
 
     it('should reject invalid token', async () => {
-      await expect(
-        Effect.runPromise(authenticateToken('Bearer invalid-token'))
-      ).rejects.toThrow('Invalid token');
+      await expect(Effect.runPromise(authenticateToken('Bearer invalid-token'))).rejects.toThrow(
+        'Invalid token',
+      );
     });
   });
 
@@ -92,9 +115,9 @@ describe('Practical Effect User Routes Demo', () => {
     it('should reject user without required role', async () => {
       const user = { roles: ['user'] };
 
-      await expect(
-        Effect.runPromise(requireRole(user, 'game.admin'))
-      ).rejects.toThrow('Insufficient permissions');
+      await expect(Effect.runPromise(requireRole(user, 'game.admin'))).rejects.toThrow(
+        'Insufficient permissions',
+      );
     });
 
     it('should handle multiple roles', async () => {
@@ -127,7 +150,7 @@ describe('Practical Effect User Routes Demo', () => {
 
     it('should handle user not found', async () => {
       await expect(
-        Effect.runPromise(getUserByUsernameEffect('nonexistent@example.com'))
+        Effect.runPromise(getUserByUsernameEffect('nonexistent@example.com')),
       ).rejects.toThrow('User not found');
     });
 
@@ -153,9 +176,9 @@ describe('Practical Effect User Routes Demo', () => {
         roles: ['user'],
       };
 
-      await expect(
-        Effect.runPromise(createUserEffect(userData))
-      ).rejects.toThrow('User already exists');
+      await expect(Effect.runPromise(createUserEffect(userData))).rejects.toThrow(
+        'User already exists',
+      );
     });
 
     it('should update existing user', async () => {
@@ -179,17 +202,19 @@ describe('Practical Effect User Routes Demo', () => {
       };
 
       await expect(
-        Effect.runPromise(updateUserEffect('nonexistent@example.com', updateData))
+        Effect.runPromise(updateUserEffect('nonexistent@example.com', updateData)),
       ).rejects.toThrow('User not found');
     });
 
     it('should delete user', async () => {
       // First create a user to delete
-      await Effect.runPromise(createUserEffect({
-        username: 'todelete@example.com',
-        nickname: 'To Delete',
-        roles: ['user'],
-      }));
+      await Effect.runPromise(
+        createUserEffect({
+          username: 'todelete@example.com',
+          nickname: 'To Delete',
+          roles: ['user'],
+        }),
+      );
 
       const result = await Effect.runPromise(deleteUserEffect('todelete@example.com'));
 
@@ -197,9 +222,9 @@ describe('Practical Effect User Routes Demo', () => {
     });
 
     it('should handle delete of non-existent user', async () => {
-      await expect(
-        Effect.runPromise(deleteUserEffect('nonexistent@example.com'))
-      ).rejects.toThrow('User not found');
+      await expect(Effect.runPromise(deleteUserEffect('nonexistent@example.com'))).rejects.toThrow(
+        'User not found',
+      );
     });
   });
 
@@ -212,20 +237,20 @@ describe('Practical Effect User Routes Demo', () => {
     });
 
     it('should reject list users without auth', async () => {
-      await expect(
-        Effect.runPromise(listUsersWithAuth(undefined))
-      ).rejects.toThrow('Missing or invalid authorization header');
+      await expect(Effect.runPromise(listUsersWithAuth(undefined))).rejects.toThrow(
+        'Missing or invalid authorization header',
+      );
     });
 
     it('should reject list users with user token', async () => {
-      await expect(
-        Effect.runPromise(listUsersWithAuth('Bearer user-token'))
-      ).rejects.toThrow('Insufficient permissions');
+      await expect(Effect.runPromise(listUsersWithAuth('Bearer user-token'))).rejects.toThrow(
+        'Insufficient permissions',
+      );
     });
 
     it('should get user with valid auth', async () => {
       const result = await Effect.runPromise(
-        getUserWithAuth('admin@example.com', 'Bearer user-token')
+        getUserWithAuth('admin@example.com', 'Bearer user-token'),
       );
 
       expect(result).toMatchObject({
@@ -241,9 +266,7 @@ describe('Practical Effect User Routes Demo', () => {
         roles: ['user'],
       };
 
-      const result = await Effect.runPromise(
-        createUserWithAuth(userData, 'Bearer admin-token')
-      );
+      const result = await Effect.runPromise(createUserWithAuth(userData, 'Bearer admin-token'));
 
       expect(result).toMatchObject({
         'user-id': expect.any(String),
@@ -259,7 +282,7 @@ describe('Practical Effect User Routes Demo', () => {
       };
 
       await expect(
-        Effect.runPromise(createUserWithAuth(userData, 'Bearer user-token'))
+        Effect.runPromise(createUserWithAuth(userData, 'Bearer user-token')),
       ).rejects.toThrow('Insufficient permissions');
     });
 
@@ -270,7 +293,7 @@ describe('Practical Effect User Routes Demo', () => {
       };
 
       const result = await Effect.runPromise(
-        updateUserWithAuth('admin@example.com', updateData, 'Bearer admin-token')
+        updateUserWithAuth('admin@example.com', updateData, 'Bearer admin-token'),
       );
 
       expect(result).toMatchObject({
@@ -281,14 +304,19 @@ describe('Practical Effect User Routes Demo', () => {
 
     it('should delete user with admin auth', async () => {
       // Create a user to delete
-      await Effect.runPromise(createUserWithAuth({
-        username: 'todelete2@example.com',
-        nickname: 'To Delete 2',
-        roles: ['user'],
-      }, 'Bearer admin-token'));
+      await Effect.runPromise(
+        createUserWithAuth(
+          {
+            username: 'todelete2@example.com',
+            nickname: 'To Delete 2',
+            roles: ['user'],
+          },
+          'Bearer admin-token',
+        ),
+      );
 
       const result = await Effect.runPromise(
-        deleteUserWithAuth('todelete2@example.com', 'Bearer admin-token')
+        deleteUserWithAuth('todelete2@example.com', 'Bearer admin-token'),
       );
 
       expect(result).toBeUndefined();
@@ -303,9 +331,7 @@ describe('Practical Effect User Routes Demo', () => {
         roles: ['user'],
       };
 
-      const result = await Effect.runPromise(
-        createUserWorkflow(userData, 'Bearer admin-token')
-      );
+      const result = await Effect.runPromise(createUserWorkflow(userData, 'Bearer admin-token'));
 
       expect(result).toMatchObject({
         created: {
@@ -334,7 +360,7 @@ describe('Practical Effect User Routes Demo', () => {
       };
 
       const result = await Effect.runPromise(
-        userManagementWorkflow(createData, updateData, 'Bearer admin-token')
+        userManagementWorkflow(createData, updateData, 'Bearer admin-token'),
       );
 
       expect(result).toMatchObject({
@@ -358,7 +384,7 @@ describe('Practical Effect User Routes Demo', () => {
       };
 
       await expect(
-        Effect.runPromise(createUserWorkflow(userData, 'Bearer admin-token'))
+        Effect.runPromise(createUserWorkflow(userData, 'Bearer admin-token')),
       ).rejects.toThrow('User already exists');
     });
   });
@@ -398,14 +424,16 @@ describe('Practical Effect User Routes Demo', () => {
       } as any;
       const mockNext = jest.fn();
 
+      // Create an Effect that throws RouteError when executed
       const effect = Effect.sync(() => {
         throw new RouteError('Test error', 400, { detail: 'test' });
       });
 
+      // Test that runEffect properly handles the error
       runEffect(effect, mockRes, mockNext);
 
-      // Wait for Promise rejection handling
-      await new Promise(resolve => setTimeout(resolve, 10));
+      // Wait longer for the Promise rejection to be handled
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       expect(mockRes.status).toHaveBeenCalledWith(400);
       expect(mockRes.json).toHaveBeenCalledWith({
@@ -460,36 +488,29 @@ describe('Practical Effect User Routes Demo', () => {
 
   describe('Error Propagation in Compositions', () => {
     it('should propagate authentication errors', async () => {
-      const composedEffect = Effect.flatMap(
-        listUsersWithAuth('Bearer invalid-token'),
-        () => getUserWithAuth('test@example.com', 'Bearer user-token')
+      const composedEffect = Effect.flatMap(listUsersWithAuth('Bearer invalid-token'), () =>
+        getUserWithAuth('test@example.com', 'Bearer user-token'),
       );
 
-      await expect(
-        Effect.runPromise(composedEffect)
-      ).rejects.toThrow('Invalid token');
+      await expect(Effect.runPromise(composedEffect)).rejects.toThrow('Invalid token');
     });
 
     it('should propagate authorization errors', async () => {
       const composedEffect = Effect.flatMap(
         listUsersWithAuth('Bearer user-token'), // Should fail authorization
-        () => getUserWithAuth('test@example.com', 'Bearer user-token')
+        () => getUserWithAuth('test@example.com', 'Bearer user-token'),
       );
 
-      await expect(
-        Effect.runPromise(composedEffect)
-      ).rejects.toThrow('Insufficient permissions');
+      await expect(Effect.runPromise(composedEffect)).rejects.toThrow('Insufficient permissions');
     });
 
     it('should propagate business logic errors', async () => {
       const composedEffect = Effect.flatMap(
         getUserWithAuth('nonexistent@example.com', 'Bearer user-token'), // Should fail here
-        () => listUsersWithAuth('Bearer admin-token')
+        () => listUsersWithAuth('Bearer admin-token'),
       );
 
-      await expect(
-        Effect.runPromise(composedEffect)
-      ).rejects.toThrow('User not found');
+      await expect(Effect.runPromise(composedEffect)).rejects.toThrow('User not found');
     });
   });
 
@@ -523,16 +544,14 @@ describe('Practical Effect User Routes Demo', () => {
     it('should maintain proper types through compositions', async () => {
       const typedEffect = Effect.flatMap(
         getUserWithAuth('test@example.com', 'Bearer user-token'),
-        (user) =>
-          Effect.flatMap(
-            listUsersWithAuth('Bearer admin-token'),
-            (users) =>
-              Effect.succeed({
-                singleUser: user.username,
-                userCount: users.length,
-                isAdmin: user.roles.includes('game.admin'),
-              })
-          )
+        user =>
+          Effect.flatMap(listUsersWithAuth('Bearer admin-token'), users =>
+            Effect.succeed({
+              singleUser: user.username,
+              userCount: users.length,
+              isAdmin: user.roles.includes('game.admin'),
+            }),
+          ),
       );
 
       const result = await Effect.runPromise(typedEffect);

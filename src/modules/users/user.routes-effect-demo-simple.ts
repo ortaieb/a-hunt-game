@@ -24,15 +24,15 @@ export class RouteError extends Error {
   constructor(
     message: string,
     public readonly statusCode: number = 500,
-    public readonly context?: any
+    public readonly context?: any,
   ) {
     super(message);
     this.name = 'RouteError';
   }
 }
 
-// Mock data for demonstration
-const mockUsers: UserResponse[] = [
+// Mock data for demonstration (exported for test isolation)
+export const mockUsers: UserResponse[] = [
   {
     user_id: '1',
     username: 'test@example.com',
@@ -164,73 +164,60 @@ export const deleteUserEffect = (username: string) =>
  */
 
 export const listUsersWithAuth = (authHeader: string | undefined) =>
-  Effect.flatMap(
-    authenticateToken(authHeader),
-    (user) =>
-      Effect.flatMap(
-        requireRole(user, 'game.admin'),
-        () => getUsersEffect()
-      )
+  Effect.flatMap(authenticateToken(authHeader), user =>
+    Effect.flatMap(requireRole(user, 'game.admin'), () => getUsersEffect()),
   );
 
 export const getUserWithAuth = (username: string, authHeader: string | undefined) =>
-  Effect.flatMap(
-    authenticateToken(authHeader),
-    () => getUserByUsernameEffect(username)
-  );
+  Effect.flatMap(authenticateToken(authHeader), () => getUserByUsernameEffect(username));
 
 export const createUserWithAuth = (userData: any, authHeader: string | undefined) =>
-  Effect.flatMap(
-    authenticateToken(authHeader),
-    (user) =>
-      Effect.flatMap(
-        requireRole(user, 'game.admin'),
-        () => createUserEffect(userData)
-      )
+  Effect.flatMap(authenticateToken(authHeader), user =>
+    Effect.flatMap(requireRole(user, 'game.admin'), () => createUserEffect(userData)),
   );
 
-export const updateUserWithAuth = (username: string, userData: any, authHeader: string | undefined) =>
-  Effect.flatMap(
-    authenticateToken(authHeader),
-    (user) =>
-      Effect.flatMap(
-        requireRole(user, 'game.admin'),
-        () => updateUserEffect(username, userData)
-      )
+export const updateUserWithAuth = (
+  username: string,
+  userData: any,
+  authHeader: string | undefined,
+) =>
+  Effect.flatMap(authenticateToken(authHeader), user =>
+    Effect.flatMap(requireRole(user, 'game.admin'), () => updateUserEffect(username, userData)),
   );
 
 export const deleteUserWithAuth = (username: string, authHeader: string | undefined) =>
-  Effect.flatMap(
-    authenticateToken(authHeader),
-    (user) =>
-      Effect.flatMap(
-        requireRole(user, 'game.admin'),
-        () => deleteUserEffect(username)
-      )
+  Effect.flatMap(authenticateToken(authHeader), user =>
+    Effect.flatMap(requireRole(user, 'game.admin'), () => deleteUserEffect(username)),
   );
 
 /**
  * Express Integration Helper
  * Handles Effect execution and error conversion
  */
-export const runEffect = <T>(
-  effect: Effect.Effect<T, never, never>,
+export const runEffect = <T, E = never>(
+  effect: Effect.Effect<T, E, never>,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   Effect.runPromise(effect)
-    .then((result) => {
+    .then(result => {
       if (result === undefined) {
         res.status(204).send();
       } else {
         res.json(result);
       }
     })
-    .catch((error) => {
-      if (error instanceof RouteError) {
-        res.status(error.statusCode).json({
-          error: error.message,
-          context: error.context,
+    .catch(error => {
+      // Effect wraps exceptions in FiberFailure, extract original error if available
+      let originalError = error;
+      if (error.toJSON && error.toJSON().cause && error.toJSON().cause.defect) {
+        originalError = error.toJSON().cause.defect;
+      }
+
+      if (originalError instanceof RouteError) {
+        res.status(originalError.statusCode).json({
+          error: originalError.message,
+          context: originalError.context,
         });
       } else {
         next(error);
@@ -290,41 +277,31 @@ export const createDemoRouter = (): Router => {
  */
 
 export const createUserWorkflow = (userData: any, authHeader: string | undefined) =>
-  Effect.flatMap(
-    createUserWithAuth(userData, authHeader),
-    (created) =>
-      Effect.flatMap(
-        getUserWithAuth(created.username, authHeader),
-        (retrieved) =>
-          Effect.succeed({
-            created,
-            retrieved,
-            message: 'User created and verified successfully'
-          })
-      )
+  Effect.flatMap(createUserWithAuth(userData, authHeader), created =>
+    Effect.flatMap(getUserWithAuth(created.username, authHeader), retrieved =>
+      Effect.succeed({
+        created,
+        retrieved,
+        message: 'User created and verified successfully',
+      }),
+    ),
   );
 
 export const userManagementWorkflow = (
   createData: any,
   updateData: any,
-  authHeader: string | undefined
+  authHeader: string | undefined,
 ) =>
-  Effect.flatMap(
-    createUserWithAuth(createData, authHeader),
-    (created) =>
-      Effect.flatMap(
-        updateUserWithAuth(created.username, updateData, authHeader),
-        (updated) =>
-          Effect.flatMap(
-            deleteUserWithAuth(created.username, authHeader),
-            () =>
-              Effect.succeed({
-                created,
-                updated,
-                message: 'Complete user lifecycle executed successfully'
-              })
-          )
-      )
+  Effect.flatMap(createUserWithAuth(createData, authHeader), created =>
+    Effect.flatMap(updateUserWithAuth(created.username, updateData, authHeader), updated =>
+      Effect.flatMap(deleteUserWithAuth(created.username, authHeader), () =>
+        Effect.succeed({
+          created,
+          updated,
+          message: 'Complete user lifecycle executed successfully',
+        }),
+      ),
+    ),
   );
 
 /**
