@@ -335,3 +335,29 @@
 - All validation gates pass: TypeScript compilation (0 errors), ESLint clean, 609/609 tests passing, successful build
 - Demonstrates functional programming patterns vs traditional Zod approach with composable Effects
 - Integration ready with existing Effect-based user model for full functional architecture
+
+### 2025-01-23: Effect-Based User Service Layer (GitHub Issue #43)
+**Status:** Completed
+**Description:** Create a service layer with Effect context based on the existing user.service.ts
+**Requirements:**
+- [x] Create user.service-effect.ts with Effect-based patterns
+- [x] Base API on existing user.service.ts functionality
+- [x] Implement Effect-based service methods using functional programming patterns
+- [x] Integrate with Effect-based user model and validator
+- [x] Create comprehensive test suite for the new functionality
+- [x] Ensure proper error handling with Effect patterns
+
+**Implementation Details:**
+- Created user.service-effect.ts demonstrating comprehensive Effect service layer patterns
+- Implemented full service interface matching traditional user.service.ts with Effect types
+- Fixed TypeScript compilation errors including Effect.Effect type signatures and dependency injection
+- Resolved readonly array type conflicts with User interface using proper type casting
+- Created proper Layer-based service provider using Layer.succeed pattern
+- Added comprehensive error handling with custom error types (UserConflictError, UserNotFoundError, etc.)
+- Fixed ValidationError naming conflict by creating UserServiceValidationError
+- Integrated with existing Effect-based user model and validator components
+- Added service factory functions and convenience methods for easy consumption
+- Created comprehensive test suite with 36 test cases achieving 100% coverage
+- Demonstrated Effect patterns: dependency injection, error handling, service composition, and functional programming
+- All validation gates pass: TypeScript compilation (0 errors), ESLint clean, 645/645 tests passing, successful build
+- Service ready for integration with existing Effect-based user model and validator for complete functional architecture
