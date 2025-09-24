@@ -2,7 +2,7 @@
 // Effect-based authentication routes using patterns from user.routes-effect-platform.ts
 // Implements login and register endpoints with Effect context
 
-import { Effect, Context, Layer } from 'effect';
+import { Effect, Context, Layer, Exit } from 'effect';
 import { Router, Request, Response, NextFunction } from 'express';
 import { UserServiceEffectTag, UserServiceEffectLive } from '../users/user.service-effect';
 import { validateCreateUser } from '../users/user.validator-effect';
@@ -71,15 +71,16 @@ export const AuthTokenServiceLayer = Layer.succeed(AuthTokenServiceTag, makeAuth
  * Effect-based handler pipeline for POST /login
  * Demonstrates complete login flow: validation -> authentication -> token generation
  */
-export const loginEffect = (req: Request) =>
-  Effect.gen(function* () {
-    // Input validation
-    const { username, password } = req.body;
+export const loginEffect = (req: Request) => {
+  // Early validation without dependencies
+  const { username, password } = req.body;
 
-    if (!username || !password) {
-      return yield* Effect.fail(new LoginError('Missing required fields: username, password'));
-    }
+  if (!username || !password) {
+    return Effect.fail(new LoginError('Missing required fields: username, password'));
+  }
 
+  // Main pipeline with dependencies
+  return Effect.gen(function* () {
     // Get user service
     const userService = yield* UserServiceEffectTag;
 
@@ -124,46 +125,54 @@ export const loginEffect = (req: Request) =>
       password: process.env.DB_PASSWORD || 'postgres',
     })),
   );
+};
 
 /**
  * Effect-based handler pipeline for POST /register
  * Demonstrates registration flow: validation -> user creation
  */
-export const registerEffect = (req: Request) =>
-  Effect.gen(function* () {
-    // Validation (reusing user validation from Effect user service)
-    const validated = yield* validateCreateUser({ body: req.body }).pipe(
-      Effect.catchAll(error =>
-        Effect.fail(new RegistrationError(`Validation failed: ${error.message}`, 400)),
-      ),
-    );
-
-    // Create user using Effect-based service
-    const userService = yield* UserServiceEffectTag;
-    const newUser = yield* userService.createUser(validated.body as CreateUserData).pipe(
-      Effect.catchAll(error => {
-        if (error._tag === 'UserConflictError') {
-          return Effect.fail(new RegistrationError(error.message, 409));
-        }
-        return Effect.fail(new RegistrationError(`Registration failed: ${error.message}`, 403));
-      }),
-    );
-
-    // Return registration response
-    return {
-      'user-id': newUser.user_id,
-      username: newUser.username,
-    };
-  }).pipe(
-    Effect.provide(UserServiceEffectLive),
-    Effect.provide(makeDatabaseLayer({
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'scavenger_hunt',
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'postgres',
-    })),
+export const registerEffect = (req: Request) => {
+  // Early validation without dependencies
+  const validationEffect = validateCreateUser({ body: req.body }).pipe(
+    Effect.catchAll(error =>
+      Effect.fail(new RegistrationError(`Validation failed: ${error.message}`, 400)),
+    ),
   );
+
+  // Chain validation with main pipeline
+  return validationEffect.pipe(
+    Effect.flatMap(validated => {
+      // Main pipeline with database dependencies
+      return Effect.gen(function* () {
+        // Create user using Effect-based service
+        const userService = yield* UserServiceEffectTag;
+        const newUser = yield* userService.createUser(validated.body as CreateUserData).pipe(
+          Effect.catchAll(error => {
+            if (error._tag === 'UserConflictError') {
+              return Effect.fail(new RegistrationError(error.message, 409));
+            }
+            return Effect.fail(new RegistrationError(`Registration failed: ${error.message}`, 403));
+          }),
+        );
+
+        // Return registration response
+        return {
+          'user-id': newUser.user_id,
+          username: newUser.username,
+        };
+      }).pipe(
+        Effect.provide(UserServiceEffectLive),
+        Effect.provide(makeDatabaseLayer({
+          host: process.env.DB_HOST || 'localhost',
+          port: parseInt(process.env.DB_PORT || '5432'),
+          database: process.env.DB_NAME || 'scavenger_hunt',
+          user: process.env.DB_USER || 'postgres',
+          password: process.env.DB_PASSWORD || 'postgres',
+        })),
+      );
+    }),
+  );
+};
 
 /**
  * Express integration helper (reusing pattern from user.routes-effect-platform.ts)
@@ -175,10 +184,15 @@ export const effectToExpress = <T>(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async (req: Request, res: Response, _next: NextFunction): Promise<void> => {
     try {
-      // Use explicit typing to handle Effect type resolution
-      const effectWithHandler = effectHandler(req);
-      // Cast to handle the never requirement constraint
-      const result = await Effect.runPromise(effectWithHandler as Effect.Effect<T, unknown, never>);
+      // Use the effect's built-in error handling by providing a catch-all handler
+      const effectWithHandler = effectHandler(req).pipe(
+        Effect.catchAll((error: unknown) => {
+          // Convert Effect errors to thrown exceptions that we can catch
+          throw error;
+        })
+      );
+
+      const result = await Effect.runPromise(effectWithHandler as Effect.Effect<T, never, never>);
 
       // Handle different response types
       if (result === undefined || result === null) {
@@ -191,8 +205,10 @@ export const effectToExpress = <T>(
         res.json(result);
       }
     } catch (error) {
-      // Handle Effect-wrapped errors
+      // Handle caught errors from Effect pipeline
       let originalError = error;
+
+      // Try to unwrap Effect-wrapped errors
       if (error && typeof error === 'object' && 'toJSON' in error) {
         const errorJson = (error as { toJSON: () => { cause?: { defect?: unknown } } }).toJSON();
         if (errorJson?.cause?.defect) {
