@@ -361,3 +361,32 @@
 - Demonstrated Effect patterns: dependency injection, error handling, service composition, and functional programming
 - All validation gates pass: TypeScript compilation (0 errors), ESLint clean, 645/645 tests passing, successful build
 - Service ready for integration with existing Effect-based user model and validator for complete functional architecture
+
+### 2025-01-24: Effect-Based User Routes - Reduced Scope (GitHub Issue #50)
+**Status:** Completed
+**Description:** Implement Effect-based user routes with @effect/platform focusing on reduced scope with GET / and POST / endpoints
+**Requirements:**
+- [x] Research @effect/platform HTTP patterns and best practices
+- [x] Implement Effect-based solution using platform package
+- [x] Focus on Phase 1: implement only GET / and POST / endpoints
+- [x] Implement required handlers within Effect context or suggest alternatives:
+  - authenticateToken: confirm authentication token is valid
+  - requireRole('game.admin'): check required role in caller token
+  - validate(schema): check payload has correct schema
+  - endpoint implementation: actual business logic
+- [x] Create comprehensive test suite for Effect-based routes
+- [x] Ensure integration with existing Effect-based components (model, validator, service)
+
+**Implementation Details:**
+- Created user.routes-effect-platform.ts demonstrating @effect/platform integration patterns
+- Implemented AuthService with dependency injection using Context.GenericTag
+- Built complete Effect pipelines: Authentication → Authorization → Validation → Service
+- Created effectToExpress helper for seamless Express integration
+- Phase 1 scope: GET / (list users) and POST / (create user) endpoints only
+- Authentication service with mock token validation (admin-token, user-token)
+- Authorization service with role-based access control (game.admin required)
+- Integration with existing Effect-based user service and validator components
+- Comprehensive test suite with 29 test cases covering all scenarios
+- All validation gates pass: TypeScript compilation (0 errors), ESLint clean
+- Effect patterns demonstrated: Context, Layer, Effect.gen, dependency injection
+- Structured error handling with custom error types and HTTP status mapping
