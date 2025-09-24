@@ -18,51 +18,46 @@ import { Schema, Effect } from 'effect';
 // Reusable schema components
 const passwordSchema = Schema.String.pipe(
   Schema.minLength(8),
-  Schema.filter((password) => /[a-zA-Z]/.test(password), {
-    message: () => 'Password must contain at least one letter'
+  Schema.filter(password => /[a-zA-Z]/.test(password), {
+    message: () => 'Password must contain at least one letter',
   }),
-  Schema.filter((password) => /\d/.test(password), {
-    message: () => 'Password must contain at least one number'
-  })
+  Schema.filter(password => /\d/.test(password), {
+    message: () => 'Password must contain at least one number',
+  }),
 );
 
 export const emailSchema = Schema.String.pipe(
-  Schema.filter((email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email.trim());
-  }, {
-    message: () => 'Must be a valid email address'
-  }),
-  Schema.transform(
-    Schema.String,
+  Schema.filter(
+    email => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return emailRegex.test(email.trim());
+    },
     {
-      strict: true,
-      decode: (email) => email.toLowerCase().trim(),
-      encode: (email) => email
-    }
-  )
+      message: () => 'Must be a valid email address',
+    },
+  ),
+  Schema.transform(Schema.String, {
+    strict: true,
+    decode: email => email.toLowerCase().trim(),
+    encode: email => email,
+  }),
 );
 
-const rolesSchema = Schema.Array(
-  Schema.Literal('game.admin', 'game.player', 'viewer')
-).pipe(
+const rolesSchema = Schema.Array(Schema.Literal('game.admin', 'game.player', 'viewer')).pipe(
   Schema.minItems(1, {
-    message: () => 'At least one role is required'
-  })
+    message: () => 'At least one role is required',
+  }),
 );
 
 const nicknameSchema = Schema.String.pipe(
-  Schema.transform(
-    Schema.String,
-    {
-      strict: true,
-      decode: (nickname) => nickname.trim(),
-      encode: (nickname) => nickname
-    }
-  ),
+  Schema.transform(Schema.String, {
+    strict: true,
+    decode: nickname => nickname.trim(),
+    encode: nickname => nickname,
+  }),
   Schema.minLength(1, {
-    message: () => 'Nickname is required'
-  })
+    message: () => 'Nickname is required',
+  }),
 );
 
 // Request validation schemas using Effect Schema patterns
@@ -98,18 +93,15 @@ export const listUsersSchema = Schema.Struct({
     Schema.Struct({
       includeDeleted: Schema.optional(
         Schema.String.pipe(
-          Schema.transform(
-            Schema.Boolean,
-            {
-              strict: true,
-              decode: (str) => str === 'true',
-              encode: (bool) => bool.toString()
-            }
-          )
-        )
+          Schema.transform(Schema.Boolean, {
+            strict: true,
+            decode: str => str === 'true',
+            encode: bool => bool.toString(),
+          }),
+        ),
       ),
       role: Schema.optional(Schema.String),
-    })
+    }),
   ),
 });
 
@@ -126,22 +118,22 @@ export type ListUsersQuery = Schema.Schema.Type<typeof listUsersSchema>['query']
 
 export const validateCreateUser = (input: unknown) =>
   Schema.decodeUnknown(createUserSchema)(input).pipe(
-    Effect.mapError((error) => new ValidationError('Create user validation failed', error))
+    Effect.mapError(error => new ValidationError('Create user validation failed', error)),
   );
 
 export const validateUpdateUser = (input: unknown) =>
   Schema.decodeUnknown(updateUserSchema)(input).pipe(
-    Effect.mapError((error) => new ValidationError('Update user validation failed', error))
+    Effect.mapError(error => new ValidationError('Update user validation failed', error)),
   );
 
 export const validateDeleteUser = (input: unknown) =>
   Schema.decodeUnknown(deleteUserSchema)(input).pipe(
-    Effect.mapError((error) => new ValidationError('Delete user validation failed', error))
+    Effect.mapError(error => new ValidationError('Delete user validation failed', error)),
   );
 
 export const validateListUsers = (input: unknown) =>
   Schema.decodeUnknown(listUsersSchema)(input).pipe(
-    Effect.mapError((error) => new ValidationError('List users validation failed', error))
+    Effect.mapError(error => new ValidationError('List users validation failed', error)),
   );
 
 /**
@@ -149,7 +141,10 @@ export const validateListUsers = (input: unknown) =>
  */
 export class ValidationError extends Error {
   readonly _tag = 'ValidationError';
-  constructor(message: string, readonly cause?: unknown) {
+  constructor(
+    message: string,
+    readonly cause?: unknown,
+  ) {
     super(message);
   }
 }
@@ -160,17 +155,17 @@ export class ValidationError extends Error {
  */
 export const validateEmail = (email: unknown) =>
   Schema.decodeUnknown(emailSchema)(email).pipe(
-    Effect.mapError((error) => new ValidationError('Email validation failed', error))
+    Effect.mapError(error => new ValidationError('Email validation failed', error)),
   );
 
 export const validatePassword = (password: unknown) =>
   Schema.decodeUnknown(passwordSchema)(password).pipe(
-    Effect.mapError((error) => new ValidationError('Password validation failed', error))
+    Effect.mapError(error => new ValidationError('Password validation failed', error)),
   );
 
 export const validateRoles = (roles: unknown) =>
   Schema.decodeUnknown(rolesSchema)(roles).pipe(
-    Effect.mapError((error) => new ValidationError('Roles validation failed', error))
+    Effect.mapError(error => new ValidationError('Roles validation failed', error)),
   );
 
 /**
