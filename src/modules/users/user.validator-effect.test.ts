@@ -489,12 +489,12 @@ describe('Effect-based User Validator', () => {
     it('should handle validation errors with Effect.catchAll', async () => {
       const safeValidation = (input: unknown) =>
         validateCreateUser(input).pipe(
-          Effect.catchAll((error) => {
+          Effect.catchAll(error => {
             return Effect.succeed({
               error: true,
               message: error.message,
             });
-          })
+          }),
         );
 
       const invalidInput = {

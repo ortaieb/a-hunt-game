@@ -58,13 +58,31 @@ type CryptoServiceType = Context.Tag.Service<typeof CryptoService>;
  * This allows proper dependency injection and type safety
  */
 export interface UserServiceEffect {
-  readonly createUser: (data: unknown) => Effect.Effect<UserResponse, UserConflictError | ValidationError, PgDrizzle | CryptoServiceType>;
-  readonly updateUser: (username: string, data: unknown) => Effect.Effect<UserResponse, UserNotFoundError | ValidationError, PgDrizzle | CryptoServiceType>;
+  readonly createUser: (
+    data: unknown,
+  ) => Effect.Effect<
+    UserResponse,
+    UserConflictError | ValidationError,
+    PgDrizzle | CryptoServiceType
+  >;
+  readonly updateUser: (
+    username: string,
+    data: unknown,
+  ) => Effect.Effect<
+    UserResponse,
+    UserNotFoundError | ValidationError,
+    PgDrizzle | CryptoServiceType
+  >;
   readonly deleteUser: (username: string) => Effect.Effect<void, UserNotFoundError, PgDrizzle>;
   readonly getUser: (username: string) => Effect.Effect<User, UserNotFoundError, PgDrizzle>;
-  readonly validateUser: (user: User, password: string) => Effect.Effect<UserResponse, UserNotFoundError | UserUnauthorizedError, CryptoServiceType>;
+  readonly validateUser: (
+    user: User,
+    password: string,
+  ) => Effect.Effect<UserResponse, UserNotFoundError | UserUnauthorizedError, CryptoServiceType>;
   readonly listUsers: (filters: UserFilters) => Effect.Effect<UserResponse[], never, PgDrizzle>;
-  readonly getUserHistory: (username: string) => Effect.Effect<UserResponse[], UserNotFoundError, PgDrizzle>;
+  readonly getUserHistory: (
+    username: string,
+  ) => Effect.Effect<UserResponse[], UserNotFoundError, PgDrizzle>;
 }
 
 /**
@@ -96,7 +114,7 @@ export class UserServiceEffectImpl implements UserServiceEffect {
       // Check if user exists (including deleted ones)
       const existingUser = yield* UserModelEffect.findByUsername(validated.body.username).pipe(
         Effect.orElse(() => Effect.succeed(null)),
-        Effect.catchAll(() => Effect.succeed(null)) // Convert SQL errors to null for existence check
+        Effect.catchAll(() => Effect.succeed(null)), // Convert SQL errors to null for existence check
       );
 
       if (existingUser) {
@@ -106,12 +124,12 @@ export class UserServiceEffectImpl implements UserServiceEffect {
       // Create the user with type cast for readonly array
       const createData: CreateUserData = {
         ...validated.body,
-        roles: validated.body.roles as string[] // Type cast readonly array to mutable
+        roles: validated.body.roles as string[], // Type cast readonly array to mutable
       };
       const user = yield* UserModelEffect.create(createData).pipe(
-        Effect.catchAll((error) =>
-          Effect.fail(new UserConflictError(`Failed to create user: ${error.message}`))
-        )
+        Effect.catchAll(error =>
+          Effect.fail(new UserConflictError(`Failed to create user: ${error.message}`)),
+        ),
       );
       return toResponse(user);
     });
@@ -130,9 +148,9 @@ export class UserServiceEffectImpl implements UserServiceEffect {
 
       // Check if user exists
       const existingUser = yield* UserModelEffect.findByUsername(username).pipe(
-        Effect.catchAll((error) =>
-          Effect.fail(new UserNotFoundError(`Database error while finding user: ${error.message}`))
-        )
+        Effect.catchAll(error =>
+          Effect.fail(new UserNotFoundError(`Database error while finding user: ${error.message}`)),
+        ),
       );
       if (!existingUser) {
         return yield* Effect.fail(new UserNotFoundError('User not found'));
@@ -149,7 +167,7 @@ export class UserServiceEffectImpl implements UserServiceEffect {
               const crypto = yield* CryptoService;
               return yield* Effect.promise(() => crypto.hash(validated.body.password!));
             })
-          : existingUser.password_hash
+          : existingUser.password_hash,
       });
 
       return toResponse(updatedUser);
@@ -162,9 +180,9 @@ export class UserServiceEffectImpl implements UserServiceEffect {
     Effect.gen(function* () {
       // Check if user exists
       const existingUser = yield* UserModelEffect.findByUsername(username).pipe(
-        Effect.catchAll((error) =>
-          Effect.fail(new UserNotFoundError(`Database error while finding user: ${error.message}`))
-        )
+        Effect.catchAll(error =>
+          Effect.fail(new UserNotFoundError(`Database error while finding user: ${error.message}`)),
+        ),
       );
       if (!existingUser) {
         return yield* Effect.fail(new UserNotFoundError('User not found'));
@@ -181,9 +199,9 @@ export class UserServiceEffectImpl implements UserServiceEffect {
   getUser = (username: string) =>
     Effect.gen(function* () {
       const user = yield* UserModelEffect.findByUsername(username).pipe(
-        Effect.catchAll((error) =>
-          Effect.fail(new UserNotFoundError(`Database error while finding user: ${error.message}`))
-        )
+        Effect.catchAll(error =>
+          Effect.fail(new UserNotFoundError(`Database error while finding user: ${error.message}`)),
+        ),
       );
       if (!user) {
         return yield* Effect.fail(new UserNotFoundError('User not found'));
@@ -202,7 +220,7 @@ export class UserServiceEffectImpl implements UserServiceEffect {
 
       const crypto = yield* CryptoService;
       const passwordMatch = yield* Effect.promise(() =>
-        crypto.compare(password, user.password_hash)
+        crypto.compare(password, user.password_hash),
       );
 
       if (!passwordMatch) {
@@ -231,9 +249,9 @@ export class UserServiceEffectImpl implements UserServiceEffect {
       // Note: Since we don't have a history method in UserModelEffect yet,
       // we'll simulate by checking if user exists and returning empty history
       const user = yield* UserModelEffect.findByUsername(username).pipe(
-        Effect.catchAll((error) =>
-          Effect.fail(new UserNotFoundError(`Database error while finding user: ${error.message}`))
-        )
+        Effect.catchAll(error =>
+          Effect.fail(new UserNotFoundError(`Database error while finding user: ${error.message}`)),
+        ),
       );
       if (!user) {
         return yield* Effect.fail(new UserNotFoundError('User not found'));
@@ -252,10 +270,7 @@ export const makeUserServiceEffect = (): UserServiceEffect => new UserServiceEff
 /**
  * Service layer provider using Effect Layer
  */
-export const UserServiceEffectLive = Layer.succeed(
-  UserServiceEffectTag,
-  makeUserServiceEffect()
-);
+export const UserServiceEffectLive = Layer.succeed(UserServiceEffectTag, makeUserServiceEffect());
 
 /**
  * Convenience functions for using the service
