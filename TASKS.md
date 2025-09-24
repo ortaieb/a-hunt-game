@@ -390,3 +390,15 @@
 - All validation gates pass: TypeScript compilation (0 errors), ESLint clean
 - Effect patterns demonstrated: Context, Layer, Effect.gen, dependency injection
 - Structured error handling with custom error types and HTTP status mapping
+
+### 2025-01-24: Effect-Based Authentication Routes (GitHub Issue #46)
+**Status:** In Progress
+**Description:** Implement auth.routes-effect.ts with Effect context based solution, reusing user.routes-effect-platform.ts architecture
+**Requirements:**
+- [ ] Analyze existing auth.routes.ts implementation
+- [ ] Create Effect-based auth routes using user.routes-effect-platform.ts patterns
+- [ ] Implement POST /login endpoint with Effect pipeline
+- [ ] Implement POST /register endpoint with Effect pipeline
+- [ ] Integrate with existing Effect-based user service
+- [ ] Create comprehensive test suite for Effect-based auth routes
+- [ ] Ensure TypeScript compilation and linting passes
